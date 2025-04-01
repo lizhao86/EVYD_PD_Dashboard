@@ -1,0 +1,1228 @@
+/* 基础样式 */
+:root {
+    --primary: #0066FF;
+    --primary-dark: #0052cc;
+    --primary-light: #3385FF;
+    --secondary: #00C1FF;
+    --secondary-dark: #009acd;
+    --secondary-light: #33CDFF;
+    --white: #FFFFFF;
+    --black: #000000;
+    --gray-50: #F9FAFB;
+    --gray-100: #F3F4F6;
+    --gray-200: #E5E7EB;
+    --gray-300: #D1D5DB;
+    --gray-400: #9CA3AF;
+    --gray-500: #6B7280;
+    --gray-600: #4B5563;
+    --gray-700: #374151;
+    --gray-800: #1F2937;
+    --gray-900: #111827;
+    --success: #10B981;
+    --warning: #F59E0B;
+    --danger: #EF4444;
+    --info: #3B82F6;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
+        'Open Sans', 'Helvetica Neue', sans-serif;
+    color: var(--gray-800);
+    background-color: var(--gray-50);
+    line-height: 1.5;
+}
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+/* 头部导航样式 */
+.header {
+    background-color: #000000;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
+}
+
+.logo-divider {
+    height: 24px;
+    width: 1px;
+    background-color: #333;
+    margin: 0 1rem;
+}
+
+.logo-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.logo-text h1 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--white);
+}
+
+.logo-text p {
+    font-size: 0.75rem;
+    color: #aaa;
+}
+
+.main-nav ul {
+    display: flex;
+    list-style-type: none;
+    gap: 0.5rem;
+}
+
+.main-nav a {
+    display: block;
+    padding: 0.5rem 1rem;
+    color: #aaa;
+    text-decoration: none;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: color 0.2s, background-color 0.2s;
+}
+
+.main-nav a:hover {
+    color: var(--white);
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.main-nav a.active {
+    color: var(--white);
+    font-weight: 600;
+}
+
+/* 英雄区域样式 */
+.hero {
+    background: linear-gradient(135deg, #000 0%, #003366 100%);
+    color: var(--white);
+    padding: 4rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-content {
+    max-width: 600px;
+    position: relative;
+    z-index: 1;
+}
+
+.hero h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+}
+
+.hero p {
+    font-size: 1.125rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.hero-bg-element-1 {
+    position: absolute;
+    bottom: -100px;
+    right: -100px;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(0, 193, 255, 0.15) 0%, rgba(0, 102, 255, 0) 70%);
+    border-radius: 50%;
+}
+
+.hero-bg-element-2 {
+    position: absolute;
+    top: -50px;
+    right: 20%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(0, 193, 255, 0.1) 0%, rgba(0, 102, 255, 0) 70%);
+    border-radius: 50%;
+}
+
+/* 按钮样式 */
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    background-color: var(--white);
+    color: var(--primary);
+    border: none;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.875rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary:hover {
+    background-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    background-color: transparent;
+    color: var(--white);
+    border: 1px solid var(--white);
+    border-radius: 0.375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.875rem;
+}
+
+.btn-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 主内容区域样式 */
+.main-content {
+    padding: 3rem 0;
+}
+
+/* 工具分类样式 */
+.tool-category {
+    margin-bottom: 3rem;
+}
+
+.category-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.category-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    background-color: rgba(0, 102, 255, 0.1);
+    border-radius: 0.5rem;
+    margin-right: 1rem;
+}
+
+.category-icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--primary);
+}
+
+.category-info h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin-bottom: 0.25rem;
+}
+
+.category-info p {
+    font-size: 0.875rem;
+    color: var(--gray-500);
+    max-width: 36rem;
+}
+
+/* 工具卡片网格 */
+.tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+/* 工具卡片样式 */
+.tool-card {
+    background: linear-gradient(135deg, rgba(0, 102, 255, 0.05) 0%, rgba(0, 193, 255, 0.1) 100%);
+    border: 1px solid var(--gray-200);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+}
+
+.tool-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 102, 255, 0.1);
+}
+
+.tool-card-link {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    color: inherit;
+    text-decoration: none;
+}
+
+.tool-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.tool-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.5rem;
+    margin-right: 1rem;
+}
+
+.document-icon {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    color: white;
+}
+
+.analytics-icon {
+    background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+    color: white;
+}
+
+.research-icon {
+    background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+    color: white;
+}
+
+.tool-card-header h4 {
+    flex: 1;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gray-900);
+}
+
+.tool-tags {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.tag-ai {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    background-color: rgba(0, 102, 255, 0.1);
+    color: var(--primary);
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.tag-new {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.tag-coming-soon {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--warning);
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.tool-card-body {
+    padding: 1.25rem;
+}
+
+.tool-card-body p {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    margin-bottom: 1rem;
+}
+
+.tool-tags-list {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.tool-tags-list .tag {
+    margin: 0;
+    transition: all 0.2s ease;
+    border-radius: 15px;
+    padding: 4px 10px;
+    font-size: 11px;
+    letter-spacing: 0.2px;
+}
+
+.tool-tags-list .tag:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.05);
+}
+
+/* Dify标签特别样式 */
+.tool-tags-list .tag:first-child {
+    background-color: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+}
+
+/* 自然语言处理标签样式 */
+.tag:last-child {
+    background-color: rgba(102, 16, 242, 0.1);
+    color: #6610f2;
+}
+
+.tool-card-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0.75rem 1.25rem;
+    background-color: rgba(245, 247, 250, 0.7);
+    border-top: 1px solid var(--gray-200);
+}
+
+.tool-card-footer span {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--primary);
+    transition: transform 0.2s;
+}
+
+.tool-card:hover .tool-card-footer span {
+    transform: translateX(4px);
+}
+
+.tool-card.coming-soon {
+    opacity: 0.7;
+    cursor: default;
+}
+
+.tool-card.coming-soon:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.tool-card.coming-soon .tool-card-footer span {
+    color: var(--gray-500);
+}
+
+/* 模态框样式 */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+.modal-content {
+    background-color: var(--white);
+    margin: 2rem auto;
+    max-width: 800px;
+    width: 90%;
+    border-radius: 0.75rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    position: relative;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.modal-header h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--gray-900);
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.5rem;
+    color: var(--gray-500);
+    line-height: 1;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.tool-description {
+    margin-bottom: 1.5rem;
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    line-height: 1.6;
+}
+
+.tool-form {
+    margin-bottom: 2rem;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--gray-700);
+    margin-bottom: 0.5rem;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--gray-300);
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    color: var(--gray-800);
+    background-color: var(--white);
+    transition: border-color 0.15s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: var(--gray-400);
+}
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+/* 在模态框中的主按钮样式调整 */
+.modal .btn-primary {
+    background-color: var(--primary);
+    color: var(--white);
+}
+
+.modal .btn-primary:hover {
+    background-color: var(--primary-dark);
+}
+
+.modal .btn-secondary {
+    color: var(--gray-700);
+    border-color: var(--gray-300);
+    background-color: var(--white);
+}
+
+.modal .btn-secondary:hover {
+    background-color: var(--gray-50);
+}
+
+.result-container {
+    margin-bottom: 1.5rem;
+    padding: 1.25rem;
+    border: 1px solid var(--gray-200);
+    border-radius: 0.5rem;
+    background-color: var(--gray-50);
+}
+
+.result-container h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    margin-bottom: 1rem;
+}
+
+.result-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    color: var(--gray-400);
+    font-size: 0.875rem;
+}
+
+.result-content {
+    font-size: 0.875rem;
+    color: var(--gray-800);
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.tool-tips {
+    padding: 1.25rem;
+    background-color: rgba(0, 102, 255, 0.05);
+    border-radius: 0.5rem;
+}
+
+.tool-tips h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    margin-bottom: 0.75rem;
+}
+
+.tool-tips ul {
+    list-style-type: none;
+}
+
+.tool-tips li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--gray-600);
+}
+
+.tool-tips li:before {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-right: 0.75rem;
+    background-color: var(--primary);
+    border-radius: 50%;
+}
+
+/* 页脚样式 */
+.footer {
+    background-color: var(--gray-900);
+    color: var(--white);
+    padding: 3rem 0;
+}
+
+.footer-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.footer-info h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.footer-info p {
+    color: var(--gray-400);
+    font-size: 0.875rem;
+    max-width: 30rem;
+    line-height: 1.6;
+}
+
+.footer-links {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.copyright {
+    color: var(--gray-500);
+    font-size: 0.875rem;
+}
+
+.links {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.links a {
+    color: var(--gray-400);
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: color 0.2s;
+}
+
+.links a:hover {
+    color: var(--white);
+}
+
+/* 响应式样式 */
+@media (min-width: 768px) {
+    .footer-content {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+    
+    .footer-info {
+        max-width: 60%;
+    }
+    
+    .footer-links {
+        align-items: flex-end;
+    }
+}
+
+@media (max-width: 768px) {
+    .logo-text h1 {
+        font-size: 1rem;
+    }
+    
+    .hero h2 {
+        font-size: 2rem;
+    }
+    
+    .main-nav {
+        display: none;
+    }
+}
+
+/* 加载中动画 */
+.loading-spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    margin-right: 0.5rem;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 用户操作区域 */
+.user-actions {
+    display: flex;
+    align-items: center;
+}
+
+.btn-login {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-login:hover {
+    background-color: var(--primary-dark);
+}
+
+#user-info {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+#username-display {
+    margin-right: 8px;
+    color: white;
+    font-size: 14px;
+}
+
+.user-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.user-dropdown-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: background-color 0.2s;
+}
+
+.user-dropdown-button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: 8px;
+    background-color: white;
+    min-width: 160px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    z-index: 10;
+    padding-top: 10px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.dropdown-content::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    right: 0;
+    width: 100%;
+    height: 10px;
+    background-color: transparent;
+}
+
+.user-dropdown:hover .dropdown-content {
+    display: block;
+    opacity: 1;
+}
+
+.dropdown-content:hover {
+    display: block;
+    opacity: 1;
+}
+
+.dropdown-content a {
+    color: var(--gray-700);
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.dropdown-content a:hover {
+    background-color: var(--gray-100);
+    color: var(--primary);
+}
+
+/* 登录和注册表单样式 */
+.auth-form {
+    margin-bottom: 1rem;
+}
+
+.form-tabs {
+    display: flex;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.form-tab {
+    padding: 0.75rem 1.5rem;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--gray-600);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.form-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.form-message {
+    margin: 1rem 0;
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    display: none;
+}
+
+.form-message.error {
+    display: block;
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.form-message.success {
+    display: block;
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.form-help {
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+/* 设置选项卡样式 */
+.settings-tabs {
+    display: flex;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.settings-tab {
+    padding: 0.75rem 1.5rem;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--gray-600);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.settings-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+.settings-content {
+    display: none;
+}
+
+.settings-content.active {
+    display: block;
+}
+
+/* API 密钥样式 */
+.api-keys-description {
+    margin-bottom: 1.5rem;
+}
+
+.api-keys-list {
+    margin-bottom: 1.5rem;
+}
+
+.api-key-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid var(--gray-200);
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    background-color: var(--white);
+}
+
+.api-key-info h4 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: var(--gray-800);
+}
+
+.api-key-info p {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+.api-key-value {
+    display: flex;
+    align-items: center;
+}
+
+.api-key-value input {
+    width: 200px;
+    padding: 0.5rem;
+    border: 1px solid var(--gray-300);
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    margin-right: 0.5rem;
+}
+
+.btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 0.375rem;
+    background-color: var(--gray-100);
+    border: none;
+    cursor: pointer;
+    color: var(--gray-600);
+    transition: all 0.2s;
+}
+
+.btn-icon:hover {
+    background-color: var(--gray-200);
+    color: var(--gray-800);
+}
+
+/* 管理员面板样式 */
+.admin-modal-content {
+    max-width: 1000px;
+    width: 90%;
+}
+
+.admin-tabs {
+    display: flex;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.admin-tab {
+    padding: 0.75rem 1.5rem;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--gray-600);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.admin-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+/* 管理面板内容区域 - 删除display属性，由JavaScript控制 */
+.admin-content {
+    padding: 1rem;
+    background-color: var(--white);
+    border-radius: 0.5rem;
+}
+
+.admin-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1.5rem;
+}
+
+.users-table-container {
+    overflow-x: auto;
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.users-table th,
+.users-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.users-table th {
+    font-weight: 600;
+    color: var(--gray-700);
+    background-color: var(--gray-50);
+    font-size: 0.875rem;
+}
+
+.users-table td {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+}
+
+.users-table tr:hover td {
+    background-color: var(--gray-50);
+}
+
+.user-actions-cell {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-edit,
+.btn-delete {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    border: none;
+}
+
+.btn-edit {
+    background-color: var(--gray-100);
+    color: var(--primary);
+}
+
+.btn-delete {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.btn-edit:hover {
+    background-color: var(--gray-200);
+}
+
+.btn-delete:hover {
+    background-color: rgba(239, 68, 68, 0.2);
+}
+
+.user-select-container {
+    margin-bottom: 1.5rem;
+}
+
+.user-select-container label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--gray-700);
+}
+
+.user-select-container select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--gray-300);
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    color: var(--gray-800);
+    background-color: var(--white);
+}
+
+.api-keys-config {
+    margin-bottom: 1.5rem;
+}
+
+.api-key-config-item {
+    padding: 1rem;
+    border: 1px solid var(--gray-200);
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    background-color: var(--white);
+}
+
+.api-key-input input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--gray-300);
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+}
+
+/* 基本链接样式 */
+a {
+    color: var(--primary);
+    transition: color 0.2s;
+}
+
+a:hover {
+    color: var(--primary-dark);
+}
+
+/* 删除特殊标签样式 */
+.tag {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background-color: var(--gray-100);
+    color: var(--gray-600);
+    border-radius: 1rem;
+    font-size: 0.75rem;
+}
+
+/* 恢复原始工具卡片样式 */
+.tool-card {
+    background: linear-gradient(135deg, rgba(0, 102, 255, 0.05) 0%, rgba(0, 193, 255, 0.1) 100%);
+    border: 1px solid var(--gray-200);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+}
+
+.tool-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 102, 255, 0.1);
+}
+
+.tool-card-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0.75rem 1.25rem;
+    background-color: rgba(245, 247, 250, 0.7);
+    border-top: 1px solid var(--gray-200);
+}
+
+.tool-card-footer span {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--primary);
+    transition: transform 0.2s;
+}
+
+.tool-card:hover .tool-card-footer span {
+    transform: translateX(4px);
+}
+
+/* 特别强调当前工具 */
+.tool-card#user-story-tool {
+    border-left: 3px solid #3498db;
+}
+
+/* 确保链接没有下划线的通用规则 */
+a, a:visited, a:active, a:focus {
+    text-decoration: none;
+}
+
+/* 卡片内链接特殊样式 */
+.tool-card a {
+    color: inherit;
+}
+
+.tool-card-footer a,
+.tool-card-footer span {
+    color: #3498db;
+    font-weight: 500;
+} 

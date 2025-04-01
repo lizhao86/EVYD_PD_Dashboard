@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVYD 产品经理AI工作台</title>
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../styles/common.css">
+    <!-- 添加字体 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- 导入非模块化JS -->
+    <script src="../../scripts/services/storage.js"></script>
+    <script src="../../modules/auth/auth.js"></script>
+    <script src="../../scripts/core/config.js"></script>
+    <script src="../../scripts/core/app.js"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="container header-container">
+            <div class="logo-container">
+                <img src="../../assets/images/Group-29-2048x943.png" alt="EVYD Logo" class="logo">
+                <span class="logo-divider"></span>
+                <div class="logo-text">
+                    <h1>产品经理 AI 工作台</h1>
+                    <p>AI驱动的产品开发助手</p>
+                </div>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="#" class="active">工具主页</a></li>
+                    <li><a href="#">AI 工具</a></li>
+                    <li><a href="#">文档中心</a></li>
+                    <li id="admin-panel-link" style="display: none;"><a href="#" id="admin-panel-button">管理面板</a></li>
+                </ul>
+            </nav>
+            <div class="user-actions">
+                <div id="user-info" style="display: none;">
+                    <span id="username-display"></span>
+                    <div class="user-dropdown">
+                        <button class="user-dropdown-button">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </button>
+                        <div class="dropdown-content">
+                            <a href="#" id="profile-settings">账号设置</a>
+                            <a href="#" id="view-api-keys">查看API密钥</a>
+                            <a href="#" id="logout-button">登出</a>
+                        </div>
+                    </div>
+                </div>
+                <button id="login-button" class="btn-login">登录</button>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h2>AI 驱动的产品经理工作台</h2>
+                <p>利用人工智能技术简化产品开发流程，增强创意生成，自动编写产品文档，让产品经理专注于更具创造性的工作。</p>
+                <div class="hero-buttons">
+                    <button class="btn-primary">开始使用</button>
+                    <button class="btn-secondary">查看演示</button>
+                </div>
+            </div>
+        </div>
+        <div class="hero-bg-element-1"></div>
+        <div class="hero-bg-element-2"></div>
+    </section>
+
+    <main class="container main-content">
+        <section class="tool-category">
+            <div class="category-header">
+                <div class="category-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                </div>
+                <div class="category-info">
+                    <h3>AI 助手工具</h3>
+                    <p>利用AI技术简化产品经理的日常工作，从需求分析到文档编写，一键完成</p>
+                </div>
+            </div>
+            
+            <div class="tools-grid">
+                <!-- AI写User Story工具卡片 -->
+                <div class="tool-card" id="user-story-tool">
+                    <a href="user-story.html" class="tool-card-link">
+                        <div class="tool-card-header">
+                            <div class="tool-icon document-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <h4>AI 写 User Story</h4>
+                            <div class="tool-tags">
+                                <span class="tag-ai">AI</span>
+                                <span class="tag-new">新</span>
+                            </div>
+                        </div>
+                        <div class="tool-card-body">
+                            <p>基于简单描述，自动生成结构化的用户故事和验收标准，支持多种格式导出</p>
+                            <div class="tool-tags-list">
+                                <span class="tag">Dify Workflow</span>
+                                <span class="tag">自然语言处理</span>
+                            </div>
+                        </div>
+                        <div class="tool-card-footer">
+                            <span>使用工具 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></span>
+                        </div>
+                    </a>
+                </div>
+                
+                <!-- AI写User Manual工具卡片 -->
+                <div class="tool-card" id="user-manual-tool">
+                    <div class="tool-card-header">
+                        <div class="tool-icon document-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                        </div>
+                        <h4>AI 写 User Manual</h4>
+                        <div class="tool-tags">
+                            <span class="tag-ai">AI</span>
+                        </div>
+                    </div>
+                    <div class="tool-card-body">
+                        <p>为您的产品生成清晰简洁的用户手册，自动创建操作指南和常见问题解答</p>
+                        <div class="tool-tags-list">
+                            <span class="tag">Dify Agent</span>
+                            <span class="tag">文档生成</span>
+                        </div>
+                    </div>
+                    <div class="tool-card-footer">
+                        <span>使用工具 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></span>
+                    </div>
+                </div>
+                
+                <!-- 需求分析助手工具卡片 -->
+                <div class="tool-card" id="requirements-tool">
+                    <div class="tool-card-header">
+                        <div class="tool-icon analytics-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                        </div>
+                        <h4>需求分析助手</h4>
+                        <div class="tool-tags">
+                            <span class="tag-ai">AI</span>
+                        </div>
+                    </div>
+                    <div class="tool-card-body">
+                        <p>分析需求文档，识别关键点，提取功能列表，并提供优化建议</p>
+                        <div class="tool-tags-list">
+                            <span class="tag">文本分析</span>
+                            <span class="tag">需求管理</span>
+                        </div>
+                    </div>
+                    <div class="tool-card-footer">
+                        <span>使用工具 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 预留功能入口 -->
+        <section class="tool-category">
+            <div class="category-header">
+                <div class="category-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                </div>
+                <div class="category-info">
+                    <h3>数据分析工具</h3>
+                    <p>整合多种数据分析工具，帮助产品经理从数据中获取洞察，支持决策制定</p>
+                </div>
+            </div>
+            
+            <div class="tools-grid">
+                <!-- 预留功能卡片1 -->
+                <div class="tool-card coming-soon">
+                    <div class="tool-card-header">
+                        <div class="tool-icon analytics-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                        </div>
+                        <h4>用户行为分析</h4>
+                        <div class="tool-tags">
+                            <span class="tag-coming-soon">即将推出</span>
+                        </div>
+                    </div>
+                    <div class="tool-card-body">
+                        <p>分析用户使用产品的行为数据，生成热图和行为路径，识别优化点</p>
+                        <div class="tool-tags-list">
+                            <span class="tag">行为分析</span>
+                            <span class="tag">用户体验</span>
+                        </div>
+                    </div>
+                    <div class="tool-card-footer">
+                        <span>敬请期待 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></span>
+                    </div>
+                </div>
+                
+                <!-- 预留功能卡片2 -->
+                <div class="tool-card coming-soon">
+                    <div class="tool-card-header">
+                        <div class="tool-icon research-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <h4>市场竞品分析</h4>
+                        <div class="tool-tags">
+                            <span class="tag-coming-soon">即将推出</span>
+                        </div>
+                    </div>
+                    <div class="tool-card-body">
+                        <p>收集和整理市场上竞争产品的信息，帮助制定差异化策略</p>
+                        <div class="tool-tags-list">
+                            <span class="tag">市场研究</span>
+                            <span class="tag">竞争情报</span>
+                        </div>
+                    </div>
+                    <div class="tool-card-footer">
+                        <span>敬请期待 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- AI写User Story工具模态框 -->
+    <div class="modal" id="user-story-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>AI User Story 生成器</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="tool-description">
+                    <p>通过简单描述，利用AI技术自动生成结构化的用户故事和验收标准。该工具使用Dify Workflow API，可以帮助您快速创建高质量的用户故事，提升需求管理效率。</p>
+                </div>
+                
+                <div class="tool-form">
+                    <div class="form-group">
+                        <label for="story-feature-name">功能名称</label>
+                        <input type="text" id="story-feature-name" placeholder="例如：用户注册功能">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="story-description">需求描述</label>
+                        <textarea id="story-description" rows="6" placeholder="详细描述这个功能，包括目标用户、主要功能点、业务规则等。越详细越好。"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="story-priority">优先级</label>
+                        <select id="story-priority">
+                            <option value="high">高</option>
+                            <option value="medium">中</option>
+                            <option value="low">低</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button class="btn-secondary" id="clear-story-form">清空</button>
+                        <button class="btn-primary" id="generate-story">生成 User Story</button>
+                    </div>
+                </div>
+                
+                <div class="result-container" id="story-result">
+                    <h3>生成结果</h3>
+                    <div class="result-placeholder">User Story 将在这里显示...</div>
+                    <div class="result-content" style="display: none;"></div>
+                </div>
+                
+                <div class="tool-tips">
+                    <h3>使用提示</h3>
+                    <ul>
+                        <li>提供详细的需求描述，包含用户角色、目标和业务规则</li>
+                        <li>明确指出功能的边界和约束条件</li>
+                        <li>生成后可以继续编辑和调整内容</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI写User Manual工具模态框 -->
+    <div class="modal" id="user-manual-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>AI User Manual 生成器</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="tool-description">
+                    <p>为您的产品自动生成清晰简洁的用户手册，包括操作指南和常见问题解答。该工具使用Dify Agent API，能够根据产品信息创建全面的用户文档。</p>
+                </div>
+                
+                <div class="tool-form">
+                    <div class="form-group">
+                        <label for="manual-product-name">产品名称</label>
+                        <input type="text" id="manual-product-name" placeholder="例如：智能家居控制系统">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="manual-product-description">产品描述</label>
+                        <textarea id="manual-product-description" rows="6" placeholder="详细描述产品的功能、特点和使用场景。"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="manual-target-audience">目标用户</label>
+                        <input type="text" id="manual-target-audience" placeholder="例如：家庭用户、企业管理员">
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button class="btn-secondary" id="clear-manual-form">清空</button>
+                        <button class="btn-primary" id="generate-manual">生成用户手册</button>
+                    </div>
+                </div>
+                
+                <div class="result-container" id="manual-result">
+                    <h3>生成结果</h3>
+                    <div class="result-placeholder">用户手册将在这里显示...</div>
+                    <div class="result-content" style="display: none;"></div>
+                </div>
+                
+                <div class="tool-tips">
+                    <h3>使用提示</h3>
+                    <ul>
+                        <li>提供详细的产品信息和功能描述</li>
+                        <li>明确说明目标用户群体和他们的需求</li>
+                        <li>生成后可以根据需要进一步完善内容</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 需求分析助手工具模态框 -->
+    <div class="modal" id="requirements-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>需求分析助手</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="tool-description">
+                    <p>分析需求文档，自动识别关键点，提取功能列表，并提供优化建议。该工具能帮助产品经理更高效地处理和优化需求文档。</p>
+                </div>
+                
+                <div class="tool-form">
+                    <div class="form-group">
+                        <label for="req-document-name">文档名称</label>
+                        <input type="text" id="req-document-name" placeholder="例如：移动应用需求文档V1.0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="req-document-content">需求文档内容</label>
+                        <textarea id="req-document-content" rows="8" placeholder="粘贴需求文档内容到这里..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="req-analysis-focus">分析重点</label>
+                        <select id="req-analysis-focus">
+                            <option value="all">全面分析</option>
+                            <option value="features">功能提取</option>
+                            <option value="gaps">需求缺口识别</option>
+                            <option value="priority">优先级建议</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button class="btn-secondary" id="clear-req-form">清空</button>
+                        <button class="btn-primary" id="analyze-requirements">分析需求</button>
+                    </div>
+                </div>
+                
+                <div class="result-container" id="req-result">
+                    <h3>分析结果</h3>
+                    <div class="result-placeholder">分析结果将在这里显示...</div>
+                    <div class="result-content" style="display: none;"></div>
+                </div>
+                
+                <div class="tool-tips">
+                    <h3>使用提示</h3>
+                    <ul>
+                        <li>粘贴完整的需求文档可获得更准确的分析</li>
+                        <li>根据需要选择不同的分析重点</li>
+                        <li>分析结果可导出为PDF或Excel格式</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 登录模态框 -->
+    <div class="modal" id="login-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>登录</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="auth-form">
+                    <div class="form-tabs">
+                        <button class="form-tab active" data-tab="login">登录</button>
+                        <button class="form-tab" data-tab="register" id="register-tab" style="display: none;">注册</button>
+                    </div>
+                    
+                    <div class="tab-content active" id="login-tab-content">
+                        <div class="form-group">
+                            <label for="login-username">用户名</label>
+                            <input type="text" id="login-username" placeholder="输入用户名">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="login-password">密码</label>
+                            <input type="password" id="login-password" placeholder="输入密码">
+                        </div>
+                        
+                        <div class="form-message" id="login-message"></div>
+                        
+                        <div class="form-actions">
+                            <button class="btn-primary" id="submit-login">登录</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 用户设置模态框 -->
+    <div class="modal" id="user-settings-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>账号设置</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-tabs">
+                    <button class="settings-tab active" data-settings="password">修改密码</button>
+                    <button class="settings-tab" data-settings="profile">个人资料</button>
+                </div>
+                
+                <div class="settings-content active" id="password-settings">
+                    <div class="form-group">
+                        <label for="current-password">当前密码</label>
+                        <input type="password" id="current-password" placeholder="输入当前密码">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="new-password">新密码</label>
+                        <input type="password" id="new-password" placeholder="输入新密码">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirm-password">确认新密码</label>
+                        <input type="password" id="confirm-password" placeholder="再次输入新密码">
+                    </div>
+                    
+                    <div class="form-message" id="password-message"></div>
+                    
+                    <div class="form-actions">
+                        <button class="btn-secondary" id="cancel-password-change">取消</button>
+                        <button class="btn-primary" id="submit-password-change">更新密码</button>
+                    </div>
+                </div>
+                
+                <div class="settings-content" id="profile-settings-content">
+                    <div class="form-group">
+                        <label for="profile-username">用户名</label>
+                        <input type="text" id="profile-username" disabled>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="profile-role">角色</label>
+                        <input type="text" id="profile-role" disabled>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="profile-created">创建日期</label>
+                        <input type="text" id="profile-created" disabled>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Key 管理模态框 -->
+    <div class="modal" id="api-keys-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>API 密钥管理</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="api-keys-description">
+                    <p>这里您可以查看您的 Dify API 密钥，这些密钥用于连接到 Dify 服务并使用 AI 功能。</p>
+                </div>
+                
+                <div class="api-keys-list">
+                    <div class="api-key-item">
+                        <div class="api-key-info">
+                            <h4>User Story 生成器</h4>
+                            <p>用于生成用户故事的 Dify Workflow API Key</p>
+                        </div>
+                        <div class="api-key-value">
+                            <input type="password" id="userStory-api-key" readonly>
+                            <button class="btn-icon toggle-password">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="api-key-item">
+                        <div class="api-key-info">
+                            <h4>User Manual 生成器</h4>
+                            <p>用于生成用户手册的 Dify Agent API Key</p>
+                        </div>
+                        <div class="api-key-value">
+                            <input type="password" id="userManual-api-key" readonly>
+                            <button class="btn-icon toggle-password">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="api-key-item">
+                        <div class="api-key-info">
+                            <h4>需求分析助手</h4>
+                            <p>用于需求分析的 Dify API Key</p>
+                        </div>
+                        <div class="api-key-value">
+                            <input type="password" id="requirementsAnalysis-api-key" readonly>
+                            <button class="btn-icon toggle-password">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-message" id="api-keys-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 管理员面板模态框 -->
+    <div class="modal" id="admin-panel-modal">
+        <div class="modal-content admin-modal-content">
+            <div class="modal-header">
+                <h2>管理员面板</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="admin-tabs">
+                    <button class="admin-tab active" data-admin-tab="users">用户管理</button>
+                    <button class="admin-tab" data-admin-tab="api-keys">API Key 配置</button>
+                    <button class="admin-tab" data-admin-tab="api-endpoints">API 地址配置</button>
+                </div>
+                
+                <div class="admin-content active" id="users-management">
+                    <div class="admin-actions">
+                        <button class="btn-primary" id="add-user-button">添加用户</button>
+                    </div>
+                    
+                    <div class="users-table-container">
+                        <table class="users-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>用户名</th>
+                                    <th>角色</th>
+                                    <th>创建日期</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body">
+                                <!-- 用户列表将在这里动态生成 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="admin-content" id="api-keys-management">
+                    <div class="api-keys-management-description">
+                        <p>在这里您可以为每个用户配置不同的 Dify API 密钥。</p>
+                    </div>
+                    
+                    <div class="user-select-container">
+                        <label for="api-keys-user-select">选择用户</label>
+                        <select id="api-keys-user-select">
+                            <!-- 用户选项将在这里动态生成 -->
+                        </select>
+                    </div>
+                    
+                    <div class="api-keys-config">
+                        <div class="api-key-config-item">
+                            <div class="api-key-info">
+                                <h4>User Story 生成器</h4>
+                                <p>用于生成用户故事的 Dify Workflow API Key</p>
+                            </div>
+                            <div class="api-key-input">
+                                <input type="text" id="admin-userStory-api-key" placeholder="输入 API Key">
+                            </div>
+                        </div>
+                        
+                        <div class="api-key-config-item">
+                            <div class="api-key-info">
+                                <h4>User Manual 生成器</h4>
+                                <p>用于生成用户手册的 Dify Agent API Key</p>
+                            </div>
+                            <div class="api-key-input">
+                                <input type="text" id="admin-userManual-api-key" placeholder="输入 API Key">
+                            </div>
+                        </div>
+                        
+                        <div class="api-key-config-item">
+                            <div class="api-key-info">
+                                <h4>需求分析助手</h4>
+                                <p>用于需求分析的 Dify API Key</p>
+                            </div>
+                            <div class="api-key-input">
+                                <input type="text" id="admin-requirementsAnalysis-api-key" placeholder="输入 API Key">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-message" id="admin-api-keys-message"></div>
+                    
+                    <div class="form-actions">
+                        <button class="btn-primary" id="save-api-keys-button">保存 API Keys</button>
+                    </div>
+                </div>
+
+                <div class="admin-content" id="api-endpoints-management">
+                    <div class="api-endpoints-description">
+                        <p>在这里您可以配置全局的Dify API地址，所有用户都将使用这些地址进行API调用。</p>
+                    </div>
+                    
+                    <div class="api-endpoints-config">
+                        <div class="api-endpoint-config-item">
+                            <div class="api-endpoint-info">
+                                <h4>User Story 生成器</h4>
+                                <p>用于生成用户故事的 Dify Workflow API 地址</p>
+                            </div>
+                            <div class="api-endpoint-input">
+                                <input type="text" id="userStory-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
+                            </div>
+                        </div>
+                        
+                        <div class="api-endpoint-config-item">
+                            <div class="api-endpoint-info">
+                                <h4>User Manual 生成器</h4>
+                                <p>用于生成用户手册的 Dify Agent API 地址</p>
+                            </div>
+                            <div class="api-endpoint-input">
+                                <input type="text" id="userManual-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
+                            </div>
+                        </div>
+                        
+                        <div class="api-endpoint-config-item">
+                            <div class="api-endpoint-info">
+                                <h4>需求分析助手</h4>
+                                <p>用于需求分析的 Dify API 地址</p>
+                            </div>
+                            <div class="api-endpoint-input">
+                                <input type="text" id="requirementsAnalysis-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-message" id="api-endpoints-message"></div>
+                    
+                    <div class="form-actions">
+                        <button class="btn-primary" id="save-api-endpoints-button">保存 API 地址</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加/编辑用户模态框 -->
+    <div class="modal" id="edit-user-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="edit-user-title">添加用户</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="edit-username">用户名</label>
+                    <input type="text" id="edit-username" placeholder="输入用户名">
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-password">密码</label>
+                    <input type="password" id="edit-password" placeholder="输入密码">
+                    <p class="form-help" id="password-help">留空则使用默认密码: password123</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-role">角色</label>
+                    <select id="edit-role">
+                        <option value="user">普通用户</option>
+                        <option value="admin">管理员</option>
+                    </select>
+                </div>
+                
+                <div class="form-message" id="edit-user-message"></div>
+                
+                <div class="form-actions">
+                    <button class="btn-secondary" id="cancel-edit-user">取消</button>
+                    <button class="btn-primary" id="save-edit-user">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <h3>EVYD 产品经理 AI 工作台</h3>
+                    <p>基于EVYD科技先进的人工智能技术，为产品经理提供的一站式工作平台，提升工作效率和产出质量。</p>
+                </div>
+                <div class="footer-links">
+                    <div class="copyright">© 2023 EVYD Technology</div>
+                    <div class="links">
+                        <a href="#">关于我们</a>
+                        <a href="#">使用条款</a>
+                        <a href="#">隐私政策</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html> 

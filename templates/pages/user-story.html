@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVYD 产品经理AI工作台 - User Story 生成器</title>
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../styles/common.css">
+    <link rel="stylesheet" href="../../styles/user-story.css">
+    <!-- 添加字体 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- 导入非模块化JS -->
+    <script src="../../scripts/utils/helper.js"></script>
+    <script src="../../scripts/services/storage.js"></script>
+    <script src="../../modules/auth/auth.js"></script>
+    <script src="../../scripts/core/config.js"></script>
+    <script src="../../modules/apps/user-story/ui.js"></script>
+    <script src="../../modules/apps/user-story/api.js"></script>
+    <script src="../../modules/apps/user-story/index.js"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="container header-container">
+            <div class="logo-container">
+                <img src="../../assets/images/Group-29-2048x943.png" alt="EVYD Logo" class="logo">
+                <span class="logo-divider"></span>
+                <div class="logo-text">
+                    <h1>产品经理 AI 工作台</h1>
+                    <p>AI驱动的产品开发助手</p>
+                </div>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html">工具主页</a></li>
+                    <li><a href="#" class="active">AI 工具</a></li>
+                    <li><a href="#">文档中心</a></li>
+                    <li id="admin-panel-link" style="display: none;"><a href="#" id="admin-panel-button">管理面板</a></li>
+                </ul>
+            </nav>
+            <div class="user-actions">
+                <div id="user-info" style="display: none;">
+                    <span id="username-display"></span>
+                    <div class="user-dropdown">
+                        <button class="user-dropdown-button">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </button>
+                        <div class="dropdown-content">
+                            <a href="#" id="profile-settings">账号设置</a>
+                            <a href="#" id="view-api-keys">查看API密钥</a>
+                            <a href="#" id="logout-button">登出</a>
+                        </div>
+                    </div>
+                </div>
+                <button id="login-button" class="btn-login">登录</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container user-story-container">
+        <div class="user-story-header">
+            <div class="back-button">
+                <a href="index.html">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                    返回主页
+                </a>
+            </div>
+            <h2>AI User Story 生成器</h2>
+        </div>
+
+        <div class="app-info-loading" id="app-info-loading">
+            <div class="loading-spinner"></div>
+            <p>正在获取应用信息...</p>
+        </div>
+        
+        <div class="app-info-error" id="app-info-error" style="display: none;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <h3>连接错误</h3>
+            <p id="error-message">无法连接到Dify API，请检查API地址和密钥设置。</p>
+            <button class="btn-primary" id="retry-connection">重试连接</button>
+        </div>
+
+        <div class="app-info" id="app-info" style="display: none;">
+            <div class="app-info-header">
+                <h3 id="app-name">应用名称</h3>
+                <div class="app-tags" id="app-tags">
+                    <!-- 标签将在这里动态生成 -->
+                </div>
+            </div>
+            <p id="app-description">应用描述加载中...</p>
+        </div>
+
+        <div class="user-story-form" id="user-story-form" style="display: none;">
+            <div class="form-group">
+                <label for="platform-name">平台名称</label>
+                <input type="text" id="platform-name" placeholder="例如：App, Console">
+            </div>
+            
+            <div class="form-group">
+                <label for="system-name">系统名称</label>
+                <input type="text" id="system-name" placeholder="例如：Routines, OVA">
+            </div>
+            
+            <div class="form-group">
+                <label for="module-name">模块名称</label>
+                <input type="text" id="module-name" placeholder="例如：Logging, Calendar">
+            </div>
+            
+            <div class="form-group">
+                <label for="requirement-description">需求描述</label>
+                <textarea id="requirement-description" rows="6" placeholder="详细描述该功能需求，包括目标用户、主要功能点、业务规则等。"></textarea>
+            </div>
+            
+            <div class="form-actions">
+                <button class="btn-secondary" id="clear-form">清空</button>
+                <button class="btn-primary" id="generate-story">生成 User Story</button>
+            </div>
+        </div>
+
+        <div class="result-container" id="result-container" style="display: none;">
+            <div class="result-header">
+                <h3>生成结果</h3>
+                <div class="result-actions">
+                    <button class="btn-secondary" id="stop-generation">停止生成</button>
+                    <button class="btn-icon" id="copy-result" title="复制全部">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="result-content" id="result-content">
+                <!-- 生成内容将在这里显示 -->
+            </div>
+            <div class="result-stats" id="result-stats" style="display: none;">
+                <div class="stat-item">
+                    <span class="stat-label">耗时:</span>
+                    <span class="stat-value" id="elapsed-time">0秒</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">总步骤:</span>
+                    <span class="stat-value" id="total-steps">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">总Token:</span>
+                    <span class="stat-value" id="total-tokens">0</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 登录模态框 -->
+    <div class="modal" id="login-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>登录</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="auth-form">
+                    <div class="form-tabs">
+                        <button class="form-tab active" data-tab="login">登录</button>
+                        <button class="form-tab" data-tab="register" id="register-tab" style="display: none;">注册</button>
+                    </div>
+                    
+                    <div class="tab-content active" id="login-tab-content">
+                        <div class="form-group">
+                            <label for="login-username">用户名</label>
+                            <input type="text" id="login-username" placeholder="输入用户名">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="login-password">密码</label>
+                            <input type="password" id="login-password" placeholder="输入密码">
+                        </div>
+                        
+                        <div class="form-message" id="login-message"></div>
+                        
+                        <div class="form-actions">
+                            <button class="btn-primary" id="submit-login">登录</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 用户设置模态框 -->
+    <div class="modal" id="user-settings-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>账号设置</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-tabs">
+                    <button class="settings-tab active" data-settings="password">修改密码</button>
+                    <button class="settings-tab" data-settings="profile">个人资料</button>
+                </div>
+                
+                <div class="settings-content active" id="password-settings">
+                    <div class="form-group">
+                        <label for="current-password">当前密码</label>
+                        <input type="password" id="current-password" placeholder="输入当前密码">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="new-password">新密码</label>
+                        <input type="password" id="new-password" placeholder="输入新密码">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirm-password">确认新密码</label>
+                        <input type="password" id="confirm-password" placeholder="再次输入新密码">
+                    </div>
+                    
+                    <div class="form-message" id="password-message"></div>
+                    
+                    <div class="form-actions">
+                        <button class="btn-secondary" id="cancel-password-change">取消</button>
+                        <button class="btn-primary" id="submit-password-change">更新密码</button>
+                    </div>
+                </div>
+                
+                <div class="settings-content" id="profile-settings-content">
+                    <div class="form-group">
+                        <label for="profile-username">用户名</label>
+                        <input type="text" id="profile-username" disabled>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="profile-role">角色</label>
+                        <input type="text" id="profile-role" disabled>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="profile-created">创建日期</label>
+                        <input type="text" id="profile-created" disabled>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Key 管理模态框 -->
+    <div class="modal" id="api-keys-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>API 密钥管理</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="api-keys-description">
+                    <p>这里您可以查看您的 Dify API 密钥，这些密钥用于连接到 Dify 服务并使用 AI 功能。</p>
+                </div>
+                
+                <div class="api-keys-list">
+                    <div class="api-key-item">
+                        <div class="api-key-info">
+                            <h4>User Story 生成器</h4>
+                            <p>用于生成用户故事的 Dify Workflow API Key</p>
+                        </div>
+                        <div class="api-key-value">
+                            <input type="password" id="userStory-api-key" readonly>
+                            <button class="btn-icon toggle-password">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="api-key-item">
+                        <div class="api-key-info">
+                            <h4>User Manual 生成器</h4>
+                            <p>用于生成用户手册的 Dify Agent API Key</p>
+                        </div>
+                        <div class="api-key-value">
+                            <input type="password" id="userManual-api-key" readonly>
+                            <button class="btn-icon toggle-password">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="api-key-item">
+                        <div class="api-key-info">
+                            <h4>需求分析助手</h4>
+                            <p>用于需求分析的 Dify API Key</p>
+                        </div>
+                        <div class="api-key-value">
+                            <input type="password" id="requirementsAnalysis-api-key" readonly>
+                            <button class="btn-icon toggle-password">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-message" id="api-keys-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <h3>EVYD 产品经理 AI 工作台</h3>
+                    <p>基于EVYD科技先进的人工智能技术，为产品经理提供的一站式工作平台，提升工作效率和产出质量。</p>
+                </div>
+                <div class="footer-links">
+                    <div class="copyright">© 2023 EVYD Technology</div>
+                    <div class="links">
+                        <a href="#">关于我们</a>
+                        <a href="#">使用条款</a>
+                        <a href="#">隐私政策</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html> 
