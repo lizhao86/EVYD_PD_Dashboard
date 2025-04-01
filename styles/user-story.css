@@ -152,6 +152,85 @@
     font-size: 0.875rem;
 }
 
+/* Markdown内容样式 */
+.markdown-content {
+    font-family: 'Inter', sans-serif;
+    white-space: normal;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4 {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--gray-900);
+    font-weight: 600;
+}
+
+.markdown-content h1 {
+    font-size: 1.75rem;
+    border-bottom: 1px solid var(--gray-200);
+    padding-bottom: 0.5rem;
+}
+
+.markdown-content h2 {
+    font-size: 1.5rem;
+}
+
+.markdown-content h3 {
+    font-size: 1.25rem;
+}
+
+.markdown-content h4 {
+    font-size: 1.1rem;
+}
+
+.markdown-content p {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.markdown-content ul, 
+.markdown-content ol {
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.markdown-content li {
+    margin-bottom: 0.5rem;
+}
+
+.markdown-content a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.markdown-content a:hover {
+    text-decoration: underline;
+}
+
+.markdown-content pre {
+    background-color: var(--gray-100);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+}
+
+.markdown-content code {
+    font-family: monospace;
+    font-size: 0.9em;
+}
+
+.markdown-content strong {
+    font-weight: 600;
+}
+
+.markdown-content em {
+    font-style: italic;
+}
+
 .result-stats {
     display: flex;
     flex-wrap: wrap;
@@ -210,4 +289,133 @@
     background-color: var(--gray-600);
     margin-left: 0.125rem;
     animation: blink 1s step-end infinite;
+}
+
+/* 系统信息区域样式 */
+.system-info-container {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--gray-200);
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.system-info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background-color: var(--gray-100);
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.system-info-header h4 {
+    font-size: 0.875rem;
+    color: var(--gray-700);
+    font-weight: 500;
+    margin: 0;
+}
+
+.toggle-system-info {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--gray-500);
+    padding: 0;
+    transition: color 0.2s;
+}
+
+.toggle-system-info:hover {
+    color: var(--gray-700);
+}
+
+.toggle-system-info.collapsed svg {
+    transform: rotate(180deg);
+}
+
+.system-info-content {
+    padding: 1rem;
+    background-color: var(--gray-50);
+    font-family: monospace;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    max-height: 200px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+}
+
+/* 为停止按钮添加危险样式 */
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    transition: background-color 0.3s;
+}
+
+.btn-danger:hover {
+    background-color: #bd2130;
+}
+
+/* 进度条动画 - 调整为蓝色背景上可见的白色 */
+.spinner-border {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 0.15rem solid rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s linear infinite;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+}
+
+/* 新的加载圆圈样式 - 红色版本 */
+.loading-circle-container {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.loading-circle {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 0, 0, 0.8);
+    border-top-color: transparent;
+    animation: pulse-spin 1s linear infinite;
+    box-sizing: border-box;
+    box-shadow: 0 0 8px rgba(255, 0, 0, 0.7);
+}
+
+/* 添加脉冲旋转动画 - 红色版本 */
+@keyframes pulse-spin {
+    0% { 
+        transform: rotate(0deg); 
+        box-shadow: 0 0 3px rgba(255, 0, 0, 0.7);
+    }
+    50% { 
+        box-shadow: 0 0 10px rgba(255, 0, 0, 0.9);
+    }
+    100% { 
+        transform: rotate(360deg);
+        box-shadow: 0 0 3px rgba(255, 0, 0, 0.7);
+    }
+}
+
+/* 修改spin动画，加快速度 */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* 调整清空按钮样式，使其文本为蓝色 */
+#user-story-form .btn-secondary {
+    background-color: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+}
+
+#user-story-form .btn-secondary:hover {
+    background-color: rgba(0, 102, 255, 0.05);
 } 

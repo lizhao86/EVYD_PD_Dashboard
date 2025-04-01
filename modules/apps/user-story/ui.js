@@ -87,14 +87,32 @@ const UI = {
     showGenerationStarted() {
         document.getElementById('result-container').style.display = 'block';
         document.getElementById('result-stats').style.display = 'none';
+        
+        // 初始化两个内容显示区域
         document.getElementById('result-content').innerHTML = '正在生成...<span class="cursor"></span>';
+        document.getElementById('result-content').style.display = 'block';
         
-        // 更新按钮状态
+        // 隐藏Markdown内容区域
+        if (document.getElementById('result-content-markdown')) {
+            document.getElementById('result-content-markdown').style.display = 'none';
+            document.getElementById('result-content-markdown').innerHTML = '';
+        }
+        
+        // 隐藏系统信息区域，待有数据时再显示
+        document.getElementById('system-info-container').style.display = 'none';
+        document.getElementById('system-info-content').innerHTML = '';
+        
+        // 更新按钮状态 - 将生成按钮变为带进度条的停止按钮（保持蓝色背景）
         const generateButton = document.getElementById('generate-story');
-        generateButton.disabled = true;
-        generateButton.innerHTML = '<span class="loading-spinner"></span> 生成中...';
+        generateButton.disabled = false;
         
-        document.getElementById('stop-generation').style.display = 'block';
+        // 使用更明显的红色加载动画
+        generateButton.innerHTML = '<div class="loading-circle-container"><div class="loading-circle" style="border-color: #ff3333; border-top-color: transparent;"></div></div> 生成中...点击停止';
+        generateButton.setAttribute('data-action', 'stop');
+        // 保持使用primary样式，确保文字可见
+        
+        // 隐藏原有的停止生成按钮
+        document.getElementById('stop-generation').style.display = 'none';
     },
     
     /**
@@ -104,7 +122,12 @@ const UI = {
         const generateButton = document.getElementById('generate-story');
         generateButton.disabled = false;
         generateButton.innerHTML = '生成 User Story';
+        generateButton.setAttribute('data-action', 'generate');
+        // 确保恢复为原来的样式
+        generateButton.classList.remove('btn-danger', 'btn-secondary');
+        generateButton.classList.add('btn-primary');
         
+        // 隐藏停止按钮
         document.getElementById('stop-generation').style.display = 'none';
     },
     
@@ -119,12 +142,35 @@ const UI = {
         const totalSteps = taskData.total_steps || 0;
         const totalTokens = taskData.total_tokens || 0;
         
-        // 更新UI
-        document.getElementById('elapsed-time').textContent = `${Number(elapsedTime).toFixed(2)}秒`;
-        document.getElementById('total-steps').textContent = totalSteps;
-        document.getElementById('total-tokens').textContent = totalTokens;
+        console.log('准备显示的统计数据:', {
+            elapsedTime,
+            totalSteps,
+            totalTokens
+        });
         
-        document.getElementById('result-stats').style.display = 'flex';
+        // 检查DOM元素是否存在
+        const elapsedTimeElement = document.getElementById('elapsed-time');
+        const totalStepsElement = document.getElementById('total-steps');
+        const totalTokensElement = document.getElementById('total-tokens');
+        
+        if (!elapsedTimeElement || !totalStepsElement || !totalTokensElement) {
+            console.error('统计数据DOM元素不存在');
+            return;
+        }
+        
+        // 更新UI
+        elapsedTimeElement.textContent = `${Number(elapsedTime).toFixed(2)}秒`;
+        totalStepsElement.textContent = totalSteps;
+        totalTokensElement.textContent = totalTokens;
+        
+        // 确保统计区域可见
+        const statsContainer = document.getElementById('result-stats');
+        if (statsContainer) {
+            console.log('显示统计区域');
+            statsContainer.style.display = 'flex';
+        } else {
+            console.error('找不到统计区域元素');
+        }
     },
     
     /**

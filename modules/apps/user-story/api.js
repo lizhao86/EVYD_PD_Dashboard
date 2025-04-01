@@ -105,6 +105,9 @@ const API = {
      * 生成User Story
      */
     async generateUserStory(platform, system, module, requirement) {
+        // 清除之前的任务ID
+        UserStoryApp.state.currentTaskId = null;
+        
         const currentUser = Auth.checkAuth();
         if (!currentUser) return;
         
@@ -252,6 +255,14 @@ const API = {
             console.log('API地址:', apiEndpoint);
             console.log('API Key前几位:', apiKey.substring(0, 8) + '...');
         } finally {
+            // 如果生成失败或完成，清除任务ID
+            if (!UserStoryApp.state.currentTaskId) {
+                console.log('生成已完成，无需清除任务ID');
+            } else {
+                console.log('生成异常结束，清除任务ID:', UserStoryApp.state.currentTaskId);
+                UserStoryApp.state.currentTaskId = null;
+            }
+            
             UI.showGenerationCompleted();
         }
     },
@@ -264,10 +275,19 @@ const API = {
         const decoder = new TextDecoder();
         let result = '';
         let taskId = null;
+        let workflowRunId = null;
+        let systemInfo = {};
+        let statsUpdated = false; // 标记统计数据是否已更新
         
         // 清空结果内容
         const resultContent = document.getElementById('result-content');
         resultContent.innerHTML = '';
+        
+        // 准备系统信息区域
+        const systemInfoContainer = document.getElementById('system-info-container');
+        const systemInfoContent = document.getElementById('system-info-content');
+        systemInfoContainer.style.display = 'none';
+        systemInfoContent.innerHTML = '';
         
         while (true) {
             const { value, done } = await reader.read();
@@ -291,55 +311,176 @@ const API = {
                     const data = JSON.parse(line);
                     console.log('解析的数据:', data);
                     
-                    // 处理任务ID
+                    // 收集系统信息，包括任务ID和工作流运行ID
                     if (data.task_id && !taskId) {
                         taskId = data.task_id;
-                        // 使用全局作用域
                         window.userStoryTaskId = taskId;
+                        UserStoryApp.state.currentTaskId = taskId; // 保存到应用状态
+                        systemInfo.task_id = taskId;
                         console.log('已捕获任务ID:', taskId);
                     } else if (data.id && !taskId) {
                         taskId = data.id;
                         window.userStoryTaskId = taskId;
+                        UserStoryApp.state.currentTaskId = taskId; // 保存到应用状态
+                        systemInfo.task_id = taskId;
                         console.log('已捕获任务ID(id字段):', taskId);
                     } else if (data.workflow_task_id && !taskId) {
                         taskId = data.workflow_task_id;
                         window.userStoryTaskId = taskId;
+                        UserStoryApp.state.currentTaskId = taskId; // 保存到应用状态
+                        systemInfo.task_id = taskId;
                         console.log('已捕获任务ID(workflow_task_id字段):', taskId);
                     }
                     
-                    // 处理不同类型的响应
-                    if (data.event === 'message' && data.answer) {
+                    if (data.workflow_run_id && !workflowRunId) {
+                        workflowRunId = data.workflow_run_id;
+                        systemInfo.workflow_run_id = workflowRunId;
+                        console.log('已捕获工作流ID:', workflowRunId);
+                    }
+                    
+                    // 处理不同类型的事件
+                    if (data.event) {
+                        // 处理系统事件
+                        systemInfo[data.event] = data.data || {};
+                        
+                        // 更新系统信息显示
+                        systemInfoContainer.style.display = 'block';
+                        systemInfoContent.textContent = JSON.stringify(systemInfo, null, 2);
+                        
+                        // 特别处理workflow_finished事件 - 这是最终结果
+                        if (data.event === 'workflow_finished' && data.data) {
+                            console.log('收到workflow_finished事件，详细数据:', data.data);
+                            
+                            // 尝试直接从data.data中提取统计信息
+                            const directStats = {
+                                elapsed_time: data.data.elapsed_time,
+                                total_tokens: data.data.total_tokens,
+                                total_steps: data.data.total_steps
+                            };
+                            console.log('直接从workflow_finished获取的统计数据:', directStats);
+                            
+                            // 如果有统计数据且还未更新过统计信息，可以直接显示
+                            if (!statsUpdated && data.data.elapsed_time && data.data.total_tokens && data.data.total_steps) {
+                                console.log('使用流数据中的统计信息更新UI');
+                                UI.displayTaskStats(data.data);
+                                statsUpdated = true; // 标记统计数据已更新
+                            }
+                            
+                            if (data.data.outputs) {
+                                // 显示最终输出结果
+                                const finalOutputs = data.data.outputs;
+                                if (Object.keys(finalOutputs).length > 0) {
+                                    // 尝试从outputs中提取实际内容
+                                    let actualOutput = '';
+                                    
+                                    // 检查是否存在文本或排版过的内容字段
+                                    if (finalOutputs.text) {
+                                        actualOutput = finalOutputs.text;
+                                    } else if (finalOutputs.content) {
+                                        actualOutput = finalOutputs.content;
+                                    } else if (finalOutputs.result) {
+                                        actualOutput = finalOutputs.result;
+                                    } else if (finalOutputs.Reject) {
+                                        // 显示拒绝信息
+                                        actualOutput = finalOutputs.Reject;
+                                    } else if (finalOutputs.User_Story) {
+                                        actualOutput = finalOutputs.User_Story;
+                                    } else {
+                                        // 如果没有识别的字段，显示整个outputs对象
+                                        actualOutput = JSON.stringify(finalOutputs, null, 2);
+                                    }
+                                    
+                                    // 处理JSON格式的响应
+                                    if (typeof actualOutput === 'string' && actualOutput.trim().startsWith('{') && actualOutput.trim().endsWith('}')) {
+                                        try {
+                                            const jsonObj = JSON.parse(actualOutput);
+                                            // 如果是JSON对象，提取内容并处理
+                                            for (const key in jsonObj) {
+                                                if (jsonObj[key] && typeof jsonObj[key] === 'string') {
+                                                    // 取出内容并替换\n为实际的换行
+                                                    actualOutput = jsonObj[key].replace(/\\n/g, '\n');
+                                                    break;
+                                                }
+                                            }
+                                        } catch (e) {
+                                            console.log('尝试解析JSON失败，保持原样:', e);
+                                        }
+                                    }
+                                    
+                                    // 尝试将结果内容渲染为markdown (如果存在)
+                                    if (document.getElementById('result-content-markdown')) {
+                                        const markdownDiv = document.getElementById('result-content-markdown');
+                                        // 显示markdown格式的内容
+                                        markdownDiv.innerHTML = this.convertMarkdownToHtml(actualOutput);
+                                        markdownDiv.style.display = 'block';
+                                        // 隐藏纯文本内容
+                                        document.getElementById('result-content').style.display = 'none';
+                                        result = actualOutput;
+                                    } else {
+                                        // 如果没有markdown容器，则使用普通文本显示
+                                        resultContent.textContent = actualOutput;
+                                        result = actualOutput;
+                                    }
+                                }
+                            }
+                        }
+                        // 节点完成事件可能包含部分结果
+                        else if (data.event === 'node_finished' && data.data && data.data.outputs) {
+                            const nodeOutputs = data.data.outputs;
+                            if (nodeOutputs.text) {
+                                // 追加到结果中
+                                result += nodeOutputs.text;
+                                resultContent.textContent = result;
+                                
+                                // 如果存在markdown容器，也更新它
+                                const markdownDiv = document.getElementById('result-content-markdown');
+                                if (markdownDiv) {
+                                    markdownDiv.innerHTML = this.convertMarkdownToHtml(result);
+                                }
+                            }
+                        }
+                    }
+                    // 处理其他类型的消息
+                    else if (data.event === 'message' && data.answer) {
                         result += data.answer;
                         resultContent.textContent = result;
+                        
+                        // 如果存在markdown容器，也更新它
+                        const markdownDiv = document.getElementById('result-content-markdown');
+                        if (markdownDiv) {
+                            markdownDiv.innerHTML = this.convertMarkdownToHtml(result);
+                        }
                     } 
                     else if (data.output && data.output.text) {
                         result += data.output.text;
                         resultContent.textContent = result;
-                    }
-                    else if (data.event === 'node_finished' && data.data && data.data.outputs) {
-                        const outputText = data.data.outputs.text || JSON.stringify(data.data.outputs);
-                        if (outputText) {
-                            result += outputText;
-                            resultContent.textContent = result;
+                        
+                        // 如果存在markdown容器，也更新它
+                        const markdownDiv = document.getElementById('result-content-markdown');
+                        if (markdownDiv) {
+                            markdownDiv.innerHTML = this.convertMarkdownToHtml(result);
                         }
                     }
                     
                     // 自动滚动到底部
                     resultContent.scrollTop = resultContent.scrollHeight;
+                    systemInfoContent.scrollTop = systemInfoContent.scrollHeight;
                 } catch (e) {
                     console.error('解析数据失败:', line, e);
                 }
             }
         }
         
-        // 完成后获取任务详情
-        if (taskId) {
-            console.log('生成完成，等待1秒后获取统计信息...');
+        // 完成后，只有在未通过流更新统计数据时才获取任务详情
+        if (taskId && !statsUpdated) {
+            console.log('生成完成，统计数据未从流中获取，等待1秒后通过API获取...');
             setTimeout(() => {
                 this.fetchTaskDetails(taskId);
             }, 1000);
-        } else {
+        } else if (!taskId) {
             console.log('未获取到任务ID，无法获取统计信息');
+        } else {
+            console.log('统计数据已从流中更新，无需再次获取');
         }
     },
     
@@ -359,6 +500,8 @@ const API = {
         const stopUrl = `${baseUrl}/workflows/tasks/${taskId}/stop`;
         
         try {
+            console.log(`发送停止请求到: ${stopUrl}, taskId: ${taskId}`);
+            
             const response = await fetch(stopUrl, {
                 method: 'POST',
                 headers: {
@@ -373,12 +516,24 @@ const API = {
             }
             
             const data = await response.json();
+            console.log('停止生成响应:', data);
+            
             if (data.result === 'success') {
                 // 添加停止提示
                 document.getElementById('result-content').innerHTML += '<br><br><i>(已停止生成)</i>';
+                
+                // 更新UI状态为已完成
+                UI.showGenerationCompleted();
+                
+                // 清除当前任务ID
+                UserStoryApp.state.currentTaskId = null;
             }
         } catch (error) {
             console.error('停止生成失败:', error, '请求URL:', stopUrl);
+            alert('停止生成失败: ' + error.message);
+            
+            // 即使失败也恢复UI状态
+            UI.showGenerationCompleted();
         }
     },
     
@@ -414,12 +569,68 @@ const API = {
             }
             
             const taskData = await response.json();
-            console.log('获取到的任务详情:', taskData);
+            console.log('获取到的原始任务数据:', taskData);
+            console.log('统计数据:', {
+                elapsed_time: taskData.elapsed_time,
+                total_steps: taskData.total_steps,
+                total_tokens: taskData.total_tokens
+            });
+            
+            // 确保数据格式正确
+            if (taskData.elapsed_time === undefined && taskData.data && taskData.data.elapsed_time) {
+                console.log('从data字段中获取统计数据');
+                taskData.elapsed_time = taskData.data.elapsed_time;
+                taskData.total_steps = taskData.data.total_steps;
+                taskData.total_tokens = taskData.data.total_tokens;
+            }
             
             UI.displayTaskStats(taskData);
         } catch (error) {
             console.error('获取任务详情失败:', error.message);
             UI.showTaskStatsFailed();
         }
+    },
+
+    /**
+     * 将Markdown文本转换为HTML
+     */
+    convertMarkdownToHtml(markdown) {
+        if (!markdown) return '';
+        
+        // 基本的Markdown转HTML处理
+        let html = markdown
+            // 处理标题
+            .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+            .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+            .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+            .replace(/^#### (.*$)/gm, '<h4>$1</h4>')
+            
+            // 处理加粗和斜体
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            
+            // 处理列表
+            .replace(/^\s*\* (.*$)/gm, '<li>$1</li>')
+            .replace(/^\s*- (.*$)/gm, '<li>$1</li>')
+            .replace(/^\s*\d+\. (.*$)/gm, '<li>$1</li>')
+            
+            // 处理链接
+            .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
+            
+            // 处理换行和段落
+            .replace(/\n\n/g, '</p><p>')
+            
+            // 处理代码块
+            .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+        
+        // 包装在段落中
+        html = '<p>' + html + '</p>';
+        
+        // 处理多个连续的li标签，添加ul包装
+        html = html.replace(/<li>[\s\S]*?<\/li>(?=[\s\S]*?<li>|$)/g, function(match) {
+            return '<ul>' + match + '</ul>';
+        });
+        
+        return html;
     }
 }; 
