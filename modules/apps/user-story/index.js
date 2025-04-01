@@ -121,6 +121,21 @@ const UserStoryApp = {
             });
         });
         
+        // 系统信息折叠/展开
+        const toggleSystemInfoButton = document.getElementById('toggle-system-info');
+        if (toggleSystemInfoButton) {
+            toggleSystemInfoButton.addEventListener('click', function() {
+                const systemInfoContent = document.getElementById('system-info-content');
+                if (systemInfoContent.style.display === 'none') {
+                    systemInfoContent.style.display = 'block';
+                    this.classList.remove('collapsed');
+                } else {
+                    systemInfoContent.style.display = 'none';
+                    this.classList.add('collapsed');
+                }
+            });
+        }
+        
         // 重试连接
         document.getElementById('retry-connection').addEventListener('click', function() {
             API.fetchAppInfo();
@@ -218,6 +233,23 @@ const UserStoryApp = {
      * 生成User Story
      */
     handleGenerateStory() {
+        const generateButton = document.getElementById('generate-story');
+        const action = generateButton.getAttribute('data-action');
+        
+        // 如果当前是停止状态，则调用停止生成方法
+        if (action === 'stop') {
+            console.log('触发停止生成，当前任务ID:', UserStoryApp.state.currentTaskId);
+            if (UserStoryApp.state.currentTaskId) {
+                API.stopGeneration(UserStoryApp.state.currentTaskId);
+            } else {
+                console.warn('没有正在进行的任务ID，无法停止');
+                // 即使没有任务ID也恢复UI状态
+                UI.showGenerationCompleted();
+            }
+            return;
+        }
+        
+        // 否则，正常执行生成逻辑
         const platformName = document.getElementById('platform-name').value;
         const systemName = document.getElementById('system-name').value;
         const moduleName = document.getElementById('module-name').value;
