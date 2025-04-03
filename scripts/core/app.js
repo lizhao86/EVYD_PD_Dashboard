@@ -355,15 +355,15 @@ const App = {
         const adminTabs = document.querySelectorAll('.admin-tab');
         const adminContents = document.querySelectorAll('.admin-content');
         
-        // 先隐藏所有内容
+        // 先移除所有内容的active类
         adminContents.forEach(content => {
-            content.style.display = 'none';
+            content.classList.remove('active');
         });
         
         // 显示默认tab (用户管理)
         const usersContent = document.getElementById('users-management');
         if (usersContent) {
-            usersContent.style.display = 'block';
+            usersContent.classList.add('active');
         }
         
         // 设置默认active tab
@@ -379,7 +379,7 @@ const App = {
         
         // 为所有tab添加点击事件
         adminTabs.forEach(tab => {
-            // 移除旧的事件监听器
+            // 移除旧的事件监听器，通过克隆节点并替换的方式
             const newTab = tab.cloneNode(true);
             tab.parentNode.replaceChild(newTab, tab);
             
@@ -388,13 +388,16 @@ const App = {
                 const tabId = this.getAttribute('data-admin-tab');
                 console.log('点击管理面板Tab:', tabId);
                 
-                // 更新active tab
-                adminTabs.forEach(t => t.classList.remove('active'));
+                // 重新获取所有标签元素，确保能正确移除所有active类
+                const allTabs = document.querySelectorAll('.admin-tab');
+                
+                // 更新active tab样式
+                allTabs.forEach(t => t.classList.remove('active'));
                 this.classList.add('active');
                 
-                // 隐藏所有内容
+                // 移除所有内容的active类
                 adminContents.forEach(content => {
-                    content.style.display = 'none';
+                    content.classList.remove('active');
                 });
                 
                 // 显示对应内容
@@ -412,7 +415,7 @@ const App = {
                 
                 const contentElement = document.getElementById(contentId);
                 if (contentElement) {
-                    contentElement.style.display = 'block';
+                    contentElement.classList.add('active');
                     console.log('显示内容区域:', contentId);
                 } else {
                     console.error('找不到内容区域:', contentId);
@@ -547,6 +550,8 @@ const App = {
     loadApiKeysConfig() {
         // 获取所有用户
         const users = Storage.getAllUsers();
+        // 获取当前登录用户
+        const currentUser = Auth.checkAuth();
         
         // 获取用户选择下拉框
         const userSelect = document.getElementById('api-keys-user-select');
@@ -569,6 +574,16 @@ const App = {
             const option = document.createElement('option');
             option.value = user.id;
             option.textContent = user.username + (user.role === 'admin' ? ' (管理员)' : '');
+            // 如果是当前登录用户，则选中该选项
+            if (currentUser && user.id === currentUser.id) {
+                option.selected = true;
+                // 预填充当前用户的API密钥
+                setTimeout(() => {
+                    document.getElementById('admin-userStory-api-key').value = user.apiKeys.userStory || '';
+                    document.getElementById('admin-userManual-api-key').value = user.apiKeys.userManual || '';
+                    document.getElementById('admin-requirementsAnalysis-api-key').value = user.apiKeys.requirementsAnalysis || '';
+                }, 0);
+            }
             userSelect.appendChild(option);
         });
         
@@ -666,10 +681,6 @@ const App = {
             // 尝试查找页面中所有input元素
             const inputs = document.querySelectorAll('input');
             console.log('页面中的input元素数量:', inputs.length);
-            inputs.forEach(input => {
-                console.log('Input ID:', input.id, 'Type:', input.type);
-            });
-            
             return;
         }
         

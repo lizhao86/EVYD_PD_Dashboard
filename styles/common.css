@@ -1,9 +1,11 @@
 /* 基础样式 */
 :root {
     --primary: #0066FF;
+    --primary-rgb: 0, 102, 255;
     --primary-dark: #0052cc;
     --primary-light: #3385FF;
     --secondary: #00C1FF;
+    --secondary-rgb: 0, 193, 255;
     --secondary-dark: #009acd;
     --secondary-light: #33CDFF;
     --white: #FFFFFF;
@@ -1028,13 +1030,25 @@ body {
 .admin-tab.active {
     color: var(--primary);
     border-bottom-color: var(--primary);
+    background-color: rgba(var(--primary-rgb), 0.05);
 }
 
-/* 管理面板内容区域 - 删除display属性，由JavaScript控制 */
+.admin-tab:hover {
+    color: var(--primary);
+    background-color: rgba(var(--primary-rgb), 0.03);
+}
+
+/* 管理面板内容区域 */
 .admin-content {
+    display: none;
     padding: 1rem;
     background-color: var(--white);
     border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.admin-content.active {
+    display: block;
 }
 
 .admin-actions {
