@@ -141,6 +141,20 @@ const UserStoryApp = {
             API.fetchAppInfo();
         });
         
+        // 需求描述字数统计和放大功能
+        const requirementDescription = document.getElementById('requirement-description');
+        if (requirementDescription) {
+            requirementDescription.addEventListener('input', this.updateCharCount.bind(this));
+            // 初始化字数统计
+            this.updateCharCount({ target: requirementDescription });
+        }
+        
+        // 放大按钮功能
+        const expandTextarea = document.getElementById('expand-textarea');
+        if (expandTextarea) {
+            expandTextarea.addEventListener('click', this.toggleTextareaExpand.bind(this));
+        }
+        
         // User Story 相关
         document.getElementById('clear-form').addEventListener('click', this.handleClearForm.bind(this));
         document.getElementById('generate-story').addEventListener('click', this.handleGenerateStory.bind(this));
@@ -289,6 +303,130 @@ const UserStoryApp = {
     },
     
     /**
+     * 更新字数统计
+     */
+    updateCharCount(event) {
+        const textarea = event.target;
+        const charCount = textarea.value.length;
+        const charCountElement = document.getElementById('char-count');
+        const charCountContainer = document.querySelector('.char-counter');
+        const generateButton = document.getElementById('generate-story');
+        
+        charCountElement.textContent = charCount;
+        
+        // 超出字数限制时的处理
+        if (charCount > 5000) {
+            charCountContainer.classList.add('warning');
+            generateButton.disabled = true;
+        } else {
+            charCountContainer.classList.remove('warning');
+            generateButton.disabled = false;
+        }
+    },
+    
+    /**
+     * 切换文本框放大状态
+     */
+    toggleTextareaExpand() {
+        const textareaContainer = document.querySelector('.textarea-container');
+        const textarea = document.getElementById('requirement-description');
+        const charCounter = document.querySelector('.char-counter');
+        
+        if (textareaContainer.classList.contains('textarea-expanded')) {
+            // 恢复正常大小
+            this.shrinkTextarea(textareaContainer, textarea, charCounter);
+        } else {
+            // 放大文本框
+            this.expandTextarea(textareaContainer, textarea, charCounter);
+        }
+    },
+    
+    /**
+     * 放大文本框
+     */
+    expandTextarea(container, textarea, charCounter) {
+        // 创建遮罩层
+        const overlay = document.createElement('div');
+        overlay.className = 'textarea-overlay';
+        overlay.addEventListener('click', () => this.shrinkTextarea(container, textarea, charCounter));
+        document.body.appendChild(overlay);
+        
+        // 保存原始位置
+        const formGroup = container.closest('.form-group');
+        container.dataset.originalParent = formGroup.id || '';
+        
+        // 记住原始父元素的引用
+        this.originalParentElement = formGroup;
+        this.originalNextSibling = container.nextSibling;
+        
+        // 保存其他原始状态
+        textarea.dataset.originalRows = textarea.rows;
+        
+        // 添加放大样式
+        container.classList.add('textarea-expanded');
+        document.body.appendChild(container);
+        
+        // 调整文本区大小
+        textarea.rows = 20;
+        textarea.focus();
+        
+        // 更新放大按钮图标
+        const expandButton = document.getElementById('expand-textarea');
+        expandButton.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+            </svg>
+        `;
+        
+        // 移动字数统计到放大框内
+        container.appendChild(charCounter);
+    },
+    
+    /**
+     * 缩小文本框
+     */
+    shrinkTextarea(container, textarea, charCounter) {
+        // 移除遮罩层
+        const overlay = document.querySelector('.textarea-overlay');
+        if (overlay) {
+            overlay.remove();
+        }
+        
+        // 恢复原始样式
+        container.classList.remove('textarea-expanded');
+        textarea.rows = textarea.dataset.originalRows || 6;
+        
+        // 将文本框放回原位置
+        if (this.originalParentElement) {
+            // 先从当前位置移除
+            if (container.parentNode) {
+                container.parentNode.removeChild(container);
+            }
+            
+            // 放回正确位置
+            if (this.originalNextSibling) {
+                this.originalParentElement.insertBefore(container, this.originalNextSibling);
+            } else {
+                this.originalParentElement.appendChild(container);
+            }
+            
+            // 确保字数统计在正确位置
+            if (charCounter.parentNode) {
+                charCounter.parentNode.removeChild(charCounter);
+            }
+            this.originalParentElement.appendChild(charCounter);
+        }
+        
+        // 更新放大按钮图标
+        const expandButton = document.getElementById('expand-textarea');
+        expandButton.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 3h6v6M14 10l7-7M9 21H3v-6M10 14l-7 7"/>
+            </svg>
+        `;
+    },
+    
+    /**
      * 清空表单
      */
     handleClearForm() {
@@ -296,6 +434,20 @@ const UserStoryApp = {
         document.getElementById('system-name').value = '';
         document.getElementById('module-name').value = '';
         document.getElementById('requirement-description').value = '';
+        
+        // 重置字数统计
+        const charCountElement = document.getElementById('char-count');
+        if (charCountElement) {
+            charCountElement.textContent = '0';
+        }
+        const charCountContainer = document.querySelector('.char-counter');
+        if (charCountContainer) {
+            charCountContainer.classList.remove('warning');
+        }
+        const generateButton = document.getElementById('generate-story');
+        if (generateButton) {
+            generateButton.disabled = false;
+        }
     }
 };
 
