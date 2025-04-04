@@ -40,7 +40,7 @@ const UI = {
         document.getElementById('app-info-loading').style.display = 'flex';
         document.getElementById('app-info-error').style.display = 'none';
         document.getElementById('app-info').style.display = 'none';
-        document.getElementById('user-story-form').style.display = 'none';
+        document.getElementById('app-form').style.display = 'none';
     },
     
     /**
@@ -78,7 +78,7 @@ const UI = {
         }
         
         // 显示表单
-        document.getElementById('user-story-form').style.display = 'block';
+        document.getElementById('app-form').style.display = 'block';
     },
     
     /**

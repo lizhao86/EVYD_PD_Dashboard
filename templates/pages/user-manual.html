@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EVYD 产品经理AI工作台 - User Story 生成器</title>
+    <title>EVYD 产品经理AI工作台 - User Manual 生成器</title>
     <!-- 样式文件 -->
     <link rel="stylesheet" href="../../styles/common.css">
-    <link rel="stylesheet" href="../../styles/user-story.css">
+    <link rel="stylesheet" href="../../styles/user-manual.css">
     <!-- 添加字体 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,9 +16,9 @@
     <script src="../../scripts/services/storage.js"></script>
     <script src="../../modules/auth/auth.js"></script>
     <script src="../../scripts/core/config.js"></script>
-    <script src="../../modules/apps/user-story/ui.js"></script>
-    <script src="../../modules/apps/user-story/api.js"></script>
-    <script src="../../modules/apps/user-story/index.js"></script>
+    <script src="../../modules/apps/user-manual/ui.js"></script>
+    <script src="../../modules/apps/user-manual/api.js"></script>
+    <script src="../../modules/apps/user-manual/index.js"></script>
 </head>
 <body>
     <header class="header">
@@ -71,7 +71,7 @@
                     返回主页
                 </a>
             </div>
-            <h2>AI User Story 生成器</h2>
+            <h2>AI User Manual 生成器</h2>
         </div>
 
         <div class="app-info-loading" id="app-info-loading">
@@ -100,26 +100,11 @@
             <p id="app-description">应用描述加载中...</p>
         </div>
 
-        <div class="app-form" id="app-form" style="display: none;">
-            <div class="form-group">
-                <label for="platform-name">平台名称</label>
-                <input type="text" id="platform-name" placeholder="例如：App, Console">
-            </div>
-            
-            <div class="form-group">
-                <label for="system-name">系统名称</label>
-                <input type="text" id="system-name" placeholder="例如：Routines, OVA">
-            </div>
-            
-            <div class="form-group">
-                <label for="module-name">模块名称</label>
-                <input type="text" id="module-name" placeholder="例如：Logging, Calendar">
-            </div>
-            
+        <div class="app-form" id="app-form" style="display: none;">            
             <div class="form-group" id="requirement-group">
                 <label for="requirement-description">需求描述</label>
                 <div class="textarea-container">
-                    <textarea id="requirement-description" rows="6" placeholder="详细描述该功能需求，包括目标用户、主要功能点、业务规则等。"></textarea>
+                    <textarea id="requirement-description" rows="6" placeholder="请输入需求的 Acceptance Criteria的内容。"></textarea>
                     <div class="textarea-controls">
                         <button class="btn-icon" id="expand-textarea" title="放大">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -135,7 +120,7 @@
             
             <div class="form-actions">
                 <button class="btn-secondary" id="clear-form">清空</button>
-                <button class="btn-primary" id="generate-story" data-action="generate">生成 User Story</button>
+                <button class="btn-primary" id="generate-manual" data-action="generate">生成 User Manual</button>
             </div>
         </div>
 

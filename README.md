@@ -15,7 +15,9 @@
 ├── styles/                  # CSS样式文件
 │   ├── common.css           # 通用样式
 │   ├── user-story.css       # User Story生成器样式
-│   └── variables.css        # CSS变量（待添加）
+│   ├── user-manual.css      # 用户手册生成器样式
+│   ├── main.css             # 主样式文件
+│   └── variables.css        # CSS变量
 │
 ├── scripts/                 # JavaScript脚本文件
 │   ├── core/                # 核心功能
