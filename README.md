@@ -1,100 +1,21 @@
-# EVYD 产品经理 AI 工作台
+# EVYD_PD_Dashboard
 
-基于EVYD科技先进的人工智能技术，为产品经理提供的一站式工作平台，提升工作效率和产出质量。
+产品开发仪表板项目，用于产品开发流程管理和数据可视化。
+
+## 功能特点
+- 工作流程管理
+- 数据可视化
+- 对话型应用接口
 
 ## 项目结构
+- `assets/` - 静态资源文件
+- `backup/` - 备份文件
+- `docs/` - 文档
+- `modules/` - 模块代码
+- `scripts/` - 脚本文件
+- `server/` - 服务器端代码
+- `styles/` - 样式文件
+- `templates/` - 模板文件
 
-```
-/EVYD_PD_Dashboard/
-├── assets/                  # 静态资源文件夹
-│   ├── images/              # 图片资源
-│   │   └── logo/            # 徽标相关图片
-│   ├── fonts/               # 字体文件
-│   └── icons/               # 图标资源
-│
-├── styles/                  # CSS样式文件
-│   ├── common.css           # 通用样式
-│   ├── user-story.css       # User Story生成器样式
-│   ├── user-manual.css      # 用户手册生成器样式
-│   ├── main.css             # 主样式文件
-│   └── variables.css        # CSS变量
-│
-├── scripts/                 # JavaScript脚本文件
-│   ├── core/                # 核心功能
-│   │   ├── app.js           # 应用入口
-│   │   └── config.js        # 全局配置
-│   ├── utils/               # 工具函数
-│   │   ├── helper.js        # 辅助函数
-│   │   └── api.js           # API工具
-│   └── services/            # 服务层
-│       └── storage.js       # 存储服务
-│
-├── modules/                 # 功能模块
-│   ├── auth/                # 用户认证模块
-│   │   └── auth.js          # 用户认证功能
-│   ├── admin/               # 管理员功能
-│   │   └── admin.js         # 用户管理
-│   └── apps/                # 应用功能模块
-│       ├── user-story/      # User Story生成器
-│       │   ├── index.js     # 入口文件
-│       │   ├── api.js       # API交互
-│       │   └── ui.js        # 界面处理
-│       ├── user-manual/     # 用户手册生成器（待添加）
-│       └── requirements/    # 需求分析工具（待添加）
-│
-├── templates/               # HTML模板
-│   └── pages/               # 页面模板
-│       ├── index.html       # 主页
-│       └── user-story.html  # User Story页面
-│
-├── backup/                  # 备份文件夹
-├── index.html               # 重定向入口
-├── user-story.html          # User Story重定向入口
-└── README.md                # 项目说明
-```
-
-## 功能模块
-
-1. **用户认证**：支持登录、注销和密码修改
-2. **用户管理**：管理员可以添加、编辑和删除用户
-3. **API配置**：配置Dify API地址和密钥
-4. **AI功能**：
-   - User Story生成器：基于简单描述生成结构化用户故事
-   - 用户手册生成器：自动创建产品用户手册（规划中）
-   - 需求分析助手：分析需求文档，提取关键点（规划中）
-
-## 最近更新
-
-### User Story生成器增强功能
-
-- **Markdown渲染**：新增对Markdown格式的支持，生成结果将以格式化的方式展示，包括标题、列表、加粗和斜体等
-- **JSON解析**：自动识别并解析JSON格式的响应，提取内容并处理换行符
-- **响应式UI**：根据内容类型自动切换显示模式，提供更好的阅读体验
-
-这些改进使产品经理能够获得结构清晰、易于阅读的User Story文档，便于直接复制使用或进一步编辑。
-
-## 开发指南
-
-### 添加新功能
-
-1. 在 `modules/apps/` 目录下创建新模块文件夹
-2. 创建 `index.js`、`api.js` 和 `ui.js` 文件
-3. 在 `templates/pages/` 中添加对应的HTML模板
-4. 在 `styles/` 中添加对应的CSS样式文件
-5. 更新主页添加新功能入口
-
-### 项目运行
-
-本项目是纯前端项目，可以直接通过浏览器打开 `index.html` 文件运行，也可以使用简单的HTTP服务器：
-
-```bash
-# 使用Python启动简单HTTP服务器
-python -m http.server
-
-# 使用Node.js启动HTTP服务器
-npx serve
-```
-
-默认管理员账户：
-- 用户名：admin
-- 密码：admin 
+## 安装与使用
+请参考相关文档进行安装和配置。 
