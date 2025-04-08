@@ -20,7 +20,7 @@ jobs:
       - name: Deploy to S3
         run: |
           # 排除不需要部署的文件和目录
-          aws s3 sync . s3://evyd-pd-home \
+          aws s3 sync . s3://evyd-pd-homepage \
             --delete \
             --exclude ".git/*" \
             --exclude ".github/*" \
