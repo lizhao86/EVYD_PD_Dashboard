@@ -63,6 +63,9 @@
 │
 ├── docs/                    # 文档文件夹
 │   └── Product_Requirements_Manual.md # 产品需求手册
+├── .github/                 # GitHub相关配置
+│   └── workflows/           # GitHub Actions工作流
+│       └── deploy.yml       # 自动部署工作流配置
 ├── backup/                  # 备份文件夹
 └── index.html               # 重定向入口（指向Homepage.html）
 ```
@@ -123,6 +126,10 @@
 
 ## 最近更新
 
+- 新增GitHub Actions自动部署功能：
+  - 配置了自动化部署流程，每次推送到main分支时自动部署到AWS S3
+  - 排除了不必要文件(.git、.github等)的部署，优化部署效率
+  - 使用IAM权限管理确保部署安全
 - 新增产品需求手册页面，提供完整的产品需求文档访问
 - 优化导航菜单，增加下拉菜单功能，提升用户体验
 - 修复UX界面设计(POC)功能的用户体验问题：
@@ -168,3 +175,17 @@ npx serve
 默认管理员账户：
 - 用户名：admin
 - 密码：admin 
+
+### 部署流程
+
+本项目使用GitHub Actions自动部署到AWS S3：
+
+1. 每次推送到`main`分支时，会自动触发部署工作流
+2. 工作流会将项目文件同步到AWS S3存储桶
+3. 部署排除了开发相关文件(.git、.github目录等)
+
+部署前需要在GitHub仓库的Settings > Secrets中设置以下密钥：
+- `AWS_ACCESS_KEY_ID`：AWS访问密钥ID
+- `AWS_SECRET_ACCESS_KEY`：AWS秘密访问密钥
+
+AWS IAM用户需要有对应S3存储桶的写入权限。 
