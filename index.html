@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EVYD 产品经理AI工作台</title>
     <!-- 注释掉自动跳转，改为使用JS控制 -->
-    <!-- <meta http-equiv="refresh" content="0; url=templates/pages/index.html"> -->
+    <!-- <meta http-equiv="refresh" content="0; url=templates/pages/Homepage.html"> -->
     <!-- 添加Lato字体 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -146,7 +146,7 @@
         
         <div class="button-container">
             <a href="#" class="btn btn-secondary" id="back-btn">返回</a>
-            <a href="templates/pages/index.html" class="btn btn-primary" id="continue-btn">继续</a>
+            <a href="templates/pages/Homepage.html" class="btn btn-primary" id="continue-btn">继续</a>
         </div>
     </div>
 
@@ -173,7 +173,7 @@
                     clearInterval(interval);
                     setTimeout(() => {
                         // 3秒后自动跳转
-                        window.location.href = 'templates/pages/index.html';
+                        window.location.href = 'templates/pages/Homepage.html';
                     }, 500);
                 }
             }, 30); // 大约3秒完成
@@ -181,7 +181,7 @@
             // 点击继续直接跳转
             continueBtn.addEventListener('click', function(e) {
                 e.preventDefault();
-                window.location.href = 'templates/pages/index.html';
+                window.location.href = 'templates/pages/Homepage.html';
             });
         });
     </script>

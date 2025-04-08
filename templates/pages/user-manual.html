@@ -33,9 +33,16 @@
             </div>
             <nav class="main-nav">
                 <ul>
-                    <li><a href="index.html">工具主页</a></li>
+                    <li><a href="Homepage.html">工具主页</a></li>
                     <li><a href="#" class="active">AI 工具</a></li>
-                    <li><a href="#">文档中心</a></li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle">文档中心 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></a>
+                        <div class="dropdown-menu">
+                            <a href="product-requirements.html">产品需求手册</a>
+                            <a href="#">API文档</a>
+                            <a href="#">使用教程</a>
+                        </div>
+                    </li>
                     <li id="admin-panel-link" style="display: none;"><a href="#" id="admin-panel-button">管理面板</a></li>
                 </ul>
             </nav>
@@ -64,7 +71,7 @@
     <main class="container app-container">
         <div class="app-header">
             <div class="back-button">
-                <a href="index.html">
+                <a href="Homepage.html">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M19 12H5M12 19l-7-7 7-7"/>
                     </svg>

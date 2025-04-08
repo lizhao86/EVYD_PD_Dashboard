@@ -200,7 +200,7 @@ const UserStoryApp = {
     handleLogout() {
         Auth.logout();
         UI.initUserInterface();
-        window.location.href = 'index.html';
+        window.location.href = 'Homepage.html';
     },
     
     /**

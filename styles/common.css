@@ -328,6 +328,11 @@ body {
     color: white;
 }
 
+.design-icon {
+    background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
+    color: white;
+}
+
 .tool-card-header h4 {
     flex: 1;
     font-size: 1rem;
@@ -355,6 +360,16 @@ body {
     padding: 0.125rem 0.5rem;
     background-color: rgba(16, 185, 129, 0.1);
     color: var(--success);
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.tag-poc {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    background-color: rgba(139, 92, 246, 0.1);
+    color: #8b5cf6;
     border-radius: 1rem;
     font-size: 0.75rem;
     font-weight: 500;
@@ -1370,50 +1385,54 @@ a, a:visited, a:active, a:focus {
 .textarea-container {
     position: relative;
     width: 100%;
+    margin-bottom: 0.5rem;
 }
 
 .textarea-container textarea {
-    font-family: 'Inter', sans-serif;
     width: 100%;
-    resize: vertical;
+    min-height: 150px;
+    padding: 0.75rem;
     border: 1px solid var(--gray-300);
     border-radius: 0.375rem;
-    padding: 0.625rem;
     font-size: 0.875rem;
-    line-height: 1.5;
     color: var(--gray-800);
-    transition: border-color 0.2s, box-shadow 0.2s;
+    background-color: var(--white);
+    transition: all 0.3s ease;
+    resize: vertical;
 }
 
 .textarea-container textarea:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.1);
+    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+}
+
+.textarea-container textarea.expanded {
+    height: 400px;
 }
 
 .textarea-controls {
     position: absolute;
-    right: 8px;
-    top: 8px;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 10;
 }
 
 .textarea-controls .btn-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border: 1px solid var(--gray-300);
     border-radius: 4px;
-    background-color: transparent;
-    border: none;
-    color: var(--gray-500);
     cursor: pointer;
-    transition: background-color 0.2s, color 0.2s;
+    transition: all 0.2s;
 }
 
 .textarea-controls .btn-icon:hover {
     background-color: var(--gray-100);
-    color: var(--gray-700);
 }
 
 .char-counter {
@@ -1437,8 +1456,8 @@ a, a:visited, a:active, a:focus {
     transform: translate(-50%, -50%);
     width: 80%;
     height: 80%;
+    z-index: 1001;
     background-color: var(--white);
-    z-index: 1000;
     padding: 1.5rem;
     border-radius: 0.75rem;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
@@ -1446,21 +1465,12 @@ a, a:visited, a:active, a:focus {
     flex-direction: column;
 }
 
-.textarea-container:not(.textarea-expanded) {
-    position: relative;
-    top: auto;
-    left: auto;
-    transform: none;
-    width: 100%;
-    height: auto;
-    padding: 0;
-    box-shadow: none;
-}
-
 .textarea-container.textarea-expanded textarea {
     flex: 1;
     height: calc(100% - 60px);
     font-size: 1rem;
+    min-height: auto;
+    resize: none;
 }
 
 .textarea-overlay {
@@ -1470,7 +1480,12 @@ a, a:visited, a:active, a:focus {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
-    z-index: 999;
+    z-index: 1000;
+}
+
+.textarea-container.textarea-expanded .char-counter {
+    margin-top: 0.75rem;
+    margin-right: 0.75rem;
 }
 
 /* 结果容器样式 */
@@ -1714,4 +1729,26 @@ a, a:visited, a:active, a:focus {
         flex-direction: column;
         gap: 1rem;
     }
+}
+
+/* 加载圆圈动画 */
+.loading-circle-container {
+    display: inline-block;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.loading-circle {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ff3333;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 } 

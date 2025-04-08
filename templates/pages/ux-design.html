@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EVYD 产品经理AI工作台 - User Story 生成器</title>
+    <title>EVYD 产品经理AI工作台 - UX 界面设计(POC)</title>
     <!-- 样式文件 -->
     <link rel="stylesheet" href="../../styles/common.css">
-    <link rel="stylesheet" href="../../styles/user-story.css">
+    <link rel="stylesheet" href="../../styles/user-manual.css">
     <!-- 添加字体 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,9 +16,9 @@
     <script src="../../scripts/services/storage.js"></script>
     <script src="../../modules/auth/auth.js"></script>
     <script src="../../scripts/core/config.js"></script>
-    <script src="../../modules/apps/user-story/ui.js"></script>
-    <script src="../../modules/apps/user-story/api.js"></script>
-    <script src="../../modules/apps/user-story/index.js"></script>
+    <script src="../../modules/apps/ux-design/ui.js"></script>
+    <script src="../../modules/apps/ux-design/api.js"></script>
+    <script src="../../modules/apps/ux-design/index.js"></script>
 </head>
 <body>
     <header class="header">
@@ -78,7 +78,7 @@
                     返回主页
                 </a>
             </div>
-            <h2>AI User Story 生成器</h2>
+            <h2>UX 界面设计(POC)</h2>
         </div>
 
         <div class="app-info-loading" id="app-info-loading">
@@ -99,34 +99,19 @@
 
         <div class="app-info" id="app-info" style="display: none;">
             <div class="app-info-header">
-                <h3 id="app-name">应用名称</h3>
+                <h3 id="app-name">UX 界面设计助手</h3>
                 <div class="app-tags" id="app-tags">
                     <!-- 标签将在这里动态生成 -->
                 </div>
             </div>
-            <p id="app-description">应用描述加载中...</p>
+            <p id="app-description">该工具可以根据需求描述和User Story生成Figma界面设计的AI提示词，帮助您快速创建界面原型。请注意，由于Figma AI功能本身较为原始，生成效果不保证可用。</p>
         </div>
 
-        <div class="app-form" id="app-form" style="display: none;">
-            <div class="form-group">
-                <label for="platform-name">平台名称</label>
-                <input type="text" id="platform-name" placeholder="例如：App, Console">
-            </div>
-            
-            <div class="form-group">
-                <label for="system-name">系统名称</label>
-                <input type="text" id="system-name" placeholder="例如：Routines, OVA">
-            </div>
-            
-            <div class="form-group">
-                <label for="module-name">模块名称</label>
-                <input type="text" id="module-name" placeholder="例如：Logging, Calendar">
-            </div>
-            
+        <div class="app-form" id="app-form" style="display: none;">            
             <div class="form-group" id="requirement-group">
                 <label for="requirement-description">需求描述</label>
                 <div class="textarea-container">
-                    <textarea id="requirement-description" rows="6" placeholder="详细描述该功能需求，包括目标用户、主要功能点、业务规则等。"></textarea>
+                    <textarea id="requirement-description" rows="6" placeholder="请输入User Story Tickets中的描述和Acceptance Criteria的内容，详细的需求描述可以帮助生成更精准的设计提示词。"></textarea>
                     <div class="textarea-controls">
                         <button class="btn-icon" id="expand-textarea" title="放大">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -142,7 +127,7 @@
             
             <div class="form-actions">
                 <button class="btn-secondary" id="clear-form">清空</button>
-                <button class="btn-primary" id="generate-story" data-action="generate">生成 User Story</button>
+                <button class="btn-primary" id="generate-manual" data-action="generate">生成设计提示词</button>
             </div>
         </div>
 
@@ -150,7 +135,6 @@
             <div class="result-header">
                 <h3>生成结果</h3>
                 <div class="result-actions">
-                    <button class="btn-secondary" id="stop-generation">停止生成</button>
                     <button class="btn-icon" id="copy-result" title="复制全部">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -348,6 +332,22 @@
                             </button>
                         </div>
                     </div>
+
+                    <div class="api-key-item">
+                        <div class="api-key-info">
+                            <h4>UX 界面设计</h4>
+                            <p>用于生成界面设计提示词的 Dify API Key</p>
+                        </div>
+                        <div class="api-key-value">
+                            <input type="password" id="uxDesign-api-key" readonly>
+                            <button class="btn-icon toggle-password">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="form-message" id="api-keys-message"></div>
@@ -373,6 +373,5 @@
             </div>
         </div>
     </footer>
-
 </body>
 </html> 

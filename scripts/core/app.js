@@ -236,6 +236,7 @@ const App = {
                 const userStoryKey = document.getElementById('admin-userStory-api-key').value;
                 const userManualKey = document.getElementById('admin-userManual-api-key').value;
                 const requirementsAnalysisKey = document.getElementById('admin-requirementsAnalysis-api-key').value;
+                const uxDesignKey = document.getElementById('admin-uxDesign-api-key').value;
                 
                 if (!selectedUserId) {
                     App.showFormMessage('admin-api-keys-message', '请选择用户', 'error');
@@ -245,7 +246,8 @@ const App = {
                 const result = App.updateUserApiKeys(selectedUserId, {
                     userStory: userStoryKey,
                     userManual: userManualKey,
-                    requirementsAnalysis: requirementsAnalysisKey
+                    requirementsAnalysis: requirementsAnalysisKey,
+                    uxDesign: uxDesignKey
                 });
                 
                 if (result.success) {
@@ -263,11 +265,13 @@ const App = {
                 const userStoryEndpoint = document.getElementById('userStory-api-endpoint').value;
                 const userManualEndpoint = document.getElementById('userManual-api-endpoint').value;
                 const requirementsAnalysisEndpoint = document.getElementById('requirementsAnalysis-api-endpoint').value;
+                const uxDesignEndpoint = document.getElementById('uxDesign-api-endpoint').value;
                 
                 const result = App.updateApiEndpoints({
                     userStory: userStoryEndpoint,
                     userManual: userManualEndpoint,
-                    requirementsAnalysis: requirementsAnalysisEndpoint
+                    requirementsAnalysis: requirementsAnalysisEndpoint,
+                    uxDesign: uxDesignEndpoint
                 });
                 
                 if (result.success) {
@@ -326,6 +330,7 @@ const App = {
         document.getElementById('userStory-api-key').value = currentUser.apiKeys.userStory || '';
         document.getElementById('userManual-api-key').value = currentUser.apiKeys.userManual || '';
         document.getElementById('requirementsAnalysis-api-key').value = currentUser.apiKeys.requirementsAnalysis || '';
+        document.getElementById('uxDesign-api-key').value = currentUser.apiKeys.uxDesign || '';
     },
     
     /**
@@ -582,6 +587,7 @@ const App = {
                     document.getElementById('admin-userStory-api-key').value = user.apiKeys.userStory || '';
                     document.getElementById('admin-userManual-api-key').value = user.apiKeys.userManual || '';
                     document.getElementById('admin-requirementsAnalysis-api-key').value = user.apiKeys.requirementsAnalysis || '';
+                    document.getElementById('admin-uxDesign-api-key').value = user.apiKeys.uxDesign || '';
                 }, 0);
             }
             userSelect.appendChild(option);
@@ -598,12 +604,14 @@ const App = {
                     document.getElementById('admin-userStory-api-key').value = user.apiKeys.userStory || '';
                     document.getElementById('admin-userManual-api-key').value = user.apiKeys.userManual || '';
                     document.getElementById('admin-requirementsAnalysis-api-key').value = user.apiKeys.requirementsAnalysis || '';
+                    document.getElementById('admin-uxDesign-api-key').value = user.apiKeys.uxDesign || '';
                 }
             } else {
                 // 清空输入框
                 document.getElementById('admin-userStory-api-key').value = '';
                 document.getElementById('admin-userManual-api-key').value = '';
                 document.getElementById('admin-requirementsAnalysis-api-key').value = '';
+                document.getElementById('admin-uxDesign-api-key').value = '';
             }
         });
     },
@@ -658,6 +666,11 @@ const App = {
             hasChanges = true;
         }
         
+        if (!config.apiEndpoints.uxDesign) {
+            config.apiEndpoints.uxDesign = 'https://api.dify.ai/v4';
+            hasChanges = true;
+        }
+        
         // 如果有任何默认值被设置，保存配置
         if (hasChanges) {
             Config.saveGlobalConfig(config);
@@ -668,14 +681,16 @@ const App = {
         const userStoryInput = document.getElementById('userStory-api-endpoint');
         const userManualInput = document.getElementById('userManual-api-endpoint');
         const requirementsAnalysisInput = document.getElementById('requirementsAnalysis-api-endpoint');
+        const uxDesignInput = document.getElementById('uxDesign-api-endpoint');
         
         console.log('输入字段存在状态:', {
             userStoryInput: !!userStoryInput,
             userManualInput: !!userManualInput,
-            requirementsAnalysisInput: !!requirementsAnalysisInput
+            requirementsAnalysisInput: !!requirementsAnalysisInput,
+            uxDesignInput: !!uxDesignInput
         });
         
-        if (!userStoryInput || !userManualInput || !requirementsAnalysisInput) {
+        if (!userStoryInput || !userManualInput || !requirementsAnalysisInput || !uxDesignInput) {
             console.error('找不到API地址输入字段，尝试查找可能的输入字段...');
             
             // 尝试查找页面中所有input元素
@@ -688,11 +703,13 @@ const App = {
         userStoryInput.value = config.apiEndpoints.userStory;
         userManualInput.value = config.apiEndpoints.userManual;
         requirementsAnalysisInput.value = config.apiEndpoints.requirementsAnalysis;
+        uxDesignInput.value = config.apiEndpoints.uxDesign;
         
         console.log('API地址配置已加载:', {
             userStory: userStoryInput.value,
             userManual: userManualInput.value,
-            requirementsAnalysis: requirementsAnalysisInput.value
+            requirementsAnalysis: requirementsAnalysisInput.value,
+            uxDesign: uxDesignInput.value
         });
     },
     
@@ -718,7 +735,8 @@ const App = {
             apiKeys: {
                 userStory: '',
                 userManual: '',
-                requirementsAnalysis: ''
+                requirementsAnalysis: '',
+                uxDesign: ''
             }
         };
         
