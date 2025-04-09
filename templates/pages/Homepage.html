@@ -396,8 +396,8 @@
     <div class="modal" id="user-story-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>AI User Story 生成器</h2>
-                <button class="close-modal">&times;</button>
+                <h2 id="user-story-modal-title">AI User Story 生成器</h2>
+                <button class="close-modal" id="user-story-modal-close">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="tool-description">
@@ -406,18 +406,18 @@
                 
                 <div class="tool-form">
                     <div class="form-group">
-                        <label for="story-feature-name">功能名称</label>
-                        <input type="text" id="story-feature-name" placeholder="例如：用户注册功能">
+                        <label for="user-story-feature-name">功能名称</label>
+                        <input type="text" id="user-story-feature-name" placeholder="例如：用户注册功能">
                     </div>
                     
                     <div class="form-group">
-                        <label for="story-description">需求描述</label>
-                        <textarea id="story-description" rows="6" placeholder="详细描述这个功能，包括目标用户、主要功能点、业务规则等。越详细越好。"></textarea>
+                        <label for="user-story-description">需求描述</label>
+                        <textarea id="user-story-description" rows="6" placeholder="详细描述这个功能，包括目标用户、主要功能点、业务规则等。越详细越好。"></textarea>
                     </div>
                     
                     <div class="form-group">
-                        <label for="story-priority">优先级</label>
-                        <select id="story-priority">
+                        <label for="user-story-priority">优先级</label>
+                        <select id="user-story-priority">
                             <option value="high">高</option>
                             <option value="medium">中</option>
                             <option value="low">低</option>
@@ -425,19 +425,19 @@
                     </div>
                     
                     <div class="form-actions">
-                        <button class="btn-secondary" id="clear-story-form">清空</button>
-                        <button class="btn-primary" id="generate-story">生成 User Story</button>
+                        <button class="btn-secondary" id="clear-user-story-form">清空</button>
+                        <button class="btn-primary" id="generate-user-story">生成 User Story</button>
                     </div>
                 </div>
                 
-                <div class="result-container" id="story-result">
-                    <h3>生成结果</h3>
-                    <div class="result-placeholder">User Story 将在这里显示...</div>
-                    <div class="result-content" style="display: none;"></div>
+                <div class="result-container" id="user-story-result">
+                    <h3 id="user-story-result-title">生成结果</h3>
+                    <div class="result-placeholder" id="user-story-placeholder">User Story 将在这里显示...</div>
+                    <div class="result-content" id="user-story-content" style="display: none;"></div>
                 </div>
                 
-                <div class="tool-tips">
-                    <h3>使用提示</h3>
+                <div class="tool-tips" id="user-story-tips">
+                    <h3 id="user-story-tips-title">使用提示</h3>
                     <ul>
                         <li>提供详细的需求描述，包含用户角色、目标和业务规则</li>
                         <li>明确指出功能的边界和约束条件</li>
@@ -452,8 +452,8 @@
     <div class="modal" id="user-manual-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>AI User Manual 生成器</h2>
-                <button class="close-modal">&times;</button>
+                <h2 id="user-manual-modal-title">AI User Manual 生成器</h2>
+                <button class="close-modal" id="user-manual-modal-close">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="tool-description">
@@ -462,34 +462,34 @@
                 
                 <div class="tool-form">
                     <div class="form-group">
-                        <label for="manual-product-name">产品名称</label>
-                        <input type="text" id="manual-product-name" placeholder="例如：智能家居控制系统">
+                        <label for="user-manual-product-name">产品名称</label>
+                        <input type="text" id="user-manual-product-name" placeholder="例如：智能家居控制系统">
                     </div>
                     
                     <div class="form-group">
-                        <label for="manual-product-description">产品描述</label>
-                        <textarea id="manual-product-description" rows="6" placeholder="详细描述产品的功能、特点和使用场景。"></textarea>
+                        <label for="user-manual-product-description">产品描述</label>
+                        <textarea id="user-manual-product-description" rows="6" placeholder="详细描述产品的功能、特点和使用场景。"></textarea>
                     </div>
                     
                     <div class="form-group">
-                        <label for="manual-target-audience">目标用户</label>
-                        <input type="text" id="manual-target-audience" placeholder="例如：家庭用户、企业管理员">
+                        <label for="user-manual-target-audience">目标用户</label>
+                        <input type="text" id="user-manual-target-audience" placeholder="例如：家庭用户、企业管理员">
                     </div>
                     
                     <div class="form-actions">
-                        <button class="btn-secondary" id="clear-manual-form">清空</button>
-                        <button class="btn-primary" id="generate-manual">生成用户手册</button>
+                        <button class="btn-secondary" id="clear-user-manual-form">清空</button>
+                        <button class="btn-primary" id="generate-user-manual">生成用户手册</button>
                     </div>
                 </div>
                 
-                <div class="result-container" id="manual-result">
-                    <h3>生成结果</h3>
-                    <div class="result-placeholder">用户手册将在这里显示...</div>
-                    <div class="result-content" style="display: none;"></div>
+                <div class="result-container" id="user-manual-result">
+                    <h3 id="user-manual-result-title">生成结果</h3>
+                    <div class="result-placeholder" id="user-manual-placeholder">用户手册将在这里显示...</div>
+                    <div class="result-content" id="user-manual-content" style="display: none;"></div>
                 </div>
                 
-                <div class="tool-tips">
-                    <h3>使用提示</h3>
+                <div class="tool-tips" id="user-manual-tips">
+                    <h3 id="user-manual-tips-title">使用提示</h3>
                     <ul>
                         <li>提供详细的产品信息和功能描述</li>
                         <li>明确说明目标用户群体和他们的需求</li>
@@ -504,8 +504,8 @@
     <div class="modal" id="requirements-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>需求分析助手</h2>
-                <button class="close-modal">&times;</button>
+                <h2 id="requirements-modal-title">需求分析助手</h2>
+                <button class="close-modal" id="requirements-modal-close">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="tool-description">
@@ -514,18 +514,18 @@
                 
                 <div class="tool-form">
                     <div class="form-group">
-                        <label for="req-document-name">文档名称</label>
-                        <input type="text" id="req-document-name" placeholder="例如：移动应用需求文档V1.0">
+                        <label for="requirement-document-name">文档名称</label>
+                        <input type="text" id="requirement-document-name" placeholder="例如：移动应用需求文档V1.0">
                     </div>
                     
                     <div class="form-group">
-                        <label for="req-document-content">需求文档内容</label>
-                        <textarea id="req-document-content" rows="8" placeholder="粘贴需求文档内容到这里..."></textarea>
+                        <label for="requirement-document-content">需求文档内容</label>
+                        <textarea id="requirement-document-content" rows="8" placeholder="粘贴需求文档内容到这里..."></textarea>
                     </div>
                     
                     <div class="form-group">
-                        <label for="req-analysis-focus">分析重点</label>
-                        <select id="req-analysis-focus">
+                        <label for="requirement-analysis-focus">分析重点</label>
+                        <select id="requirement-analysis-focus">
                             <option value="all">全面分析</option>
                             <option value="features">功能提取</option>
                             <option value="gaps">需求缺口识别</option>
@@ -534,19 +534,19 @@
                     </div>
                     
                     <div class="form-actions">
-                        <button class="btn-secondary" id="clear-req-form">清空</button>
-                        <button class="btn-primary" id="analyze-requirements">分析需求</button>
+                        <button class="btn-secondary" id="clear-requirement-form">清空</button>
+                        <button class="btn-primary" id="analyze-requirement-doc">分析需求</button>
                     </div>
                 </div>
                 
-                <div class="result-container" id="req-result">
-                    <h3>分析结果</h3>
-                    <div class="result-placeholder">分析结果将在这里显示...</div>
-                    <div class="result-content" style="display: none;"></div>
+                <div class="result-container" id="requirement-result">
+                    <h3 id="requirement-result-title">分析结果</h3>
+                    <div class="result-placeholder" id="requirement-placeholder">分析结果将在这里显示...</div>
+                    <div class="result-content" id="requirement-content" style="display: none;"></div>
                 </div>
                 
-                <div class="tool-tips">
-                    <h3>使用提示</h3>
+                <div class="tool-tips" id="requirement-analysis-tips">
+                    <h3 id="requirement-tips-title">使用提示</h3>
                     <ul>
                         <li>粘贴完整的需求文档可获得更准确的分析</li>
                         <li>根据需要选择不同的分析重点</li>
@@ -561,30 +561,30 @@
     <div class="modal" id="admin-panel-modal">
         <div class="modal-content admin-modal-content">
             <div class="modal-header">
-                <h2>管理员面板</h2>
-                <button class="close-modal">&times;</button>
+                <h2 id="admin-panel-modal-title">管理员面板</h2>
+                <button class="close-modal" id="admin-panel-modal-close">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="admin-tabs">
-                    <button class="admin-tab active" data-admin-tab="users">用户管理</button>
-                    <button class="admin-tab" data-admin-tab="api-keys">API Key 配置</button>
-                    <button class="admin-tab" data-admin-tab="api-endpoints">API 地址配置</button>
+                    <button class="admin-tab active" data-admin-tab="users" id="users-tab-btn">用户管理</button>
+                    <button class="admin-tab" data-admin-tab="api-keys" id="api-keys-tab-btn">API Key 配置</button>
+                    <button class="admin-tab" data-admin-tab="api-endpoints" id="api-endpoints-tab-btn">API 地址配置</button>
                 </div>
                 
                 <div class="admin-content active" id="users-management">
                     <div class="admin-actions">
-                        <button class="btn-primary" id="add-user-button">添加用户</button>
+                        <button class="btn-primary" id="admin-add-user-button">添加用户</button>
                     </div>
                     
                     <div class="users-table-container">
-                        <table class="users-table">
+                        <table class="users-table" id="admin-users-table">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
-                                    <th>用户名</th>
-                                    <th>角色</th>
-                                    <th>创建日期</th>
-                                    <th>操作</th>
+                                    <th id="user-id-header">ID</th>
+                                    <th id="username-header">用户名</th>
+                                    <th id="role-header">角色</th>
+                                    <th id="created-date-header">创建日期</th>
+                                    <th id="actions-header">操作</th>
                                 </tr>
                             </thead>
                             <tbody id="users-table-body">
@@ -600,8 +600,8 @@
                     </div>
                     
                     <div class="user-select-container">
-                        <label for="api-keys-user-select">选择用户</label>
-                        <select id="api-keys-user-select">
+                        <label for="api-key-config-user-select">选择用户</label>
+                        <select id="api-key-config-user-select">
                             <!-- 用户选项将在这里动态生成 -->
                         </select>
                     </div>
@@ -613,7 +613,7 @@
                                 <p>用于生成用户故事的 Dify Workflow API Key</p>
                             </div>
                             <div class="api-key-input">
-                                <input type="text" id="admin-userStory-api-key" placeholder="输入 API Key">
+                                <input type="text" id="user-specific-userStory-api-key" placeholder="输入 API Key">
                             </div>
                         </div>
                         
@@ -623,7 +623,7 @@
                                 <p>用于生成用户手册的 Dify Agent API Key</p>
                             </div>
                             <div class="api-key-input">
-                                <input type="text" id="admin-userManual-api-key" placeholder="输入 API Key">
+                                <input type="text" id="user-specific-userManual-api-key" placeholder="输入 API Key">
                             </div>
                         </div>
                         
@@ -633,7 +633,7 @@
                                 <p>用于需求分析的 Dify API Key</p>
                             </div>
                             <div class="api-key-input">
-                                <input type="text" id="admin-requirementsAnalysis-api-key" placeholder="输入 API Key">
+                                <input type="text" id="user-specific-requirementsAnalysis-api-key" placeholder="输入 API Key">
                             </div>
                         </div>
                         
@@ -643,15 +643,15 @@
                                 <p>用于生成界面设计提示词的 Dify API Key</p>
                             </div>
                             <div class="api-key-input">
-                                <input type="text" id="admin-uxDesign-api-key" placeholder="输入 API Key">
+                                <input type="text" id="user-specific-uxDesign-api-key" placeholder="输入 API Key">
                             </div>
                         </div>
                     </div>
                     
-                    <div class="form-message" id="admin-api-keys-message"></div>
+                    <div class="form-message" id="user-specific-api-keys-message"></div>
                     
                     <div class="form-actions">
-                        <button class="btn-primary" id="save-api-keys-button">保存 API Keys</button>
+                        <button class="btn-primary" id="save-user-api-keys-button">保存 API Keys</button>
                     </div>
                 </div>
 
@@ -667,7 +667,7 @@
                                 <p>用于生成用户故事的 Dify Workflow API 地址</p>
                             </div>
                             <div class="api-key-input">
-                                <input type="text" id="userStory-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
+                                <input type="text" id="global-userStory-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
                             </div>
                         </div>
                         
@@ -677,7 +677,7 @@
                                 <p>用于生成用户手册的 Dify Agent API 地址</p>
                             </div>
                             <div class="api-key-input">
-                                <input type="text" id="userManual-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
+                                <input type="text" id="global-userManual-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
                             </div>
                         </div>
                         
@@ -687,7 +687,7 @@
                                 <p>用于需求分析的 Dify API 地址</p>
                             </div>
                             <div class="api-key-input">
-                                <input type="text" id="requirementsAnalysis-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
+                                <input type="text" id="global-requirementsAnalysis-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
                             </div>
                         </div>
                         
@@ -697,15 +697,15 @@
                                 <p>用于生成界面设计提示词的 Dify API 地址</p>
                             </div>
                             <div class="api-key-input">
-                                <input type="text" id="uxDesign-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
+                                <input type="text" id="global-uxDesign-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
                             </div>
                         </div>
                     </div>
                     
-                    <div class="form-message" id="api-endpoints-message"></div>
+                    <div class="form-message" id="global-api-endpoints-message"></div>
                     
                     <div class="form-actions">
-                        <button class="btn-primary" id="save-api-endpoints-button">保存 API 地址</button>
+                        <button class="btn-primary" id="save-global-api-endpoints-button">保存 API 地址</button>
                     </div>
                 </div>
             </div>
@@ -716,34 +716,34 @@
     <div class="modal" id="edit-user-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="edit-user-title">添加用户</h2>
-                <button class="close-modal">&times;</button>
+                <h2 id="user-edit-modal-title">添加用户</h2>
+                <button class="close-modal" id="edit-user-modal-close">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label for="edit-username">用户名</label>
-                    <input type="text" id="edit-username" placeholder="输入用户名">
+                    <label for="user-edit-username">用户名</label>
+                    <input type="text" id="user-edit-username" placeholder="输入用户名">
                 </div>
                 
                 <div class="form-group">
-                    <label for="edit-password">密码</label>
-                    <input type="password" id="edit-password" placeholder="输入密码">
-                    <p class="form-help" id="password-help">留空则使用默认密码: password123</p>
+                    <label for="user-edit-password">密码</label>
+                    <input type="password" id="user-edit-password" placeholder="输入密码">
+                    <p class="form-help" id="user-edit-password-help">留空则使用默认密码: password123</p>
                 </div>
                 
                 <div class="form-group">
-                    <label for="edit-role">角色</label>
-                    <select id="edit-role">
+                    <label for="user-edit-role">角色</label>
+                    <select id="user-edit-role">
                         <option value="user">普通用户</option>
                         <option value="admin">管理员</option>
                     </select>
                 </div>
                 
-                <div class="form-message" id="edit-user-message"></div>
+                <div class="form-message" id="user-edit-form-message"></div>
                 
                 <div class="form-actions">
-                    <button class="btn-secondary" id="cancel-edit-user">取消</button>
-                    <button class="btn-primary" id="save-edit-user">保存</button>
+                    <button class="btn-secondary" id="cancel-user-edit">取消</button>
+                    <button class="btn-primary" id="save-user-edit">保存</button>
                 </div>
             </div>
         </div>

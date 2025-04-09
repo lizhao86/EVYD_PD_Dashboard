@@ -192,19 +192,19 @@ const App = {
         }
         
         // 添加用户按钮
-        const addUserBtn = document.getElementById('add-user-button');
+        const addUserBtn = document.getElementById('admin-add-user-button');
         if (addUserBtn) {
             addUserBtn.addEventListener('click', function() {
                 console.log('点击添加用户');
                 const modal = document.getElementById('edit-user-modal');
                 if (modal) {
                     // 重置表单
-                    document.getElementById('edit-user-title').textContent = '添加用户';
-                    document.getElementById('edit-username').value = '';
-                    document.getElementById('edit-password').value = '';
-                    document.getElementById('edit-role').value = 'user';
-                    document.getElementById('edit-user-message').textContent = '';
-                    document.getElementById('edit-user-message').className = 'form-message';
+                    document.getElementById('user-edit-modal-title').textContent = '添加用户';
+                    document.getElementById('user-edit-username').value = '';
+                    document.getElementById('user-edit-password').value = '';
+                    document.getElementById('user-edit-role').value = 'user';
+                    document.getElementById('user-edit-form-message').textContent = '';
+                    document.getElementById('user-edit-form-message').className = 'form-message';
                     
                     // 显示模态框
                     modal.style.display = 'block';
@@ -213,15 +213,15 @@ const App = {
         }
         
         // 保存用户
-        const saveUserBtn = document.getElementById('save-edit-user');
+        const saveUserBtn = document.getElementById('save-user-edit');
         if (saveUserBtn) {
             saveUserBtn.addEventListener('click', function() {
-                const username = document.getElementById('edit-username').value;
-                const password = document.getElementById('edit-password').value;
-                const role = document.getElementById('edit-role').value;
+                const username = document.getElementById('user-edit-username').value;
+                const password = document.getElementById('user-edit-password').value;
+                const role = document.getElementById('user-edit-role').value;
                 
                 if (!username) {
-                    App.showFormMessage('edit-user-message', '请输入用户名', 'error');
+                    App.showFormMessage('user-edit-form-message', '请输入用户名', 'error');
                     return;
                 }
                 
@@ -235,39 +235,53 @@ const App = {
                 const result = App.addUser(userData);
                 
                 if (result.success) {
-                    App.showFormMessage('edit-user-message', '用户添加成功', 'success');
+                    App.showFormMessage('user-edit-form-message', '用户添加成功', 'success');
                     setTimeout(() => {
                         document.getElementById('edit-user-modal').style.display = 'none';
                         App.loadUsersList(); // 重新加载用户列表
                     }, 1500);
                 } else {
-                    App.showFormMessage('edit-user-message', result.message, 'error');
+                    App.showFormMessage('user-edit-form-message', result.message, 'error');
                 }
             });
         }
         
         // 取消添加/编辑用户
-        const cancelEditUserBtn = document.getElementById('cancel-edit-user');
+        const cancelEditUserBtn = document.getElementById('cancel-user-edit');
         if (cancelEditUserBtn) {
             cancelEditUserBtn.addEventListener('click', function() {
                 document.getElementById('edit-user-modal').style.display = 'none';
             });
         }
         
-        // 保存API密钥
-        const saveApiKeysBtn = document.getElementById('save-api-keys-button');
+        // 保存API密钥按钮
+        const saveApiKeysBtn = document.getElementById('save-user-api-keys-button');
         if (saveApiKeysBtn) {
             saveApiKeysBtn.addEventListener('click', function() {
-                const selectedUserId = document.getElementById('api-keys-user-select').value;
-                const userStoryKey = document.getElementById('admin-userStory-api-key').value;
-                const userManualKey = document.getElementById('admin-userManual-api-key').value;
-                const requirementsAnalysisKey = document.getElementById('admin-requirementsAnalysis-api-key').value;
-                const uxDesignKey = document.getElementById('admin-uxDesign-api-key').value;
+                const selectedUserId = document.getElementById('api-key-config-user-select').value;
+                const userStoryKey = document.getElementById('user-specific-userStory-api-key').value;
+                const userManualKey = document.getElementById('user-specific-userManual-api-key').value;
+                const requirementsAnalysisKey = document.getElementById('user-specific-requirementsAnalysis-api-key').value;
+                const uxDesignKey = document.getElementById('user-specific-uxDesign-api-key').value;
                 
                 if (!selectedUserId) {
-                    App.showFormMessage('admin-api-keys-message', '请选择用户', 'error');
+                    App.showFormMessage('user-specific-api-keys-message', '请选择用户', 'error');
                     return;
                 }
+                
+                const user = Storage.getUser(selectedUserId);
+                if (!user) {
+                    App.showFormMessage('user-specific-api-keys-message', '用户不存在', 'error');
+                    return;
+                }
+                
+                // 更新API密钥
+                user.apiKeys = {
+                    userStory: userStoryKey,
+                    userManual: userManualKey,
+                    requirementsAnalysis: requirementsAnalysisKey,
+                    uxDesign: uxDesignKey
+                };
                 
                 const result = App.updateUserApiKeys(selectedUserId, {
                     userStory: userStoryKey,
@@ -277,21 +291,21 @@ const App = {
                 });
                 
                 if (result.success) {
-                    App.showFormMessage('admin-api-keys-message', 'API密钥更新成功', 'success');
+                    App.showFormMessage('user-specific-api-keys-message', 'API密钥更新成功', 'success');
                 } else {
-                    App.showFormMessage('admin-api-keys-message', result.message, 'error');
+                    App.showFormMessage('user-specific-api-keys-message', result.message, 'error');
                 }
             });
         }
         
         // 保存API地址
-        const saveApiEndpointsBtn = document.getElementById('save-api-endpoints-button');
+        const saveApiEndpointsBtn = document.getElementById('save-global-api-endpoints-button');
         if (saveApiEndpointsBtn) {
             saveApiEndpointsBtn.addEventListener('click', function() {
-                const userStoryEndpoint = document.getElementById('userStory-api-endpoint').value;
-                const userManualEndpoint = document.getElementById('userManual-api-endpoint').value;
-                const requirementsAnalysisEndpoint = document.getElementById('requirementsAnalysis-api-endpoint').value;
-                const uxDesignEndpoint = document.getElementById('uxDesign-api-endpoint').value;
+                const userStoryEndpoint = document.getElementById('global-userStory-api-endpoint').value;
+                const userManualEndpoint = document.getElementById('global-userManual-api-endpoint').value;
+                const requirementsAnalysisEndpoint = document.getElementById('global-requirementsAnalysis-api-endpoint').value;
+                const uxDesignEndpoint = document.getElementById('global-uxDesign-api-endpoint').value;
                 
                 const result = App.updateApiEndpoints({
                     userStory: userStoryEndpoint,
@@ -301,9 +315,9 @@ const App = {
                 });
                 
                 if (result.success) {
-                    App.showFormMessage('api-endpoints-message', 'API地址更新成功', 'success');
+                    App.showFormMessage('global-api-endpoints-message', 'API地址更新成功', 'success');
                 } else {
-                    App.showFormMessage('api-endpoints-message', result.message, 'error');
+                    App.showFormMessage('global-api-endpoints-message', result.message, 'error');
                 }
             });
         }
@@ -611,11 +625,11 @@ const App = {
                 
                 if (user) {
                     // 填充表单
-                    document.getElementById('edit-user-title').textContent = '编辑用户';
-                    document.getElementById('edit-username').value = user.username;
-                    document.getElementById('edit-password').value = '';
-                    document.getElementById('password-help').textContent = '留空则保持原密码不变';
-                    document.getElementById('edit-role').value = user.role;
+                    document.getElementById('user-edit-modal-title').textContent = '编辑用户';
+                    document.getElementById('user-edit-username').value = user.username;
+                    document.getElementById('user-edit-password').value = '';
+                    document.getElementById('user-edit-password-help').textContent = '留空则保持原密码不变';
+                    document.getElementById('user-edit-role').value = user.role;
                     
                     // 添加用户ID到表单中
                     const form = document.getElementById('edit-user-modal');
@@ -657,7 +671,7 @@ const App = {
         const currentUser = Auth.checkAuth();
         
         // 获取用户选择下拉框
-        const userSelect = document.getElementById('api-keys-user-select');
+        const userSelect = document.getElementById('api-key-config-user-select');
         if (!userSelect) {
             console.error('找不到用户选择下拉框');
             return;
@@ -682,10 +696,10 @@ const App = {
                 option.selected = true;
                 // 预填充当前用户的API密钥
                 setTimeout(() => {
-                    document.getElementById('admin-userStory-api-key').value = user.apiKeys.userStory || '';
-                    document.getElementById('admin-userManual-api-key').value = user.apiKeys.userManual || '';
-                    document.getElementById('admin-requirementsAnalysis-api-key').value = user.apiKeys.requirementsAnalysis || '';
-                    document.getElementById('admin-uxDesign-api-key').value = user.apiKeys.uxDesign || '';
+                    document.getElementById('user-specific-userStory-api-key').value = user.apiKeys.userStory || '';
+                    document.getElementById('user-specific-userManual-api-key').value = user.apiKeys.userManual || '';
+                    document.getElementById('user-specific-requirementsAnalysis-api-key').value = user.apiKeys.requirementsAnalysis || '';
+                    document.getElementById('user-specific-uxDesign-api-key').value = user.apiKeys.uxDesign || '';
                 }, 0);
             }
             userSelect.appendChild(option);
@@ -699,17 +713,17 @@ const App = {
                 const user = Storage.getUser(userId);
                 
                 if (user) {
-                    document.getElementById('admin-userStory-api-key').value = user.apiKeys.userStory || '';
-                    document.getElementById('admin-userManual-api-key').value = user.apiKeys.userManual || '';
-                    document.getElementById('admin-requirementsAnalysis-api-key').value = user.apiKeys.requirementsAnalysis || '';
-                    document.getElementById('admin-uxDesign-api-key').value = user.apiKeys.uxDesign || '';
+                    document.getElementById('user-specific-userStory-api-key').value = user.apiKeys.userStory || '';
+                    document.getElementById('user-specific-userManual-api-key').value = user.apiKeys.userManual || '';
+                    document.getElementById('user-specific-requirementsAnalysis-api-key').value = user.apiKeys.requirementsAnalysis || '';
+                    document.getElementById('user-specific-uxDesign-api-key').value = user.apiKeys.uxDesign || '';
                 }
             } else {
                 // 清空输入框
-                document.getElementById('admin-userStory-api-key').value = '';
-                document.getElementById('admin-userManual-api-key').value = '';
-                document.getElementById('admin-requirementsAnalysis-api-key').value = '';
-                document.getElementById('admin-uxDesign-api-key').value = '';
+                document.getElementById('user-specific-userStory-api-key').value = '';
+                document.getElementById('user-specific-userManual-api-key').value = '';
+                document.getElementById('user-specific-requirementsAnalysis-api-key').value = '';
+                document.getElementById('user-specific-uxDesign-api-key').value = '';
             }
         });
     },
@@ -718,68 +732,25 @@ const App = {
      * 加载API地址配置
      */
     loadApiEndpointsConfig() {
-        console.log('加载API地址配置...');
+        console.log('加载全局API端点配置...');
         
-        // 检查管理面板内容区域的状态
-        const apiEndpointsDiv = document.getElementById('api-endpoints-management');
-        if (apiEndpointsDiv) {
-            console.log('API地址配置区域元素存在，当前显示状态:', apiEndpointsDiv.style.display);
-            console.log('元素内容长度:', apiEndpointsDiv.innerHTML.length);
-        } else {
-            console.error('API地址配置区域元素不存在!');
-            return;
-        }
-        
-        // 获取全局配置
-        const config = Config.getGlobalConfig();
-        console.log('获取到全局配置:', JSON.stringify(config));
-        
-        // 检查配置对象是否存在
-        if (!config) {
-            console.error('全局配置不存在');
-            config = {};
-        }
-        
-        // 确保apiEndpoints存在
+        // 获取存储的API端点配置
+        const config = this.getGlobalConfig();
         if (!config.apiEndpoints) {
-            console.log('API地址配置不存在，创建空对象');
-            config.apiEndpoints = {};
-        }
-        
-        // 只为缺失的配置项设置默认值
-        let hasChanges = false;
-        
-        if (!config.apiEndpoints.userStory) {
-            config.apiEndpoints.userStory = 'https://api.dify.ai/v1';
-            hasChanges = true;
-        }
-        
-        if (!config.apiEndpoints.userManual) {
-            config.apiEndpoints.userManual = 'https://api.dify.ai/v2';
-            hasChanges = true;
-        }
-        
-        if (!config.apiEndpoints.requirementsAnalysis) {
-            config.apiEndpoints.requirementsAnalysis = 'https://api.dify.ai/v3';
-            hasChanges = true;
-        }
-        
-        if (!config.apiEndpoints.uxDesign) {
-            config.apiEndpoints.uxDesign = 'https://api.dify.ai/v4';
-            hasChanges = true;
-        }
-        
-        // 如果有任何默认值被设置，保存配置
-        if (hasChanges) {
-            Config.saveGlobalConfig(config);
-            console.log('已更新部分缺失的配置:', JSON.stringify(config.apiEndpoints));
+            config.apiEndpoints = {
+                userStory: 'https://api.dify.ai/v1',
+                userManual: 'https://api.dify.ai/v1',
+                requirementsAnalysis: 'https://api.dify.ai/v1',
+                uxDesign: 'https://api.dify.ai/v1'
+            };
+            this.saveGlobalConfig(config);
         }
         
         // 设置API地址输入字段
-        const userStoryInput = document.getElementById('userStory-api-endpoint');
-        const userManualInput = document.getElementById('userManual-api-endpoint');
-        const requirementsAnalysisInput = document.getElementById('requirementsAnalysis-api-endpoint');
-        const uxDesignInput = document.getElementById('uxDesign-api-endpoint');
+        const userStoryInput = document.getElementById('global-userStory-api-endpoint');
+        const userManualInput = document.getElementById('global-userManual-api-endpoint');
+        const requirementsAnalysisInput = document.getElementById('global-requirementsAnalysis-api-endpoint');
+        const uxDesignInput = document.getElementById('global-uxDesign-api-endpoint');
         
         console.log('输入字段存在状态:', {
             userStoryInput: !!userStoryInput,
@@ -788,27 +759,11 @@ const App = {
             uxDesignInput: !!uxDesignInput
         });
         
-        if (!userStoryInput || !userManualInput || !requirementsAnalysisInput || !uxDesignInput) {
-            console.error('找不到API地址输入字段，尝试查找可能的输入字段...');
-            
-            // 尝试查找页面中所有input元素
-            const inputs = document.querySelectorAll('input');
-            console.log('页面中的input元素数量:', inputs.length);
-            return;
-        }
-        
-        // 设置输入字段的值
-        userStoryInput.value = config.apiEndpoints.userStory;
-        userManualInput.value = config.apiEndpoints.userManual;
-        requirementsAnalysisInput.value = config.apiEndpoints.requirementsAnalysis;
-        uxDesignInput.value = config.apiEndpoints.uxDesign;
-        
-        console.log('API地址配置已加载:', {
-            userStory: userStoryInput.value,
-            userManual: userManualInput.value,
-            requirementsAnalysis: requirementsAnalysisInput.value,
-            uxDesign: uxDesignInput.value
-        });
+        // 填充表单
+        if (userStoryInput) userStoryInput.value = config.apiEndpoints.userStory || '';
+        if (userManualInput) userManualInput.value = config.apiEndpoints.userManual || '';
+        if (requirementsAnalysisInput) requirementsAnalysisInput.value = config.apiEndpoints.requirementsAnalysis || '';
+        if (uxDesignInput) uxDesignInput.value = config.apiEndpoints.uxDesign || '';
     },
     
     /**

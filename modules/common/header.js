@@ -335,8 +335,8 @@ const Header = {
                 </div>
                 
                 <div class="user-select-container">
-                    <label for="api-keys-user-select">选择用户</label>
-                    <select id="api-keys-user-select">
+                    <label for="api-key-config-user-select">选择用户</label>
+                    <select id="api-key-config-user-select">
                         <!-- 用户选项将在这里动态生成 -->
                     </select>
                 </div>
@@ -348,7 +348,7 @@ const Header = {
                             <p>用于生成用户故事的 Dify Workflow API Key</p>
                         </div>
                         <div class="api-key-input">
-                            <input type="text" id="admin-userStory-api-key" placeholder="输入 API Key">
+                            <input type="text" id="user-specific-userStory-api-key" placeholder="输入 API Key">
                         </div>
                     </div>
                     
@@ -358,7 +358,7 @@ const Header = {
                             <p>用于生成用户手册的 Dify Agent API Key</p>
                         </div>
                         <div class="api-key-input">
-                            <input type="text" id="admin-userManual-api-key" placeholder="输入 API Key">
+                            <input type="text" id="user-specific-userManual-api-key" placeholder="输入 API Key">
                         </div>
                     </div>
                     
@@ -368,7 +368,7 @@ const Header = {
                             <p>用于需求分析的 Dify API Key</p>
                         </div>
                         <div class="api-key-input">
-                            <input type="text" id="admin-requirementsAnalysis-api-key" placeholder="输入 API Key">
+                            <input type="text" id="user-specific-requirementsAnalysis-api-key" placeholder="输入 API Key">
                         </div>
                     </div>
                     
@@ -378,7 +378,7 @@ const Header = {
                             <p>用于生成界面设计提示词的 Dify API Key</p>
                         </div>
                         <div class="api-key-input">
-                            <input type="text" id="admin-uxDesign-api-key" placeholder="输入 API Key">
+                            <input type="text" id="user-specific-uxDesign-api-key" placeholder="输入 API Key">
                         </div>
                     </div>
                 </div>
@@ -402,7 +402,7 @@ const Header = {
                             <p>用于生成用户故事的 Dify Workflow API 地址</p>
                         </div>
                         <div class="api-key-input">
-                            <input type="text" id="userStory-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
+                            <input type="text" id="global-userStory-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
                         </div>
                     </div>
                     
@@ -412,7 +412,7 @@ const Header = {
                             <p>用于生成用户手册的 Dify Agent API 地址</p>
                         </div>
                         <div class="api-key-input">
-                            <input type="text" id="userManual-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
+                            <input type="text" id="global-userManual-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
                         </div>
                     </div>
                     
@@ -422,7 +422,7 @@ const Header = {
                             <p>用于需求分析的 Dify API 地址</p>
                         </div>
                         <div class="api-key-input">
-                            <input type="text" id="requirementsAnalysis-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
+                            <input type="text" id="global-requirementsAnalysis-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
                         </div>
                     </div>
                     
@@ -432,7 +432,7 @@ const Header = {
                             <p>用于生成界面设计提示词的 Dify API 地址</p>
                         </div>
                         <div class="api-key-input">
-                            <input type="text" id="uxDesign-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
+                            <input type="text" id="global-uxDesign-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
                         </div>
                     </div>
                 </div>
@@ -440,7 +440,7 @@ const Header = {
                 <div class="form-message" id="api-endpoints-message"></div>
                 
                 <div class="form-actions">
-                    <button class="btn-primary" id="save-api-endpoints-button">保存 API 地址</button>
+                    <button class="btn-primary" id="save-global-api-endpoints-button">保存 API 地址</button>
                 </div>
             </div>
         </div>
@@ -456,19 +456,19 @@ const Header = {
         </div>
         <div class="modal-body">
             <div class="form-group">
-                <label for="edit-username">用户名</label>
-                <input type="text" id="edit-username" placeholder="输入用户名">
+                <label for="user-edit-username">用户名</label>
+                <input type="text" id="user-edit-username" placeholder="输入用户名">
             </div>
             
             <div class="form-group">
-                <label for="edit-password">密码</label>
-                <input type="password" id="edit-password" placeholder="输入密码">
+                <label for="user-edit-password">密码</label>
+                <input type="password" id="user-edit-password" placeholder="输入密码">
                 <p class="form-help" id="password-help">留空则使用默认密码: password123</p>
             </div>
             
             <div class="form-group">
-                <label for="edit-role">角色</label>
-                <select id="edit-role">
+                <label for="user-edit-role">角色</label>
+                <select id="user-edit-role">
                     <option value="user">普通用户</option>
                     <option value="admin">管理员</option>
                 </select>
@@ -695,12 +695,12 @@ const Header = {
             addUserButton.addEventListener('click', () => {
                 console.log('点击添加用户按钮');
                 // 重置表单
-                document.getElementById('edit-user-title').textContent = '添加用户';
-                document.getElementById('edit-username').value = '';
-                document.getElementById('edit-password').value = '';
-                document.getElementById('edit-role').value = 'user';
-                document.getElementById('edit-user-message').textContent = '';
-                document.getElementById('edit-user-message').className = 'form-message';
+                document.getElementById('user-edit-modal-title').textContent = '添加用户';
+                document.getElementById('user-edit-username').value = '';
+                document.getElementById('user-edit-password').value = '';
+                document.getElementById('user-edit-role').value = 'user';
+                document.getElementById('user-edit-form-message').textContent = '';
+                document.getElementById('user-edit-form-message').className = 'form-message';
                 
                 // 显示模态框
                 document.getElementById('edit-user-modal').style.display = 'block';
@@ -711,12 +711,12 @@ const Header = {
         const saveUserButton = document.getElementById('save-edit-user');
         if (saveUserButton) {
             saveUserButton.addEventListener('click', () => {
-                const username = document.getElementById('edit-username').value;
-                const password = document.getElementById('edit-password').value;
-                const role = document.getElementById('edit-role').value;
+                const username = document.getElementById('user-edit-username').value;
+                const password = document.getElementById('user-edit-password').value;
+                const role = document.getElementById('user-edit-role').value;
                 
                 if (!username) {
-                    this.showFormMessage('edit-user-message', '请输入用户名', 'error');
+                    this.showFormMessage('user-edit-form-message', '请输入用户名', 'error');
                     return;
                 }
                 
@@ -724,7 +724,7 @@ const Header = {
                 const users = Storage.getAllUsers();
                 const existingUser = users.find(u => u.username === username);
                 if (existingUser) {
-                    this.showFormMessage('edit-user-message', '用户名已存在', 'error');
+                    this.showFormMessage('user-edit-form-message', '用户名已存在', 'error');
                     return;
                 }
                 
@@ -742,13 +742,13 @@ const Header = {
                 });
                 
                 if (result.success) {
-                    this.showFormMessage('edit-user-message', '用户添加成功', 'success');
+                    this.showFormMessage('user-edit-form-message', '用户添加成功', 'success');
                     setTimeout(() => {
                         document.getElementById('edit-user-modal').style.display = 'none';
                         this.loadUsersList();
                     }, 1500);
                 } else {
-                    this.showFormMessage('edit-user-message', result.message || '添加用户失败', 'error');
+                    this.showFormMessage('user-edit-form-message', result.message || '添加用户失败', 'error');
                 }
             });
         }
@@ -757,7 +757,7 @@ const Header = {
         const saveApiKeysButton = document.getElementById('save-api-keys-button');
         if (saveApiKeysButton) {
             saveApiKeysButton.addEventListener('click', () => {
-                const userId = document.getElementById('api-keys-user-select').value;
+                const userId = document.getElementById('api-key-config-user-select').value;
                 if (!userId) {
                     this.showFormMessage('admin-api-keys-message', '请选择用户', 'error');
                     return;
@@ -771,10 +771,10 @@ const Header = {
                 
                 // 更新API密钥
                 user.apiKeys = {
-                    userStory: document.getElementById('admin-userStory-api-key').value,
-                    userManual: document.getElementById('admin-userManual-api-key').value,
-                    requirementsAnalysis: document.getElementById('admin-requirementsAnalysis-api-key').value,
-                    uxDesign: document.getElementById('admin-uxDesign-api-key').value
+                    userStory: document.getElementById('user-specific-userStory-api-key').value,
+                    userManual: document.getElementById('user-specific-userManual-api-key').value,
+                    requirementsAnalysis: document.getElementById('user-specific-requirementsAnalysis-api-key').value,
+                    uxDesign: document.getElementById('user-specific-uxDesign-api-key').value
                 };
                 
                 const result = Storage.updateUser(user);
@@ -787,21 +787,21 @@ const Header = {
         }
         
         // 保存API地址按钮
-        const saveApiEndpointsButton = document.getElementById('save-api-endpoints-button');
+        const saveApiEndpointsButton = document.getElementById('save-global-api-endpoints-button');
         if (saveApiEndpointsButton) {
             saveApiEndpointsButton.addEventListener('click', () => {
                 if (typeof Config === 'undefined') {
                     console.error('Config模块未定义，请确保config.js已加载');
-                    this.showFormMessage('api-endpoints-message', 'Config模块未定义', 'error');
+                    this.showFormMessage('global-api-endpoints-message', 'Config模块未定义', 'error');
                     return;
                 }
                 
                 // 获取API地址
                 const apiEndpoints = {
-                    userStory: document.getElementById('userStory-api-endpoint').value,
-                    userManual: document.getElementById('userManual-api-endpoint').value,
-                    requirementsAnalysis: document.getElementById('requirementsAnalysis-api-endpoint').value,
-                    uxDesign: document.getElementById('uxDesign-api-endpoint').value
+                    userStory: document.getElementById('global-userStory-api-endpoint').value,
+                    userManual: document.getElementById('global-userManual-api-endpoint').value,
+                    requirementsAnalysis: document.getElementById('global-requirementsAnalysis-api-endpoint').value,
+                    uxDesign: document.getElementById('global-uxDesign-api-endpoint').value
                 };
                 
                 // 更新全局配置
@@ -810,9 +810,9 @@ const Header = {
                 
                 const result = Config.saveGlobalConfig(config);
                 if (result.success) {
-                    this.showFormMessage('api-endpoints-message', 'API地址更新成功', 'success');
+                    this.showFormMessage('global-api-endpoints-message', 'API地址更新成功', 'success');
                 } else {
-                    this.showFormMessage('api-endpoints-message', result.message || '更新失败', 'error');
+                    this.showFormMessage('global-api-endpoints-message', result.message || '更新失败', 'error');
                 }
             });
         }
@@ -914,10 +914,10 @@ const Header = {
                 if (user) {
                     // 填充表单
                     document.getElementById('edit-user-title').textContent = '编辑用户';
-                    document.getElementById('edit-username').value = user.username;
-                    document.getElementById('edit-password').value = '';
+                    document.getElementById('user-edit-username').value = user.username;
+                    document.getElementById('user-edit-password').value = '';
                     document.getElementById('password-help').textContent = '留空则保持原密码不变';
-                    document.getElementById('edit-role').value = user.role;
+                    document.getElementById('user-edit-role').value = user.role;
                     
                     // 添加用户ID到表单中
                     const form = document.getElementById('edit-user-modal');
@@ -962,7 +962,7 @@ const Header = {
         const currentUser = Auth.checkAuth();
         
         // 获取用户选择下拉框
-        const userSelect = document.getElementById('api-keys-user-select');
+        const userSelect = document.getElementById('api-key-config-user-select');
         if (!userSelect) {
             console.error('找不到用户选择下拉框');
             return;
@@ -988,10 +988,10 @@ const Header = {
                 option.selected = true;
                 // 预填充当前用户的API密钥
                 setTimeout(() => {
-                    document.getElementById('admin-userStory-api-key').value = user.apiKeys?.userStory || '';
-                    document.getElementById('admin-userManual-api-key').value = user.apiKeys?.userManual || '';
-                    document.getElementById('admin-requirementsAnalysis-api-key').value = user.apiKeys?.requirementsAnalysis || '';
-                    document.getElementById('admin-uxDesign-api-key').value = user.apiKeys?.uxDesign || '';
+                    document.getElementById('user-specific-userStory-api-key').value = user.apiKeys?.userStory || '';
+                    document.getElementById('user-specific-userManual-api-key').value = user.apiKeys?.userManual || '';
+                    document.getElementById('user-specific-requirementsAnalysis-api-key').value = user.apiKeys?.requirementsAnalysis || '';
+                    document.getElementById('user-specific-uxDesign-api-key').value = user.apiKeys?.uxDesign || '';
                 }, 0);
             }
             
@@ -1006,17 +1006,17 @@ const Header = {
                 const user = Storage.getUser(userId);
                 
                 if (user) {
-                    document.getElementById('admin-userStory-api-key').value = user.apiKeys?.userStory || '';
-                    document.getElementById('admin-userManual-api-key').value = user.apiKeys?.userManual || '';
-                    document.getElementById('admin-requirementsAnalysis-api-key').value = user.apiKeys?.requirementsAnalysis || '';
-                    document.getElementById('admin-uxDesign-api-key').value = user.apiKeys?.uxDesign || '';
+                    document.getElementById('user-specific-userStory-api-key').value = user.apiKeys?.userStory || '';
+                    document.getElementById('user-specific-userManual-api-key').value = user.apiKeys?.userManual || '';
+                    document.getElementById('user-specific-requirementsAnalysis-api-key').value = user.apiKeys?.requirementsAnalysis || '';
+                    document.getElementById('user-specific-uxDesign-api-key').value = user.apiKeys?.uxDesign || '';
                 }
             } else {
                 // 清空输入框
-                document.getElementById('admin-userStory-api-key').value = '';
-                document.getElementById('admin-userManual-api-key').value = '';
-                document.getElementById('admin-requirementsAnalysis-api-key').value = '';
-                document.getElementById('admin-uxDesign-api-key').value = '';
+                document.getElementById('user-specific-userStory-api-key').value = '';
+                document.getElementById('user-specific-userManual-api-key').value = '';
+                document.getElementById('user-specific-requirementsAnalysis-api-key').value = '';
+                document.getElementById('user-specific-uxDesign-api-key').value = '';
             }
         });
     },
@@ -1047,10 +1047,15 @@ const Header = {
         }
         
         // 填充表单
-        document.getElementById('userStory-api-endpoint').value = config.apiEndpoints.userStory || '';
-        document.getElementById('userManual-api-endpoint').value = config.apiEndpoints.userManual || '';
-        document.getElementById('requirementsAnalysis-api-endpoint').value = config.apiEndpoints.requirementsAnalysis || '';
-        document.getElementById('uxDesign-api-endpoint').value = config.apiEndpoints.uxDesign || '';
+        const userStoryEl = document.getElementById('global-userStory-api-endpoint');
+        const userManualEl = document.getElementById('global-userManual-api-endpoint');
+        const requirementsAnalysisEl = document.getElementById('global-requirementsAnalysis-api-endpoint');
+        const uxDesignEl = document.getElementById('global-uxDesign-api-endpoint');
+        
+        if (userStoryEl) userStoryEl.value = config.apiEndpoints.userStory || '';
+        if (userManualEl) userManualEl.value = config.apiEndpoints.userManual || '';
+        if (requirementsAnalysisEl) requirementsAnalysisEl.value = config.apiEndpoints.requirementsAnalysis || '';
+        if (uxDesignEl) uxDesignEl.value = config.apiEndpoints.uxDesign || '';
     },
 
     /**
