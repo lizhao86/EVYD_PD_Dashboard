@@ -11,6 +11,48 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- 内联样式修复导航下拉菜单 -->
+    <style>
+        .main-nav .dropdown {
+            position: relative !important;
+        }
+        
+        .main-nav .dropdown-menu {
+            display: none !important;
+            position: absolute !important;
+            top: 100% !important;
+            left: 0 !important;
+            background-color: #fff !important;
+            min-width: 180px !important;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1) !important;
+            border-radius: 4px !important;
+            padding: 8px 0 !important;
+            z-index: 100 !important;
+            margin-top: 0 !important;
+        }
+        
+        .main-nav .dropdown-menu a {
+            display: block !important;
+            padding: 8px 16px !important;
+            color: #333 !important;
+            text-decoration: none !important;
+            transition: background-color 0.2s ease !important;
+        }
+        
+        .main-nav .dropdown-menu a:hover {
+            background-color: #f5f5f5 !important;
+        }
+        
+        .main-nav .dropdown:hover .dropdown-menu {
+            display: block !important;
+        }
+        
+        .main-nav .dropdown-toggle {
+            display: flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+        }
+    </style>
     <!-- 导入非模块化JS -->
     <script src="../../scripts/utils/helper.js"></script>
     <script src="../../scripts/services/storage.js"></script>

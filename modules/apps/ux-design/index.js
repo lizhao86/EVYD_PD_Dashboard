@@ -133,31 +133,6 @@ function setupModals() {
         });
     }
     
-    // 查看API密钥按钮点击事件
-    const viewApiKeysButton = document.getElementById('view-api-keys');
-    if (viewApiKeysButton) {
-        viewApiKeysButton.addEventListener('click', async () => {
-            document.getElementById('api-keys-modal').style.display = 'block';
-            
-            // 加载API密钥
-            try {
-                if (window.StorageService) {
-                    const userStoryApiKey = await window.StorageService.getItem('userStoryApiKey') || '';
-                    const userManualApiKey = await window.StorageService.getItem('userManualApiKey') || '';
-                    const requirementsAnalysisApiKey = await window.StorageService.getItem('requirementsAnalysisApiKey') || '';
-                    const uxDesignApiKey = await window.StorageService.getItem('uxDesignApiKey') || '';
-                    
-                    document.getElementById('userStory-api-key').value = userStoryApiKey;
-                    document.getElementById('userManual-api-key').value = userManualApiKey;
-                    document.getElementById('requirementsAnalysis-api-key').value = requirementsAnalysisApiKey;
-                    document.getElementById('uxDesign-api-key').value = uxDesignApiKey;
-                }
-            } catch (error) {
-                console.error('加载API密钥失败:', error);
-            }
-        });
-    }
-    
     // 模态框关闭按钮点击事件
     const closeButtons = document.querySelectorAll('.close-modal');
     closeButtons.forEach(button => {

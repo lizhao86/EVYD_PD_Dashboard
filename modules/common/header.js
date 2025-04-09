@@ -107,7 +107,6 @@ const Header = {
                     </button>
                     <div class="dropdown-content">
                         <a href="#" id="profile-settings">账号设置</a>
-                        <a href="#" id="view-api-keys">查看API密钥</a>
                         <a href="#" id="logout-button">登出</a>
                     </div>
                 </div>
@@ -572,19 +571,6 @@ const Header = {
                 if (settingsModal) {
                     settingsModal.style.display = 'block';
                     this.loadUserProfile();
-                }
-            });
-        }
-        
-        // API密钥按钮
-        const viewApiKeysButton = document.getElementById('view-api-keys');
-        if (viewApiKeysButton) {
-            viewApiKeysButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                const apiKeysModal = document.getElementById('api-keys-modal');
-                if (apiKeysModal) {
-                    apiKeysModal.style.display = 'block';
-                    this.loadUserApiKeys();
                 }
             });
         }

@@ -85,13 +85,6 @@ const UserManualApp = {
         });
         document.getElementById('submit-password-change').addEventListener('click', this.handlePasswordChange.bind(this));
         
-        // API密钥相关
-        document.getElementById('view-api-keys').addEventListener('click', function(e) {
-            e.preventDefault();
-            document.getElementById('api-keys-modal').style.display = 'block';
-            UI.loadUserApiKeys();
-        });
-        
         // 模态框操作
         const closeButtons = document.querySelectorAll('.close-modal');
         closeButtons.forEach(button => {
