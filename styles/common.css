@@ -1235,10 +1235,7 @@ a:hover {
     transform: translateX(4px);
 }
 
-/* 特别强调当前工具 */
-.tool-card#user-story-tool {
-    border-left: 3px solid #3498db;
-}
+
 
 /* 确保链接没有下划线的通用规则 */
 a, a:visited, a:active, a:focus {
