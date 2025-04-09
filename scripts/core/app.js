@@ -300,6 +300,78 @@ const App = {
                 }
             });
         });
+
+        // 修改密码按钮
+        const submitPasswordChangeButton = document.getElementById('submit-password-change');
+        if (submitPasswordChangeButton) {
+            submitPasswordChangeButton.addEventListener('click', function() {
+                const currentPassword = document.getElementById('current-password').value;
+                const newPassword = document.getElementById('new-password').value;
+                const confirmPassword = document.getElementById('confirm-password').value;
+                
+                if (!currentPassword || !newPassword || !confirmPassword) {
+                    App.showFormMessage('password-message', '请填写所有密码字段', 'error');
+                    return;
+                }
+                
+                if (newPassword !== confirmPassword) {
+                    App.showFormMessage('password-message', '新密码与确认密码不匹配', 'error');
+                    return;
+                }
+                
+                // 获取当前用户
+                const currentUser = Auth.checkAuth();
+                if (!currentUser) {
+                    App.showFormMessage('password-message', '用户未登录', 'error');
+                    return;
+                }
+                
+                // 验证当前密码
+                if (currentUser.password !== currentPassword) {
+                    App.showFormMessage('password-message', '当前密码不正确', 'error');
+                    return;
+                }
+                
+                // 更新密码
+                currentUser.password = newPassword;
+                const success = Storage.updateUser(currentUser);
+                
+                if (success) {
+                    App.showFormMessage('password-message', '密码修改成功', 'success');
+                    // 清空表单
+                    document.getElementById('current-password').value = '';
+                    document.getElementById('new-password').value = '';
+                    document.getElementById('confirm-password').value = '';
+                    
+                    // 延迟关闭模态框
+                    setTimeout(() => {
+                        document.getElementById('user-settings-modal').style.display = 'none';
+                    }, 1500);
+                } else {
+                    App.showFormMessage('password-message', '密码修改失败', 'error');
+                }
+            });
+        } else {
+            console.error('找不到修改密码按钮');
+        }
+        
+        // 取消修改密码按钮
+        const cancelPasswordChangeButton = document.getElementById('cancel-password-change');
+        if (cancelPasswordChangeButton) {
+            cancelPasswordChangeButton.addEventListener('click', function() {
+                // 清空表单
+                document.getElementById('current-password').value = '';
+                document.getElementById('new-password').value = '';
+                document.getElementById('confirm-password').value = '';
+                document.getElementById('password-message').className = 'form-message';
+                document.getElementById('password-message').textContent = '';
+                
+                // 关闭模态框
+                document.getElementById('user-settings-modal').style.display = 'none';
+            });
+        } else {
+            console.error('找不到取消修改密码按钮');
+        }
     },
     
     /**
