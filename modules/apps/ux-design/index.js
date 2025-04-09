@@ -276,13 +276,24 @@ function setupModals() {
 }
 
 /**
- * 设置管理面板按钮事件
+ * 设置管理面板事件
  */
 function setupAdminPanel() {
     const adminPanelButton = document.getElementById('admin-panel-button');
     if (adminPanelButton) {
-        adminPanelButton.addEventListener('click', () => {
-            window.location.href = 'admin.html';
+        adminPanelButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            // 打开管理面板模态框
+            const adminModal = document.getElementById('admin-panel-modal');
+            if (adminModal) {
+                adminModal.style.display = 'block';
+                // 如果存在初始化函数，调用它
+                if (window.App && window.App.initAdminPanel) {
+                    window.App.initAdminPanel();
+                } else if (window.Header && window.Header.initAdminPanel) {
+                    window.Header.initAdminPanel();
+                }
+            }
         });
     }
     

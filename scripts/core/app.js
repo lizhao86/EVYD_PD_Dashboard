@@ -19,8 +19,14 @@ const App = {
         // 初始化界面
         this.initUserInterface();
         
-        // 绑定事件
-        this.bindEvents();
+        // 确保页面已完全加载再绑定事件
+        if (document.readyState === 'complete') {
+            this.bindEvents();
+        } else {
+            window.addEventListener('load', () => {
+                this.bindEvents();
+            });
+        }
     },
     
     /**
@@ -206,16 +212,79 @@ const App = {
                     document.getElementById('user-edit-form-message').textContent = '';
                     document.getElementById('user-edit-form-message').className = 'form-message';
                     
+                    // 清除用户ID，表示这是新用户
+                    modal.dataset.userId = '';
+                    
                     // 显示模态框
                     modal.style.display = 'block';
+                    
+                    // 确保保存按钮的事件处理器已正确绑定
+                    const saveUserBtn = document.getElementById('save-edit-user');
+                    if (saveUserBtn) {
+                        // 移除旧的事件监听器
+                        const newSaveBtn = saveUserBtn.cloneNode(true);
+                        saveUserBtn.parentNode.replaceChild(newSaveBtn, saveUserBtn);
+                        
+                        // 添加新的事件监听器
+                        newSaveBtn.addEventListener('click', function() {
+                            console.log('点击保存新用户按钮');
+                            const username = document.getElementById('user-edit-username').value;
+                            const password = document.getElementById('user-edit-password').value;
+                            const role = document.getElementById('user-edit-role').value;
+                            
+                            if (!username) {
+                                App.showFormMessage('user-edit-form-message', '请输入用户名', 'error');
+                                return;
+                            }
+                            
+                            // 添加用户
+                            const userData = { 
+                                username: username,
+                                password: password || 'password123',
+                                role: role
+                            };
+                            
+                            const result = App.addUser(userData);
+                            
+                            if (result.success) {
+                                App.showFormMessage('user-edit-form-message', '用户添加成功', 'success');
+                                setTimeout(() => {
+                                    document.getElementById('edit-user-modal').style.display = 'none';
+                                    App.loadUsersList(); // 重新加载用户列表
+                                }, 1500);
+                            } else {
+                                App.showFormMessage('user-edit-form-message', result.message, 'error');
+                            }
+                        });
+                    }
+                    
+                    // 确保取消按钮的事件处理器已正确绑定
+                    const cancelEditUserBtn = document.getElementById('cancel-edit-user');
+                    if (cancelEditUserBtn) {
+                        // 移除旧的事件监听器
+                        const newCancelBtn = cancelEditUserBtn.cloneNode(true);
+                        cancelEditUserBtn.parentNode.replaceChild(newCancelBtn, cancelEditUserBtn);
+                        
+                        // 添加新的事件监听器
+                        newCancelBtn.addEventListener('click', function() {
+                            console.log('点击取消添加用户按钮');
+                            document.getElementById('edit-user-modal').style.display = 'none';
+                        });
+                    }
                 }
             });
         }
         
         // 保存用户
-        const saveUserBtn = document.getElementById('save-user-edit');
+        const saveUserBtn = document.getElementById('save-edit-user');
         if (saveUserBtn) {
-            saveUserBtn.addEventListener('click', function() {
+            // 移除旧的事件监听器（如果存在）
+            const newSaveBtn = saveUserBtn.cloneNode(true);
+            saveUserBtn.parentNode.replaceChild(newSaveBtn, saveUserBtn);
+            
+            // 添加新的事件监听器
+            newSaveBtn.addEventListener('click', function() {
+                console.log('点击保存用户按钮');
                 const username = document.getElementById('user-edit-username').value;
                 const password = document.getElementById('user-edit-password').value;
                 const role = document.getElementById('user-edit-role').value;
@@ -244,14 +313,24 @@ const App = {
                     App.showFormMessage('user-edit-form-message', result.message, 'error');
                 }
             });
+        } else {
+            console.error('找不到保存用户按钮');
         }
         
         // 取消添加/编辑用户
-        const cancelEditUserBtn = document.getElementById('cancel-user-edit');
+        const cancelEditUserBtn = document.getElementById('cancel-edit-user');
         if (cancelEditUserBtn) {
-            cancelEditUserBtn.addEventListener('click', function() {
+            // 移除旧的事件监听器（如果存在）
+            const newCancelBtn = cancelEditUserBtn.cloneNode(true);
+            cancelEditUserBtn.parentNode.replaceChild(newCancelBtn, cancelEditUserBtn);
+            
+            // 添加新的事件监听器
+            newCancelBtn.addEventListener('click', function() {
+                console.log('点击取消用户编辑按钮');
                 document.getElementById('edit-user-modal').style.display = 'none';
             });
+        } else {
+            console.error('找不到取消用户编辑按钮');
         }
         
         // 保存API密钥按钮
@@ -637,6 +716,61 @@ const App = {
                     
                     // 显示模态框
                     document.getElementById('edit-user-modal').style.display = 'block';
+                    
+                    // 确保保存按钮的事件处理器已正确绑定
+                    const saveUserBtn = document.getElementById('save-edit-user');
+                    if (saveUserBtn) {
+                        // 移除旧的事件监听器
+                        const newSaveBtn = saveUserBtn.cloneNode(true);
+                        saveUserBtn.parentNode.replaceChild(newSaveBtn, saveUserBtn);
+                        
+                        // 添加新的事件监听器
+                        newSaveBtn.addEventListener('click', function() {
+                            console.log('点击保存编辑用户按钮');
+                            const username = document.getElementById('user-edit-username').value;
+                            const password = document.getElementById('user-edit-password').value;
+                            const role = document.getElementById('user-edit-role').value;
+                            
+                            if (!username) {
+                                App.showFormMessage('user-edit-form-message', '请输入用户名', 'error');
+                                return;
+                            }
+                            
+                            // 编辑用户
+                            const editedUser = {
+                                id: userId,
+                                username: username,
+                                password: password || user.password, // 如果密码为空，则保留原密码
+                                role: role
+                            };
+                            
+                            const result = Storage.updateUser(editedUser);
+                            
+                            if (result) {
+                                App.showFormMessage('user-edit-form-message', '用户更新成功', 'success');
+                                setTimeout(() => {
+                                    document.getElementById('edit-user-modal').style.display = 'none';
+                                    App.loadUsersList(); // 重新加载用户列表
+                                }, 1500);
+                            } else {
+                                App.showFormMessage('user-edit-form-message', '用户更新失败', 'error');
+                            }
+                        });
+                    }
+                    
+                    // 确保取消按钮的事件处理器已正确绑定
+                    const cancelEditUserBtn = document.getElementById('cancel-edit-user');
+                    if (cancelEditUserBtn) {
+                        // 移除旧的事件监听器
+                        const newCancelBtn = cancelEditUserBtn.cloneNode(true);
+                        cancelEditUserBtn.parentNode.replaceChild(newCancelBtn, cancelEditUserBtn);
+                        
+                        // 添加新的事件监听器
+                        newCancelBtn.addEventListener('click', function() {
+                            console.log('点击取消编辑用户按钮');
+                            document.getElementById('edit-user-modal').style.display = 'none';
+                        });
+                    }
                 }
             });
         });

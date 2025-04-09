@@ -87,12 +87,12 @@ const Header = {
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" id="nav-docs">文档中心 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></a>
                     <div class="dropdown-menu">
-                        <a href="ROOT_PATH/templates/pages/product-requirements.html" id="nav-product-requirements">产品需求手册</a>
+                        <a href="#" id="nav-product-requirements">产品需求手册</a>
                         <a href="#" id="nav-api-docs">API文档</a>
                         <a href="#" id="nav-tutorials">使用教程</a>
                     </div>
                 </li>
-                <li id="admin-panel-link" style="display: none;"><a href="#" id="admin-panel-button">管理面板</a></li>
+                <li id="admin-panel-link" style="display: none;"><a href="javascript:void(0);" id="admin-panel-button">管理面板</a></li>
             </ul>
         </nav>
         <div class="user-actions">
@@ -769,19 +769,31 @@ const Header = {
                     return;
                 }
                 
-                // 更新API密钥
-                user.apiKeys = {
+                // 获取API Key值
+                const apiKeys = {
                     userStory: document.getElementById('user-specific-userStory-api-key').value,
                     userManual: document.getElementById('user-specific-userManual-api-key').value,
                     requirementsAnalysis: document.getElementById('user-specific-requirementsAnalysis-api-key').value,
                     uxDesign: document.getElementById('user-specific-uxDesign-api-key').value
                 };
                 
-                const result = Storage.updateUser(user);
-                if (result.success) {
-                    this.showFormMessage('admin-api-keys-message', 'API密钥更新成功', 'success');
+                // 使用App模块的方法更新API Key
+                if (typeof App !== 'undefined' && App.updateUserApiKeys) {
+                    const result = App.updateUserApiKeys(userId, apiKeys);
+                    if (result.success) {
+                        this.showFormMessage('admin-api-keys-message', 'API密钥更新成功', 'success');
+                    } else {
+                        this.showFormMessage('admin-api-keys-message', result.message || '更新失败', 'error');
+                    }
                 } else {
-                    this.showFormMessage('admin-api-keys-message', result.message || '更新失败', 'error');
+                    // 降级处理：直接使用Storage.updateUser
+                    user.apiKeys = apiKeys;
+                    const result = Storage.updateUser(user);
+                    if (result) {
+                        this.showFormMessage('admin-api-keys-message', 'API密钥更新成功', 'success');
+                    } else {
+                        this.showFormMessage('admin-api-keys-message', '更新失败', 'error');
+                    }
                 }
             });
         }
@@ -792,7 +804,7 @@ const Header = {
             saveApiEndpointsButton.addEventListener('click', () => {
                 if (typeof Config === 'undefined') {
                     console.error('Config模块未定义，请确保config.js已加载');
-                    this.showFormMessage('global-api-endpoints-message', 'Config模块未定义', 'error');
+                    this.showFormMessage('api-endpoints-message', 'Config模块未定义', 'error');
                     return;
                 }
                 
@@ -808,11 +820,13 @@ const Header = {
                 const config = Config.getGlobalConfig() || {};
                 config.apiEndpoints = apiEndpoints;
                 
-                const result = Config.saveGlobalConfig(config);
-                if (result.success) {
-                    this.showFormMessage('global-api-endpoints-message', 'API地址更新成功', 'success');
-                } else {
-                    this.showFormMessage('global-api-endpoints-message', result.message || '更新失败', 'error');
+                // 保存配置并显示结果
+                try {
+                    Config.saveGlobalConfig(config);
+                    this.showFormMessage('api-endpoints-message', 'API地址更新成功', 'success');
+                } catch (error) {
+                    console.error('保存API地址失败:', error);
+                    this.showFormMessage('api-endpoints-message', '更新失败: ' + error.message, 'error');
                 }
             });
         }
@@ -1173,7 +1187,7 @@ const Header = {
         user.password = newPassword;
         const result = Storage.updateUser(user);
         
-        if (result.success) {
+        if (result) {
             this.showFormMessage('password-message', '密码修改成功', 'success');
             
             // 清空表单
@@ -1186,7 +1200,7 @@ const Header = {
                 document.getElementById('user-settings-modal').style.display = 'none';
             }, 1500);
         } else {
-            this.showFormMessage('password-message', result.message || '密码修改失败', 'error');
+            this.showFormMessage('password-message', '密码修改失败', 'error');
         }
     },
 

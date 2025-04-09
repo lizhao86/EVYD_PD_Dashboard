@@ -60,8 +60,7 @@
 │       ├── Homepage.html    # 主页
 │       ├── user-story.html  # User Story页面
 │       ├── user-manual.html # User Manual页面
-│       ├── ux-design.html   # UX界面设计页面
-│       └── product-requirements.html # 产品需求手册页面
+│       └── ux-design.html   # UX界面设计页面
 │
 ├── docs/                    # 文档文件夹
 │   └── Product_Requirements_Manual.md # 产品需求手册
@@ -85,7 +84,7 @@
    - 用户可修改个人密码（支持表单验证和操作反馈）
 
 3. **文档中心**：
-   - **产品需求手册**：展示完整的产品需求文档，包括功能描述、界面规范等
+   - **产品需求手册**：产品需求文档通过docs目录下的Markdown文件提供，可直接查看源文件
    - API文档（即将推出）
    - 使用教程（即将推出）
 
@@ -128,6 +127,9 @@
 
 ## 最近更新
 
+- 调整产品需求手册访问方式：
+  - 移除了产品需求手册HTML页面
+  - 现在通过直接查看docs/Product_Requirements_Manual.md文件访问产品需求文档
 - 修复导航菜单显示问题：
   - 解决了"文档中心"下拉菜单在不同页面中样式不一致的问题
   - 统一了下拉菜单的外观和行为，确保所有页面中下拉菜单都正确地显示在其父菜单项下方

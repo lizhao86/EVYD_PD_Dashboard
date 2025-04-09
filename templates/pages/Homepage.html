@@ -6,115 +6,56 @@
     <title>EVYD 产品经理AI工作台</title>
     <!-- 样式文件 -->
     <link rel="stylesheet" href="../../styles/common.css?v=<?php echo time(); ?>">
-    <link rel="stylesheet" href="../../styles/main.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="../../styles/user-story.css?v=<?php echo time(); ?>">
     <style>
-        /* 直接在页面中添加样式以确保标签页样式正确 */
-        /* API地址配置标签页样式 */
-        #api-endpoints-management {
-            padding: 1.5rem !important;
+        /* 只保留导航下拉菜单样式 */
+        .main-nav .dropdown {
+            position: relative !important;
         }
         
-        .api-endpoints-description {
-            margin-bottom: 1.5rem !important;
+        .main-nav .dropdown-menu {
+            display: none !important;
+            position: absolute !important;
+            top: 100% !important;
+            left: 0 !important;
+            background-color: #fff !important;
+            min-width: 180px !important;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1) !important;
+            border-radius: 4px !important;
+            padding: 8px 0 !important;
+            z-index: 100 !important;
+            margin-top: 0 !important;
         }
         
-        .api-endpoints-description p {
-            font-size: 0.9rem !important;
-            color: var(--gray-600) !important;
-            margin: 0 !important;
-            line-height: 1.5 !important;
+        .main-nav .dropdown-menu a {
+            display: block !important;
+            padding: 8px 16px !important;
+            color: #333 !important;
+            text-decoration: none !important;
+            transition: background-color 0.2s ease !important;
         }
         
-        .api-endpoints-config {
+        .main-nav .dropdown-menu a:hover {
+            background-color: #f5f5f5 !important;
+        }
+        
+        .main-nav .dropdown:hover .dropdown-menu {
+            display: block !important;
+        }
+        
+        .main-nav .dropdown-toggle {
             display: flex !important;
-            flex-direction: column !important;
-            gap: 0 !important;
-            margin: 0 !important;
-        }
-        
-        .api-endpoint-config-item {
-            padding: 1rem !important;
-            border: 1px solid var(--gray-200) !important;
-            border-radius: 0.5rem !important;
-            margin-bottom: 1rem !important;
-            background-color: var(--white) !important;
-        }
-        
-        .api-endpoint-info h4 {
-            font-size: 1rem !important;
-            font-weight: 600 !important;
-            color: var(--gray-800) !important;
-            margin: 0 0 0.25rem 0 !important;
-        }
-        
-        .api-endpoint-info p {
-            font-size: 0.875rem !important;
-            color: var(--gray-600) !important;
-            margin: 0 0 0.75rem 0 !important;
-        }
-        
-        .api-endpoint-input input {
-            width: 100% !important;
-            height: 38px !important;
-            padding: 0.5rem 0.75rem !important;
-            border: 1px solid var(--gray-300) !important;
-            border-radius: 0.375rem !important;
-            font-size: 0.875rem !important;
-            margin: 0 !important;
-            box-sizing: border-box !important;
-        }
-        
-        #api-endpoints-management .form-actions {
-            margin-top: 1.5rem !important;
-            display: flex !important;
-            justify-content: flex-end !important;
-        }
-        
-        #save-api-endpoints-button {
-            background-color: var(--primary) !important;
-            color: var(--white) !important;
-            padding: 0.5rem 1rem !important;
-            border-radius: 0.25rem !important;
-            font-weight: 500 !important;
-            font-size: 0.875rem !important;
-            cursor: pointer !important;
-            border: none !important;
-            height: 38px !important;
+            align-items: center !important;
+            gap: 5px !important;
         }
     </style>
-    <!-- 添加字体 -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- 导入非模块化JS -->
+    <script src="../../scripts/utils/helper.js"></script>
     <script src="../../scripts/services/storage.js"></script>
     <script src="../../modules/auth/auth.js"></script>
     <script src="../../scripts/core/config.js"></script>
     <!-- 导入通用头部组件 -->
     <script src="../../modules/common/header.js"></script>
-    <!-- 导入主应用脚本 -->
-    <script src="../../scripts/core/app.js"></script>
-    <script>
-        // 确保样式正确应用 - 在页面加载完成后执行
-        document.addEventListener('DOMContentLoaded', function() {
-            // 确保头部组件初始化
-            if (typeof Header !== 'undefined' && Header.init) {
-                Header.init();
-            }
-            
-            // 在点击标签页时确保样式一致
-            document.querySelectorAll('.admin-tab').forEach(function(tab) {
-                tab.addEventListener('click', function() {
-                    // 强制应用标签页样式
-                    if (this.getAttribute('data-admin-tab') === 'api-endpoints') {
-                        setTimeout(function() {
-                            document.getElementById('api-endpoints-management').style.padding = '1.5rem';
-                        }, 50);
-                    }
-                });
-            });
-        });
-    </script>
 </head>
 <body>
     <!-- 通用头部容器 -->
@@ -392,363 +333,6 @@
         </section>
     </main>
 
-    <!-- AI写User Story工具模态框 -->
-    <div class="modal" id="user-story-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="user-story-modal-title">AI User Story 生成器</h2>
-                <button class="close-modal" id="user-story-modal-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="tool-description">
-                    <p>通过简单描述，利用AI技术自动生成结构化的用户故事和验收标准。该工具使用Dify Workflow API，可以帮助您快速创建高质量的用户故事，提升需求管理效率。</p>
-                </div>
-                
-                <div class="tool-form">
-                    <div class="form-group">
-                        <label for="user-story-feature-name">功能名称</label>
-                        <input type="text" id="user-story-feature-name" placeholder="例如：用户注册功能">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="user-story-description">需求描述</label>
-                        <textarea id="user-story-description" rows="6" placeholder="详细描述这个功能，包括目标用户、主要功能点、业务规则等。越详细越好。"></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="user-story-priority">优先级</label>
-                        <select id="user-story-priority">
-                            <option value="high">高</option>
-                            <option value="medium">中</option>
-                            <option value="low">低</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-actions">
-                        <button class="btn-secondary" id="clear-user-story-form">清空</button>
-                        <button class="btn-primary" id="generate-user-story">生成 User Story</button>
-                    </div>
-                </div>
-                
-                <div class="result-container" id="user-story-result">
-                    <h3 id="user-story-result-title">生成结果</h3>
-                    <div class="result-placeholder" id="user-story-placeholder">User Story 将在这里显示...</div>
-                    <div class="result-content" id="user-story-content" style="display: none;"></div>
-                </div>
-                
-                <div class="tool-tips" id="user-story-tips">
-                    <h3 id="user-story-tips-title">使用提示</h3>
-                    <ul>
-                        <li>提供详细的需求描述，包含用户角色、目标和业务规则</li>
-                        <li>明确指出功能的边界和约束条件</li>
-                        <li>生成后可以继续编辑和调整内容</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- AI写User Manual工具模态框 -->
-    <div class="modal" id="user-manual-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="user-manual-modal-title">AI User Manual 生成器</h2>
-                <button class="close-modal" id="user-manual-modal-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="tool-description">
-                    <p>为您的产品自动生成清晰简洁的用户手册，包括操作指南和常见问题解答。该工具使用Dify Agent API，能够根据产品信息创建全面的用户文档。</p>
-                </div>
-                
-                <div class="tool-form">
-                    <div class="form-group">
-                        <label for="user-manual-product-name">产品名称</label>
-                        <input type="text" id="user-manual-product-name" placeholder="例如：智能家居控制系统">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="user-manual-product-description">产品描述</label>
-                        <textarea id="user-manual-product-description" rows="6" placeholder="详细描述产品的功能、特点和使用场景。"></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="user-manual-target-audience">目标用户</label>
-                        <input type="text" id="user-manual-target-audience" placeholder="例如：家庭用户、企业管理员">
-                    </div>
-                    
-                    <div class="form-actions">
-                        <button class="btn-secondary" id="clear-user-manual-form">清空</button>
-                        <button class="btn-primary" id="generate-user-manual">生成用户手册</button>
-                    </div>
-                </div>
-                
-                <div class="result-container" id="user-manual-result">
-                    <h3 id="user-manual-result-title">生成结果</h3>
-                    <div class="result-placeholder" id="user-manual-placeholder">用户手册将在这里显示...</div>
-                    <div class="result-content" id="user-manual-content" style="display: none;"></div>
-                </div>
-                
-                <div class="tool-tips" id="user-manual-tips">
-                    <h3 id="user-manual-tips-title">使用提示</h3>
-                    <ul>
-                        <li>提供详细的产品信息和功能描述</li>
-                        <li>明确说明目标用户群体和他们的需求</li>
-                        <li>生成后可以根据需要进一步完善内容</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 需求分析助手工具模态框 -->
-    <div class="modal" id="requirements-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="requirements-modal-title">需求分析助手</h2>
-                <button class="close-modal" id="requirements-modal-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="tool-description">
-                    <p>分析需求文档，自动识别关键点，提取功能列表，并提供优化建议。该工具能帮助产品经理更高效地处理和优化需求文档。</p>
-                </div>
-                
-                <div class="tool-form">
-                    <div class="form-group">
-                        <label for="requirement-document-name">文档名称</label>
-                        <input type="text" id="requirement-document-name" placeholder="例如：移动应用需求文档V1.0">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="requirement-document-content">需求文档内容</label>
-                        <textarea id="requirement-document-content" rows="8" placeholder="粘贴需求文档内容到这里..."></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="requirement-analysis-focus">分析重点</label>
-                        <select id="requirement-analysis-focus">
-                            <option value="all">全面分析</option>
-                            <option value="features">功能提取</option>
-                            <option value="gaps">需求缺口识别</option>
-                            <option value="priority">优先级建议</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-actions">
-                        <button class="btn-secondary" id="clear-requirement-form">清空</button>
-                        <button class="btn-primary" id="analyze-requirement-doc">分析需求</button>
-                    </div>
-                </div>
-                
-                <div class="result-container" id="requirement-result">
-                    <h3 id="requirement-result-title">分析结果</h3>
-                    <div class="result-placeholder" id="requirement-placeholder">分析结果将在这里显示...</div>
-                    <div class="result-content" id="requirement-content" style="display: none;"></div>
-                </div>
-                
-                <div class="tool-tips" id="requirement-analysis-tips">
-                    <h3 id="requirement-tips-title">使用提示</h3>
-                    <ul>
-                        <li>粘贴完整的需求文档可获得更准确的分析</li>
-                        <li>根据需要选择不同的分析重点</li>
-                        <li>分析结果可导出为PDF或Excel格式</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 管理员面板模态框 -->
-    <div class="modal" id="admin-panel-modal">
-        <div class="modal-content admin-modal-content">
-            <div class="modal-header">
-                <h2 id="admin-panel-modal-title">管理员面板</h2>
-                <button class="close-modal" id="admin-panel-modal-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="admin-tabs">
-                    <button class="admin-tab active" data-admin-tab="users" id="users-tab-btn">用户管理</button>
-                    <button class="admin-tab" data-admin-tab="api-keys" id="api-keys-tab-btn">API Key 配置</button>
-                    <button class="admin-tab" data-admin-tab="api-endpoints" id="api-endpoints-tab-btn">API 地址配置</button>
-                </div>
-                
-                <div class="admin-content active" id="users-management">
-                    <div class="admin-actions">
-                        <button class="btn-primary" id="admin-add-user-button">添加用户</button>
-                    </div>
-                    
-                    <div class="users-table-container">
-                        <table class="users-table" id="admin-users-table">
-                            <thead>
-                                <tr>
-                                    <th id="user-id-header">ID</th>
-                                    <th id="username-header">用户名</th>
-                                    <th id="role-header">角色</th>
-                                    <th id="created-date-header">创建日期</th>
-                                    <th id="actions-header">操作</th>
-                                </tr>
-                            </thead>
-                            <tbody id="users-table-body">
-                                <!-- 用户列表将在这里动态生成 -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                
-                <div class="admin-content" id="api-keys-management">
-                    <div class="api-keys-management-description">
-                        <p>在这里您可以为每个用户配置不同的 Dify API 密钥。</p>
-                    </div>
-                    
-                    <div class="user-select-container">
-                        <label for="api-key-config-user-select">选择用户</label>
-                        <select id="api-key-config-user-select">
-                            <!-- 用户选项将在这里动态生成 -->
-                        </select>
-                    </div>
-                    
-                    <div class="api-keys-config">
-                        <div class="api-key-config-item">
-                            <div class="api-key-info">
-                                <h4>User Story 生成器</h4>
-                                <p>用于生成用户故事的 Dify Workflow API Key</p>
-                            </div>
-                            <div class="api-key-input">
-                                <input type="text" id="user-specific-userStory-api-key" placeholder="输入 API Key">
-                            </div>
-                        </div>
-                        
-                        <div class="api-key-config-item">
-                            <div class="api-key-info">
-                                <h4>User Manual 生成器</h4>
-                                <p>用于生成用户手册的 Dify Agent API Key</p>
-                            </div>
-                            <div class="api-key-input">
-                                <input type="text" id="user-specific-userManual-api-key" placeholder="输入 API Key">
-                            </div>
-                        </div>
-                        
-                        <div class="api-key-config-item">
-                            <div class="api-key-info">
-                                <h4>需求分析助手</h4>
-                                <p>用于需求分析的 Dify API Key</p>
-                            </div>
-                            <div class="api-key-input">
-                                <input type="text" id="user-specific-requirementsAnalysis-api-key" placeholder="输入 API Key">
-                            </div>
-                        </div>
-                        
-                        <div class="api-key-config-item">
-                            <div class="api-key-info">
-                                <h4>UX 界面设计</h4>
-                                <p>用于生成界面设计提示词的 Dify API Key</p>
-                            </div>
-                            <div class="api-key-input">
-                                <input type="text" id="user-specific-uxDesign-api-key" placeholder="输入 API Key">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-message" id="user-specific-api-keys-message"></div>
-                    
-                    <div class="form-actions">
-                        <button class="btn-primary" id="save-user-api-keys-button">保存 API Keys</button>
-                    </div>
-                </div>
-
-                <div class="admin-content" id="api-endpoints-management">
-                    <div class="api-keys-management-description">
-                        <p>在这里您可以配置全局的Dify API地址，所有用户都将使用这些地址进行API调用。</p>
-                    </div>
-                    
-                    <div class="api-keys-config">
-                        <div class="api-key-config-item">
-                            <div class="api-key-info">
-                                <h4>User Story 生成器</h4>
-                                <p>用于生成用户故事的 Dify Workflow API 地址</p>
-                            </div>
-                            <div class="api-key-input">
-                                <input type="text" id="global-userStory-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
-                            </div>
-                        </div>
-                        
-                        <div class="api-key-config-item">
-                            <div class="api-key-info">
-                                <h4>User Manual 生成器</h4>
-                                <p>用于生成用户手册的 Dify Agent API 地址</p>
-                            </div>
-                            <div class="api-key-input">
-                                <input type="text" id="global-userManual-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
-                            </div>
-                        </div>
-                        
-                        <div class="api-key-config-item">
-                            <div class="api-key-info">
-                                <h4>需求分析助手</h4>
-                                <p>用于需求分析的 Dify API 地址</p>
-                            </div>
-                            <div class="api-key-input">
-                                <input type="text" id="global-requirementsAnalysis-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
-                            </div>
-                        </div>
-                        
-                        <div class="api-key-config-item">
-                            <div class="api-key-info">
-                                <h4>UX 界面设计</h4>
-                                <p>用于生成界面设计提示词的 Dify API 地址</p>
-                            </div>
-                            <div class="api-key-input">
-                                <input type="text" id="global-uxDesign-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-message" id="global-api-endpoints-message"></div>
-                    
-                    <div class="form-actions">
-                        <button class="btn-primary" id="save-global-api-endpoints-button">保存 API 地址</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 添加/编辑用户模态框 -->
-    <div class="modal" id="edit-user-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="user-edit-modal-title">添加用户</h2>
-                <button class="close-modal" id="edit-user-modal-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="user-edit-username">用户名</label>
-                    <input type="text" id="user-edit-username" placeholder="输入用户名">
-                </div>
-                
-                <div class="form-group">
-                    <label for="user-edit-password">密码</label>
-                    <input type="password" id="user-edit-password" placeholder="输入密码">
-                    <p class="form-help" id="user-edit-password-help">留空则使用默认密码: password123</p>
-                </div>
-                
-                <div class="form-group">
-                    <label for="user-edit-role">角色</label>
-                    <select id="user-edit-role">
-                        <option value="user">普通用户</option>
-                        <option value="admin">管理员</option>
-                    </select>
-                </div>
-                
-                <div class="form-message" id="user-edit-form-message"></div>
-                
-                <div class="form-actions">
-                    <button class="btn-secondary" id="cancel-user-edit">取消</button>
-                    <button class="btn-primary" id="save-user-edit">保存</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
@@ -767,6 +351,14 @@
             </div>
         </div>
     </footer>
+
+    <!-- 初始化页面脚本 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化头部组件
+            Header.init();
+        });
+    </script>
 
 </body>
 </html> 
