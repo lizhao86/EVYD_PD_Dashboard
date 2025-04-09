@@ -90,12 +90,18 @@
     <script src="../../scripts/services/storage.js"></script>
     <script src="../../modules/auth/auth.js"></script>
     <script src="../../scripts/core/config.js"></script>
-    <script src="../../scripts/core/app.js"></script>
     <!-- 导入通用头部组件 -->
     <script src="../../modules/common/header.js"></script>
+    <!-- 导入主应用脚本 -->
+    <script src="../../scripts/core/app.js"></script>
     <script>
         // 确保样式正确应用 - 在页面加载完成后执行
         document.addEventListener('DOMContentLoaded', function() {
+            // 确保头部组件初始化
+            if (typeof Header !== 'undefined' && Header.init) {
+                Header.init();
+            }
+            
             // 在点击标签页时确保样式一致
             document.querySelectorAll('.admin-tab').forEach(function(tab) {
                 tab.addEventListener('click', function() {

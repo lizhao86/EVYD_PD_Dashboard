@@ -30,23 +30,43 @@ const App = {
         const currentUser = Auth.checkAuth();
         console.log('当前用户:', currentUser);
         
+        // 获取DOM元素，并检查它们是否存在
+        const loginButton = document.getElementById('login-button');
+        const userInfo = document.getElementById('user-info');
+        const usernameDisplay = document.getElementById('username-display');
+        const adminPanelLink = document.getElementById('admin-panel-link');
+        
+        // 检查必要的DOM元素是否存在
+        if (!loginButton || !userInfo || !usernameDisplay) {
+            console.error('找不到必要的DOM元素:', {
+                loginButton: !!loginButton,
+                userInfo: !!userInfo,
+                usernameDisplay: !!usernameDisplay
+            });
+            return; // 如果缺少必要元素，则提前返回
+        }
+        
         if (currentUser) {
             // 用户已登录
-            document.getElementById('login-button').style.display = 'none';
-            document.getElementById('user-info').style.display = 'flex';
-            document.getElementById('username-display').textContent = currentUser.username;
+            loginButton.style.display = 'none';
+            userInfo.style.display = 'flex';
+            usernameDisplay.textContent = currentUser.username;
             
             // 管理员特权
-            if (currentUser.role === 'admin') {
-                document.getElementById('admin-panel-link').style.display = 'block';
-            } else {
-                document.getElementById('admin-panel-link').style.display = 'none';
+            if (adminPanelLink) {
+                if (currentUser.role === 'admin') {
+                    adminPanelLink.style.display = 'block';
+                } else {
+                    adminPanelLink.style.display = 'none';
+                }
             }
         } else {
             // 用户未登录
-            document.getElementById('login-button').style.display = 'block';
-            document.getElementById('user-info').style.display = 'none';
-            document.getElementById('admin-panel-link').style.display = 'none';
+            loginButton.style.display = 'block';
+            userInfo.style.display = 'none';
+            if (adminPanelLink) {
+                adminPanelLink.style.display = 'none';
+            }
         }
     },
     
@@ -55,6 +75,12 @@ const App = {
      */
     bindEvents() {
         console.log('绑定事件...');
+        
+        // 检查页面是否已经完成加载并且DOM元素存在
+        if (!document.getElementById('header-container')) {
+            console.warn('头部容器不存在，可能页面尚未完全加载，跳过事件绑定');
+            return;
+        }
         
         // 登录按钮
         const loginButton = document.getElementById('login-button');
