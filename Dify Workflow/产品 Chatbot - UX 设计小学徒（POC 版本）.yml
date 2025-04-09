@@ -1,0 +1,94 @@
+app:
+  description: 用于生成放入 Figma中First Draft的AI 工具的 Prompt。因为 Figma 本身的 AI 也非常原始，不保证可用。
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  mode: chat
+  name: 产品 Chatbot - UX 设计小学徒（POC 版本）
+  use_icon_as_answer_icon: true
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/gemini:0.0.8@47f6ecb7f3bf64e5ae1eb31f868801f48ad6e1f14ce9032fa5ba0225df5cdfc1
+kind: app
+model_config:
+  agent_mode:
+    enabled: false
+    max_iteration: 5
+    strategy: function_call
+    tools: []
+  annotation_reply:
+    enabled: false
+  chat_prompt_config: {}
+  completion_prompt_config: {}
+  dataset_configs:
+    datasets:
+      datasets: []
+    reranking_enable: false
+    retrieval_model: multiple
+    top_k: 4
+  dataset_query_variable: ''
+  external_data_tools: []
+  file_upload:
+    allowed_file_extensions:
+    - .JPG
+    - .JPEG
+    - .PNG
+    - .GIF
+    - .WEBP
+    - .SVG
+    - .MP4
+    - .MOV
+    - .MPEG
+    - .MPGA
+    allowed_file_types: []
+    allowed_file_upload_methods:
+    - remote_url
+    - local_file
+    enabled: true
+    image:
+      detail: high
+      enabled: false
+      number_limits: 3
+      transfer_methods:
+      - remote_url
+      - local_file
+    number_limits: 3
+  model:
+    completion_params:
+      stop: []
+    mode: chat
+    name: gemini-2.0-flash
+    provider: langgenius/gemini/google
+  more_like_this:
+    enabled: false
+  opening_statement: ''
+  pre_prompt: "【你的角色】\n你是一位经验丰富的产品设计师，擅长将产品需求(Acceptance Criteria)转换为清晰的线框图(Wireframe)设计描述。你有丰富的UI/UX经验，能够准确理解产品需求并提炼出页面的核心元素与功能流程。\n\
+    \n【工作流程】\n1. 我会提供一段Acceptance Criteria(AC)和相关描述\n2. 你需要分析理解这些需求，并将其转换为线框图(Wireframe)的设计描述\n\
+    \n【你的任务】\n基于我提供的AC，你需要提供以下内容：\n1. 页面概述：用一句话描述每个页面的核心目的（必填），例如：\n    - \"一个销售烧烤设备的商店结账页面\"\
+    \n    - \"一个宠物食品配送应用\"\n    - \"一个内容策略咨询公司的营销网站\"\n\n2. 核心功能\n    - 详细列出页面应包含的关键功能元素\n\
+    \n3. 给 UIUX 建议\n    - 描述页面主要区域的组织方式和各组件的合理排布\n    - 信息层次结构和视觉重量分布\n    - 主要交互方式和信息架构\n\
+    \n【输出要求】\n    - 使用Markdown格式输出所有内容\n    - 无论我使用什么语言提问，你都必须用英文回答\n    - 保持专业、简洁但详尽的描述风格\n\
+    \n【输出格式】\n当我提供AC后，请按以下格式组织你的回答:\n\n## 注意\n⚠️ 此 AI 还在测试中，如果完全依赖这个生成 UX，UIUX team\
+    \ 会生气。请仔细甄别⚠️\n\n## Page 1 - Page Name （copy paste 下面的内容去 Figma First Draft AI）\n\
+    [一句话描述页面概述]\n[一句话描述页面核心功能]\n\n## Page 2 - Page Name （copy paste 下面的内容去 Figma First\
+    \ Draft AI）\n[一句话描述页面概述]\n[一句话描述页面核心功能]\n\n## To UIUX Team (DONT FEED to FigmaAI)\n\
+    [详细描述给UIUX 建议]"
+  prompt_type: simple
+  retriever_resource:
+    enabled: true
+  sensitive_word_avoidance:
+    configs: []
+    enabled: false
+    type: ''
+  speech_to_text:
+    enabled: false
+  suggested_questions: []
+  suggested_questions_after_answer:
+    enabled: false
+  text_to_speech:
+    enabled: false
+    language: ''
+    voice: ''
+  user_input_form: []
+version: 0.1.5

@@ -695,12 +695,12 @@ const Header = {
             addUserButton.addEventListener('click', () => {
                 console.log('点击添加用户按钮');
                 // 重置表单
-                document.getElementById('user-edit-modal-title').textContent = '添加用户';
+                document.getElementById('edit-user-title').textContent = '添加用户';
                 document.getElementById('user-edit-username').value = '';
                 document.getElementById('user-edit-password').value = '';
                 document.getElementById('user-edit-role').value = 'user';
-                document.getElementById('user-edit-form-message').textContent = '';
-                document.getElementById('user-edit-form-message').className = 'form-message';
+                document.getElementById('edit-user-message').textContent = '';
+                document.getElementById('edit-user-message').className = 'form-message';
                 
                 // 显示模态框
                 document.getElementById('edit-user-modal').style.display = 'block';
@@ -711,45 +711,71 @@ const Header = {
         const saveUserButton = document.getElementById('save-edit-user');
         if (saveUserButton) {
             saveUserButton.addEventListener('click', () => {
+                console.log('点击保存用户按钮');
                 const username = document.getElementById('user-edit-username').value;
                 const password = document.getElementById('user-edit-password').value;
                 const role = document.getElementById('user-edit-role').value;
                 
+                console.log('添加用户数据:', { username, role, password: password ? '已设置' : '未设置' });
+                
                 if (!username) {
-                    this.showFormMessage('user-edit-form-message', '请输入用户名', 'error');
+                    this.showFormMessage('edit-user-message', '请输入用户名', 'error');
                     return;
                 }
                 
                 // 检查是否存在同名用户
                 const users = Storage.getAllUsers();
+                console.log('现有用户列表:', users);
+                
                 const existingUser = users.find(u => u.username === username);
                 if (existingUser) {
-                    this.showFormMessage('user-edit-form-message', '用户名已存在', 'error');
+                    this.showFormMessage('edit-user-message', '用户名已存在', 'error');
                     return;
                 }
                 
-                // 添加用户
-                const result = Storage.addUser({
-                    username,
-                    password: password || 'password123',
-                    role: role,
-                    apiKeys: {
-                        userStory: '',
-                        userManual: '',
-                        requirementsAnalysis: '',
-                        uxDesign: ''
+                try {
+                    console.log('开始添加用户...');
+                    // 添加用户
+                    const newUser = {
+                        id: 'user-' + Date.now(), // 添加唯一ID
+                        username,
+                        password: password || 'password123',
+                        role: role,
+                        created: new Date().toISOString(),
+                        apiKeys: {
+                            userStory: '',
+                            userManual: '',
+                            requirementsAnalysis: '',
+                            uxDesign: ''
+                        }
+                    };
+                    console.log('新用户对象:', newUser);
+                    
+                    const result = Storage.addUser(newUser);
+                    console.log('添加用户结果:', result);
+                    
+                    if (result === true) {
+                        this.showFormMessage('edit-user-message', '用户添加成功', 'success');
+                        setTimeout(() => {
+                            document.getElementById('edit-user-modal').style.display = 'none';
+                            this.loadUsersList();
+                        }, 1500);
+                    } else {
+                        this.showFormMessage('edit-user-message', '添加用户失败', 'error');
                     }
-                });
-                
-                if (result.success) {
-                    this.showFormMessage('user-edit-form-message', '用户添加成功', 'success');
-                    setTimeout(() => {
-                        document.getElementById('edit-user-modal').style.display = 'none';
-                        this.loadUsersList();
-                    }, 1500);
-                } else {
-                    this.showFormMessage('user-edit-form-message', result.message || '添加用户失败', 'error');
+                } catch (error) {
+                    console.error('添加用户时发生异常:', error);
+                    this.showFormMessage('edit-user-message', '添加用户异常: ' + error.message, 'error');
                 }
+            });
+        }
+        
+        // 取消编辑用户按钮
+        const cancelEditUserButton = document.getElementById('cancel-edit-user');
+        if (cancelEditUserButton) {
+            cancelEditUserButton.addEventListener('click', () => {
+                console.log('点击取消编辑用户按钮');
+                document.getElementById('edit-user-modal').style.display = 'none';
             });
         }
         
@@ -829,6 +855,75 @@ const Header = {
                     this.showFormMessage('api-endpoints-message', '更新失败: ' + error.message, 'error');
                 }
             });
+        }
+
+        // 添加清理脏数据用户的按钮
+        const addUserButtonContainer = document.querySelector('.admin-actions');
+        if (addUserButtonContainer) {
+            // 检查是否已经添加了清理按钮
+            if (!document.getElementById('cleanup-users-button')) {
+                const cleanupButton = document.createElement('button');
+                cleanupButton.className = 'btn-secondary';
+                cleanupButton.id = 'cleanup-users-button';
+                cleanupButton.textContent = '清理脏数据用户';
+                cleanupButton.style.marginLeft = '10px';
+                addUserButtonContainer.appendChild(cleanupButton);
+
+                // 添加清理脏数据用户的事件
+                cleanupButton.addEventListener('click', () => {
+                    console.log('尝试清理脏数据用户');
+                    
+                    if (confirm('确定要清理所有没有正确ID格式的用户数据吗？此操作不可撤销。')) {
+                        try {
+                            const users = Storage.getAllUsers();
+                            console.log('现有用户列表:', users);
+                            
+                            // 筛选出没有正确ID格式的用户（即ID不是以admin-或user-开头的）
+                            const dirtyUsers = users.filter(user => 
+                                !user.id || 
+                                (typeof user.id === 'string' && 
+                                 !user.id.startsWith('admin-') && 
+                                 !user.id.startsWith('user-'))
+                            );
+                            
+                            console.log('发现脏数据用户:', dirtyUsers);
+                            
+                            if (dirtyUsers.length === 0) {
+                                alert('没有发现脏数据用户');
+                                return;
+                            }
+                            
+                            // 获取当前用户
+                            const currentUser = Auth.checkAuth();
+                            
+                            // 检查是否尝试删除自己
+                            const selfInDirty = dirtyUsers.some(user => currentUser && user.id === currentUser.id);
+                            if (selfInDirty) {
+                                alert('不能删除包含当前登录账号的数据');
+                                return;
+                            }
+                            
+                            // 移除脏数据用户
+                            const cleanUsers = users.filter(user => 
+                                user.id && 
+                                typeof user.id === 'string' && 
+                                (user.id.startsWith('admin-') || user.id.startsWith('user-'))
+                            );
+                            
+                            console.log('清理后的用户列表:', cleanUsers);
+                            
+                            // 保存清理后的用户列表
+                            Storage.saveUsers(cleanUsers);
+                            
+                            alert(`成功清理了 ${dirtyUsers.length} 个脏数据用户`);
+                            Header.loadUsersList(); // 刷新用户列表
+                        } catch (error) {
+                            console.error('清理脏数据用户时发生错误:', error);
+                            alert('清理失败: ' + (error.message || '未知错误'));
+                        }
+                    }
+                });
+            }
         }
     },
     
@@ -912,17 +1007,22 @@ const Header = {
         
         // 绑定编辑和删除按钮事件
         this.bindUserActions();
+        
+        console.log('用户列表加载完成，共 ' + users.length + ' 个用户');
     },
     
     /**
      * 绑定用户操作按钮事件
      */
     bindUserActions() {
+        console.log('绑定用户操作按钮事件...');
+        
         // 编辑用户按钮
         const editButtons = document.querySelectorAll('.edit-user');
         editButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const userId = button.dataset.userId;
+                console.log('点击编辑用户按钮, 用户ID:', userId);
                 const user = Storage.getUser(userId);
                 
                 if (user) {
@@ -939,6 +1039,9 @@ const Header = {
                     
                     // 显示模态框
                     document.getElementById('edit-user-modal').style.display = 'block';
+                } else {
+                    alert('找不到该用户信息，可能已被删除');
+                    Header.loadUsersList(); // 刷新列表
                 }
             });
         });
@@ -948,15 +1051,62 @@ const Header = {
         deleteButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const userId = button.dataset.userId;
+                console.log('尝试删除用户ID:', userId);
+                
+                if (!userId) {
+                    alert('无法获取用户ID，请刷新页面后重试');
+                    return;
+                }
                 
                 if (confirm('确定要删除此用户吗？此操作不可撤销。')) {
-                    const result = Storage.deleteUser(userId);
-                    
-                    if (result.success) {
-                        alert('用户删除成功');
-                        this.loadUsersList(); // 重新加载用户列表
-                    } else {
-                        alert('删除失败: ' + (result.message || '未知错误'));
+                    try {
+                        // 获取当前用户信息，检查权限
+                        const currentUser = Auth.checkAuth();
+                        console.log('当前登录用户:', currentUser);
+                        
+                        // 获取要删除的用户信息
+                        const userToDelete = Storage.getUser(userId);
+                        console.log('要删除的用户信息:', userToDelete);
+                        
+                        // 检查用户是否存在
+                        if (!userToDelete) {
+                            alert('找不到要删除的用户，该用户可能已被删除');
+                            Header.loadUsersList(); // 刷新列表
+                            return;
+                        }
+                        
+                        // 检查是否尝试删除自己
+                        if (currentUser && currentUser.id === userId) {
+                            alert('不能删除当前登录的用户账号');
+                            return;
+                        }
+                        
+                        // 检查是否是唯一的管理员
+                        if (userToDelete && userToDelete.role === 'admin') {
+                            const allUsers = Storage.getAllUsers();
+                            const adminCount = allUsers.filter(u => u.role === 'admin').length;
+                            console.log('管理员数量:', adminCount);
+                            
+                            if (adminCount <= 1) {
+                                alert('不能删除唯一的管理员账号');
+                                return;
+                            }
+                        }
+                        
+                        console.log('执行删除用户操作');
+                        const result = Storage.deleteUser(userId);
+                        console.log('删除用户结果:', result);
+                        
+                        if (result === true) {
+                            alert('用户删除成功');
+                            Header.loadUsersList(); // 使用Header对象直接调用
+                        } else {
+                            alert('删除失败: 删除失败');
+                            console.error('删除用户失败详情:', result);
+                        }
+                    } catch (error) {
+                        console.error('删除用户时发生错误:', error);
+                        alert('删除失败: ' + (error.message || '未知错误'));
                     }
                 }
             });
