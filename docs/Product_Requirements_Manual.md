@@ -5,7 +5,7 @@
 ## 文档信息
 
 - **文档名称**：EVYD 产品经理 AI 工作台产品需求手册
-- **当前版本**：1.4.5
+- **当前版本**：1.4.6
 - **创建日期**：2025-03-01
 - **最后更新**：2025-04-10
 - **文档状态**：更新中
@@ -27,6 +27,7 @@
 | 1.4.3 | 2025-04-09 | EVYD产品团队 | 移除用户下拉菜单中的"查看API密钥"入口，优化API密钥管理流程 |
 | 1.4.4 | 2025-04-09 | EVYD产品团队 | 修复导航菜单中"文档中心"下拉菜单的显示问题，确保所有页面中下拉菜单样式统一 |
 | 1.4.5 | 2025-04-10 | EVYD产品团队 | 移除产品需求手册HTML页面，改为直接通过Markdown文件提供文档访问 |
+| 1.4.6 | 2025-04-10 | EVYD产品团队 | 新增用户管理中的脏数据清理功能，优化用户数据管理 |
 
 ## 1. 产品概述
 
@@ -59,6 +60,8 @@ EVYD 产品经理 AI 工作台是基于EVYD科技先进的人工智能技术，�
 - 应支持不同角色权限设置
 - 用户应能修改个人密码
 - 用户密码修改界面应提供清晰的表单验证和反馈
+- 提供脏数据清理功能，一键清理不符合ID格式规范的用户数据
+- 确保用户ID格式统一（admin-timestamp或user-timestamp格式）
 
 #### 2.1.3 管理员面板
 - 应提供统一的管理员面板，包含用户管理、API密钥配置和API地址配置功能
@@ -74,6 +77,77 @@ EVYD 产品经理 AI 工作台是基于EVYD科技先进的人工智能技术，�
 - 提供输出内容的一键复制功能
 - 支持应急暂停正在生成的任务，节省 Token
 - 完成输出后展示每次生成的耗时，Token消耗，步骤次数
+
+**Dify 工作流**:
+
+*   **工作流名称**: 产品工作流 - 创建需求
+*   **工作流作用**:  这个工作流就像一个智能助手，你只需要告诉它你的产品需求，它就能帮你自动生成结构清晰的用户故事和验收标准。
+*   **幕后功臣**:  这个功能背后是 Dify 工作流在驱动，它使用了 AI 技术来实现自动化生成。
+*   **核心模型**:  在生成用户故事时，主要使用了 Gemini 模型 (`langgenius/gemini/google:gemini-2.0-flash-thinking-exp-01-21`)，这个模型擅长理解产品需求并生成高质量的文档。
+*   **工作流程**:
+    1.  **告诉我你的需求**:  你需要提供一些信息，比如你的产品是关于哪个平台（App 还是 Console），哪个系统，哪个模块的，以及具体的需求描述。
+    2.  **AI 判断你想做什么**:  工作流会先判断你是不是真的想"创建产品需求"，还是有其他的想法。这个判断是由 Deepseek 模型 (`langgenius/deepseek/deepseek:deepseek-chat`) 完成的。
+    3.  **决定下一步**:  如果 AI 判断你确实想创建用户故事，它就会继续下一步；否则，它会告诉你目前这个工具只能生成用户故事。
+    4.  **AI 生成用户故事**:  接下来，Gemini 模型会根据你提供的需求和预设的"提示词"（Prompt），自动生成 User Story 文档。
+    5.  **检查细节**:  生成完用户故事后，还会用火山模型 (`langgenius/volcengine_maas/volcengine_maas:火山 V3`) 检查一下，看看生成的需求是否足够详细，有没有遗漏什么重要的细节。
+    6.  **给出最终结果**:  如果检查发现信息不足，它会提示你需要补充更多细节；如果信息完善，就会直接输出最终的 User Story 文档。
+    7.  **最终产出**:  你会得到一份结构化的 User Story 文档，或者得到一个友好的提示，告诉你需要补充哪些信息才能生成更好的用户故事。
+
+**核心提示词**:
+
+```
+根据用户的需求输入，请按下方内容和格式写 User Story 文档
+
+System:
+1. You are a senior product manager in the healthcare internet industry with expertise in health management systems and user experience design.
+2. You can understand user requirements and generate high-quality User Story documents in a standard format, including title, description, Figma links, and acceptance criteria.
+3. Interaction if the requirement provided is not clear:
+   - Guide the user to describe their requirement (target user, goal, core functionality).
+   - Ask clarifying questions in Chinese to resolve ambiguity and ensure full understanding.
+4. If the requirement is detailed enough, generate content for User Story.
+5. When generating content, please consider and refine from the following dimensions:
+    - Healthcare management perspective: Consider health data analysis, adherence tracking, and health goal achievement
+    - IT implementation perspective: Consider system functionality, user interface, and technical implementation
+    - User experience perspective: Consider usability, notification effectiveness, and personalisation options
+    - User Interface: parameters, buttons, clicking and jumping logic
+    - The title should be written in an As [a user], I want to [do a thing] format.
+6. Requirements for Acceptance Criteria:
+    - Use the Given-When-Then-And format, ensuring each scenario is complete and detailed.
+    - Include at least 5 key scenarios covering main functionality, edge cases, and error handling.
+    - Each scenario should consider user operation flow, system response, and data changes.
+    - Appropriately add "And" clauses to make acceptance criteria more comprehensive.
+    - Define conditions that QA can verify.
+    - Leave no room for interpretation. These must cover the Main Success Path ("Happy Path"): The primary way the feature should work correctly. Alternative Paths: Other valid ways the feature might be used. Edge Cases: Uncommon but possible situations. And Error Handling: How the system should respond to invalid input or failures.
+6. Output everything in English with markdown format regardless of the language used by the user, ensuring accurate professional terminology.
+
+Assistant
+
+### Title:
+[{{#1743174409613.Platform#}}] {{#1743174409613.System#}} {{#1743174409613.Module#}} - As an Admin, I Can View Inherited Read-Only Permissions When Assigning Permissions to Accounts which already linked with certain Roles
+
+### **Description**
+When assigning permissions to accounts, I can see the permissions inherited from roles, but these are displayed in a read-only format to prevent unauthorized changes.
+
+### **Figma Section Link(s)**
+- User flow: N/A *(Remove if Appliable)*
+- LoFi wireframe: *N/A (Remove if Appliable)*
+- HiFi wireframe (final design): *N/A (Remove if Appliable)*
+
+### **Acceptance Criteria**
+**Scenario 1: Viewing Inherited Permissions During Assignment**
+- **Given** I am an Admin assigning permissions to accounts,
+- **When** I select an account that is linked with certain roles already,
+- **Then** I should be able to view the permissions inherited from these roles.
+
+**Scenario 2: Read-Only Format for Inherited Permissions**
+- **Given** I am viewing inherited permissions for an account,
+- **When** I examine these permissions,
+- **Then** they should be displayed in a read-only format to ensure that I cannot make unauthorized changes to them.
+
+**Scenario 3: Clarity and Distinction of Inherited Permissions**
+- **Given** I am in the process of assigning rights to an account,
+- **When** I view the permissions linked to that account,
+- **Then** the inherited permissions should be clearly distinguished from the directly assigned permissions, possibly through different visual cues or sections.
 
 #### 2.2.2 用户手册生成器
 - 根据产品的需求描述自动生成用户手册文档
@@ -161,6 +235,9 @@ EVYD 产品经理 AI 工作台是基于EVYD科技先进的人工智能技术，�
 - UX界面设计(POC)
 - 需求分析工具 Work In Progress
 - 用户管理界面
+  - 用户列表
+  - 添加/编辑用户表单
+  - 脏数据清理功能
 - 设置界面
 - 管理员面板
   - 用户管理标签页
@@ -184,6 +261,8 @@ EVYD 产品经理 AI 工作台是基于EVYD科技先进的人工智能技术，�
 - 用户管理：
   - 显示用户列表，包含ID、用户名、角色、创建日期和操作按钮
   - 提供添加、编辑和删除用户的功能
+  - 提供"清理脏数据用户"按钮，可一键清理不规范的用户数据
+  - 清理前进行安全检查，防止误删当前登录用户或唯一管理员
 - API密钥配置：
   - 用户选择下拉框，选择要配置的用户
   - 为每个功能模块单独配置API密钥
