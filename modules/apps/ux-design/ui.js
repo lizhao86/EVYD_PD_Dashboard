@@ -99,7 +99,12 @@ function handleGenerate(event) {
         const requirementDescription = textareaElement ? textareaElement.value.trim() : '';
         
         if (!requirementDescription) {
-            showError('请输入需求描述');
+            // 使用国际化翻译错误消息
+            let errorText = '请输入需求描述'; // 默认文本
+            if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') {
+                errorText = I18n.t('uxDesign.error.emptyRequirement');
+            }
+            showError(errorText);
             return;
         }
         
@@ -118,8 +123,14 @@ function handleGenerate(event) {
             systemInfoContainer.style.display = 'none';
         }
         
+        // 获取国际化文本
+        let generatingText = '生成中...点击停止'; // 默认文本
+        if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') {
+            generatingText = I18n.t('common.generating');
+        }
+        
         // 更新生成按钮状态为停止按钮
-        button.innerHTML = '<div class="loading-circle-container"><div class="loading-circle" style="border-color: #ff3333; border-top-color: transparent;"></div></div> 生成中...点击停止';
+        button.innerHTML = '<div class="loading-circle-container"><div class="loading-circle" style="border-color: #ff3333; border-top-color: transparent;"></div></div> ' + generatingText;
         button.setAttribute('data-action', 'stop');
         // 保持使用primary样式，确保文字可见
         
@@ -171,7 +182,12 @@ function showError(message) {
  * @param {HTMLElement} button - 按钮元素
  */
 function resetGenerateButton(button) {
-    button.innerHTML = '生成设计提示词';
+    // 获取国际化文本
+    let buttonText = '生成设计提示词'; // 默认文本
+    if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') {
+        buttonText = I18n.t('uxDesign.generateButton');
+    }
+    button.innerHTML = buttonText;
     button.removeAttribute('disabled');
     button.classList.remove('btn-disabled');
     button.setAttribute('data-action', 'generate');

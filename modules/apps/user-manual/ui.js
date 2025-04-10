@@ -112,7 +112,13 @@ const UI = {
         
         // 显示结果区域
         document.getElementById('result-container').style.display = 'block';
-        document.getElementById('result-content').textContent = '生成中，请稍候...';
+        
+        // 获取国际化文本
+        let generatingText = '生成中，请稍候...'; // 默认文本
+        if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') {
+            generatingText = I18n.t('userManual.generating');
+        }
+        document.getElementById('result-content').textContent = generatingText;
         document.getElementById('result-content').style.display = 'block';
         
         // 如果有Markdown区域，先隐藏
@@ -126,7 +132,13 @@ const UI = {
         
         // 设置生成按钮状态为停止
         const generateButton = document.getElementById('generate-manual');
-        generateButton.textContent = '停止生成';
+        
+        // 获取停止生成按钮文本
+        let stopGenerationText = '停止生成'; // 默认文本
+        if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') {
+            stopGenerationText = I18n.t('common.stopGeneration');
+        }
+        generateButton.textContent = stopGenerationText;
         generateButton.setAttribute('data-action', 'stop');
         generateButton.classList.add('btn-danger');
         
@@ -147,7 +159,13 @@ const UI = {
         
         // 恢复生成按钮状态
         const generateButton = document.getElementById('generate-manual');
-        generateButton.textContent = '生成 User Manual';
+        
+        // 获取生成按钮文本
+        let generateButtonText = '生成 User Manual'; // 默认文本
+        if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') {
+            generateButtonText = I18n.t('userManual.generateButton');
+        }
+        generateButton.textContent = generateButtonText;
         generateButton.setAttribute('data-action', 'generate');
         generateButton.classList.remove('btn-danger');
         
@@ -164,8 +182,14 @@ const UI = {
         const statsContainer = document.getElementById('result-stats');
         
         if (data) {
+            // 获取国际化的"秒"后缀
+            let secondsSuffix = '秒';
+            if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') {
+                secondsSuffix = I18n.t('userManual.secondsSuffix');
+            }
+            
             // 更新统计数据
-            document.getElementById('elapsed-time').textContent = `${data.elapsed_time.toFixed(2)}秒`;
+            document.getElementById('elapsed-time').textContent = `${data.elapsed_time.toFixed(2)}${secondsSuffix}`;
             document.getElementById('total-tokens').textContent = data.total_tokens;
             document.getElementById('total-steps').textContent = data.total_steps || 1;
             

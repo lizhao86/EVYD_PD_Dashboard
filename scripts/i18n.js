@@ -36,6 +36,9 @@ const I18n = {
         // 加载当前语言的翻译
         this.loadTranslations();
         
+        // 应用翻译到带有 data-translate 属性的元素
+        this.applyTranslations();
+        
         // 根据当前语言设置文档方向
         if (this.currentLang === 'ar' || this.currentLang === 'he') {
             document.documentElement.dir = 'rtl'; // 阿拉伯语和希伯来语从右到左
@@ -155,6 +158,47 @@ const I18n = {
      */
     getSupportedLanguages() {
         return this.supportedLanguages;
+    },
+
+    /**
+     * 应用翻译到页面上所有带有 data-translate 属性的元素
+     * @param {HTMLElement|null} container 可选的容器元素，仅翻译其中的元素。若为null则翻译整个文档
+     */
+    applyTranslations(container = null) {
+        console.log('应用页面翻译...');
+        if (!this.translations) {
+            console.warn('翻译尚未加载，无法应用。');
+            return;
+        }
+        
+        // 选择特定容器内或全文档中带有 data-translate 或 data-translate-placeholder 属性的元素
+        const context = container || document;
+        const elements = context.querySelectorAll('[data-translate], [data-translate-placeholder]');
+        
+        elements.forEach(element => {
+            // 处理 textContent
+            const key = element.getAttribute('data-translate');
+            if (key) {
+                const translatedText = this.t(key);
+                if (translatedText !== key) {
+                    element.textContent = translatedText;
+                } else {
+                    console.warn(`未找到键 '${key}' 的有效翻译，或翻译值与键名相同。`);
+                }
+            }
+
+            // 处理 placeholder
+            const placeholderKey = element.getAttribute('data-translate-placeholder');
+            if (placeholderKey) {
+                const translatedPlaceholder = this.t(placeholderKey);
+                if (translatedPlaceholder !== placeholderKey) {
+                    element.setAttribute('placeholder', translatedPlaceholder);
+                } else {
+                    console.warn(`未找到 placeholder 键 '${placeholderKey}' 的有效翻译，或翻译值与键名相同。`);
+                }
+            }
+        });
+        console.log(`已处理 ${elements.length} 个待翻译元素。`);
     }
 };
 

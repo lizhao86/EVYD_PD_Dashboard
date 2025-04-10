@@ -12,6 +12,8 @@ const Header = {
     init(containerId = 'header-container') {
         console.log('初始化头部组件...');
         this.loadHeader(containerId);
+        // 设置全站favicon
+        this.setGlobalFavicon();
     },
 
     /**
@@ -52,6 +54,14 @@ const Header = {
             // 初始化语言选择器
             this.initLanguageSelector();
             
+            // 应用国际化翻译到头部
+            if (typeof I18n !== 'undefined') {
+                I18n.applyTranslations(container);
+                console.log('已应用头部翻译');
+            } else {
+                console.warn('I18n未定义，无法应用头部翻译');
+            }
+            
             console.log('头部组件加载完成');
         } catch (error) {
             console.error('头部组件加载失败:', error);
@@ -76,39 +86,39 @@ const Header = {
 <header class="header">
     <div class="container header-container">
         <div class="logo-container">
-            <img src="ROOT_PATH/assets/images/Group-29-2048x943.png" alt="EVYD Logo" class="logo">
+            <img src="ROOT_PATH/assets/images/Variant=White, Lockup=Default.png" alt="EVYD Logo" class="logo">
             <span class="logo-divider"></span>
             <div class="logo-text">
-                <h1>产品经理 AI 工作台</h1>
-                <p>AI驱动的产品开发助手</p>
+                <h1 data-translate="header.title">产品经理 AI 工作台</h1>
+                <p data-translate="header.subtitle">AI驱动的产品开发助手</p>
             </div>
         </div>
         <nav class="main-nav">
             <ul>
-                <li><a href="ROOT_PATH/templates/pages/Homepage.html" id="nav-home">工具主页</a></li>
-                <li><a href="#" id="nav-ai-tools">AI 工具</a></li>
+                <li><a href="ROOT_PATH/templates/pages/Homepage.html" id="nav-home" data-translate="nav.home">工具主页</a></li>
+                <li><a href="#" id="nav-ai-tools" data-translate="nav.aiTools">AI 工具</a></li>
                 <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" id="nav-docs">文档中心 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></a>
+                    <a href="#" class="dropdown-toggle" id="nav-docs" data-translate="nav.docs">文档中心 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></a>
                     <div class="dropdown-menu">
-                        <a href="#" id="nav-product-requirements">产品需求手册</a>
-                        <a href="#" id="nav-api-docs">API文档</a>
-                        <a href="#" id="nav-tutorials">使用教程</a>
+                        <a href="#" id="nav-product-requirements" data-translate="nav.productRequirements">产品需求手册</a>
+                        <a href="#" id="nav-api-docs" data-translate="nav.apiDocs">API文档</a>
+                        <a href="#" id="nav-tutorials" data-translate="nav.tutorials">使用教程</a>
                     </div>
                 </li>
-                <li id="admin-panel-link" style="display: none;"><a href="javascript:void(0);" id="admin-panel-button">管理面板</a></li>
+                <li id="admin-panel-link" style="display: none;"><a href="javascript:void(0);" id="admin-panel-button" data-translate="nav.adminPanel">管理面板</a></li>
             </ul>
         </nav>
         <div class="user-actions">
             <!-- 语言选择器 -->
             <div class="language-selector">
                 <button class="language-toggle">
-                    <span id="current-language-display">简体中文</span>
+                    <span id="current-language-display" data-translate="language.current">简体中文</span>
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                 </button>
                 <div class="language-dropdown">
-                    <a href="#" class="language-option" data-lang="zh-CN">简体中文</a>
-                    <a href="#" class="language-option" data-lang="zh-TW">繁體中文</a>
-                    <a href="#" class="language-option" data-lang="en">English</a>
+                    <a href="#" class="language-option" data-lang="zh-CN" data-translate="language.zhCN">简体中文</a>
+                    <a href="#" class="language-option" data-lang="zh-TW" data-translate="language.zhTW">繁體中文</a>
+                    <a href="#" class="language-option" data-lang="en" data-translate="language.en">English</a>
                 </div>
             </div>
             <div id="user-info" style="display: none;">
@@ -121,12 +131,12 @@ const Header = {
                         </svg>
                     </button>
                     <div class="dropdown-content">
-                        <a href="#" id="profile-settings">账号设置</a>
-                        <a href="#" id="logout-button">登出</a>
+                        <a href="#" id="profile-settings" data-translate="header.userMenu.settings">账号设置</a>
+                        <a href="#" id="logout-button" data-translate="common.logout">登出</a>
                     </div>
                 </div>
             </div>
-            <button id="login-button" class="btn-login">登录</button>
+            <button id="login-button" class="btn-login" data-translate="common.login">登录</button>
         </div>
     </div>
 </header>
@@ -135,31 +145,31 @@ const Header = {
 <div class="modal" id="login-modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2>登录</h2>
+            <h2 data-translate="modal.login.title">登录</h2>
             <button class="close-modal">&times;</button>
         </div>
         <div class="modal-body">
             <div class="auth-form">
                 <div class="form-tabs">
-                    <button class="form-tab active" data-tab="login">登录</button>
-                    <button class="form-tab" data-tab="register" id="register-tab" style="display: none;">注册</button>
+                    <button class="form-tab active" data-tab="login" data-translate="modal.login.tabLogin">登录</button>
+                    <button class="form-tab" data-tab="register" id="register-tab" style="display: none;" data-translate="modal.login.tabRegister">注册</button>
                 </div>
                 
                 <div class="tab-content active" id="login-tab-content">
                     <div class="form-group">
-                        <label for="login-username">用户名</label>
-                        <input type="text" id="login-username" placeholder="输入用户名">
+                        <label for="login-username" data-translate="modal.login.usernameLabel">用户名</label>
+                        <input type="text" id="login-username" data-translate-placeholder="modal.login.usernamePlaceholder" placeholder="输入用户名">
                     </div>
                     
                     <div class="form-group">
-                        <label for="login-password">密码</label>
-                        <input type="password" id="login-password" placeholder="输入密码">
+                        <label for="login-password" data-translate="modal.login.passwordLabel">密码</label>
+                        <input type="password" id="login-password" data-translate-placeholder="modal.login.passwordPlaceholder" placeholder="输入密码">
                     </div>
                     
                     <div class="form-message" id="login-message"></div>
                     
                     <div class="form-actions">
-                        <button class="btn-primary" id="submit-login">登录</button>
+                        <button class="btn-primary" id="submit-login" data-translate="modal.login.submitButton">登录</button>
                     </div>
                 </div>
             </div>
@@ -171,52 +181,52 @@ const Header = {
 <div class="modal" id="user-settings-modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2>账号设置</h2>
+            <h2 data-translate="modal.settings.title">账号设置</h2>
             <button class="close-modal">&times;</button>
         </div>
         <div class="modal-body">
             <div class="settings-tabs">
-                <button class="settings-tab active" data-settings="password">修改密码</button>
-                <button class="settings-tab" data-settings="profile">个人资料</button>
+                <button class="settings-tab active" data-settings="password" data-translate="modal.settings.tabPassword">修改密码</button>
+                <button class="settings-tab" data-settings="profile" data-translate="modal.settings.tabProfile">个人资料</button>
             </div>
             
             <div class="settings-content active" id="password-settings">
                 <div class="form-group">
-                    <label for="current-password">当前密码</label>
-                    <input type="password" id="current-password" placeholder="输入当前密码">
+                    <label for="current-password" data-translate="modal.settings.currentPasswordLabel">当前密码</label>
+                    <input type="password" id="current-password" data-translate-placeholder="modal.settings.currentPasswordPlaceholder" placeholder="输入当前密码">
                 </div>
                 
                 <div class="form-group">
-                    <label for="new-password">新密码</label>
-                    <input type="password" id="new-password" placeholder="输入新密码">
+                    <label for="new-password" data-translate="modal.settings.newPasswordLabel">新密码</label>
+                    <input type="password" id="new-password" data-translate-placeholder="modal.settings.newPasswordPlaceholder" placeholder="输入新密码">
                 </div>
                 
                 <div class="form-group">
-                    <label for="confirm-password">确认新密码</label>
-                    <input type="password" id="confirm-password" placeholder="再次输入新密码">
+                    <label for="confirm-password" data-translate="modal.settings.confirmPasswordLabel">确认新密码</label>
+                    <input type="password" id="confirm-password" data-translate-placeholder="modal.settings.confirmPasswordPlaceholder" placeholder="再次输入新密码">
                 </div>
                 
                 <div class="form-message" id="password-message"></div>
                 
                 <div class="form-actions">
-                    <button class="btn-secondary" id="cancel-password-change">取消</button>
-                    <button class="btn-primary" id="submit-password-change">更新密码</button>
+                    <button class="btn-secondary" id="cancel-password-change" data-translate="common.cancel">取消</button>
+                    <button class="btn-primary" id="submit-password-change" data-translate="modal.settings.updatePasswordButton">更新密码</button>
                 </div>
             </div>
             
             <div class="settings-content" id="profile-settings-content">
                 <div class="form-group">
-                    <label for="profile-username">用户名</label>
+                    <label for="profile-username" data-translate="modal.settings.profileUsernameLabel">用户名</label>
                     <input type="text" id="profile-username" disabled>
                 </div>
                 
                 <div class="form-group">
-                    <label for="profile-role">角色</label>
+                    <label for="profile-role" data-translate="modal.settings.profileRoleLabel">角色</label>
                     <input type="text" id="profile-role" disabled>
                 </div>
                 
                 <div class="form-group">
-                    <label for="profile-created">创建日期</label>
+                    <label for="profile-created" data-translate="modal.settings.profileCreatedLabel">创建日期</label>
                     <input type="text" id="profile-created" disabled>
                 </div>
             </div>
@@ -228,19 +238,19 @@ const Header = {
 <div class="modal" id="api-keys-modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2>API 密钥管理</h2>
+            <h2 data-translate="modal.apiKeys.title">API 密钥管理</h2>
             <button class="close-modal">&times;</button>
         </div>
         <div class="modal-body">
             <div class="api-keys-description">
-                <p>这里您可以查看您的 Dify API 密钥，这些密钥用于连接到 Dify 服务并使用 AI 功能。</p>
+                <p data-translate="modal.apiKeys.description">这里您可以查看您的 Dify API 密钥，这些密钥用于连接到 Dify 服务并使用 AI 功能。</p>
             </div>
             
             <div class="api-keys-list">
                 <div class="api-key-item">
                     <div class="api-key-info">
-                        <h4>User Story 生成器</h4>
-                        <p>用于生成用户故事的 Dify Workflow API Key</p>
+                        <h4 data-translate="modal.apiKeys.userStoryTitle">User Story 生成器</h4>
+                        <p data-translate="modal.apiKeys.userStoryDesc">用于生成用户故事的 Dify Workflow API Key</p>
                     </div>
                     <div class="api-key-value">
                         <input type="password" id="userStory-api-key" readonly>
@@ -255,8 +265,8 @@ const Header = {
                 
                 <div class="api-key-item">
                     <div class="api-key-info">
-                        <h4>User Manual 生成器</h4>
-                        <p>用于生成用户手册的 Dify Agent API Key</p>
+                        <h4 data-translate="modal.apiKeys.userManualTitle">User Manual 生成器</h4>
+                        <p data-translate="modal.apiKeys.userManualDesc">用于生成用户手册的 Dify Agent API Key</p>
                     </div>
                     <div class="api-key-value">
                         <input type="password" id="userManual-api-key" readonly>
@@ -271,8 +281,8 @@ const Header = {
                 
                 <div class="api-key-item">
                     <div class="api-key-info">
-                        <h4>需求分析助手</h4>
-                        <p>用于需求分析的 Dify API Key</p>
+                        <h4 data-translate="modal.apiKeys.requirementsAnalysisTitle">需求分析助手</h4>
+                        <p data-translate="modal.apiKeys.requirementsAnalysisDesc">用于需求分析的 Dify API Key</p>
                     </div>
                     <div class="api-key-value">
                         <input type="password" id="requirementsAnalysis-api-key" readonly>
@@ -287,8 +297,8 @@ const Header = {
                 
                 <div class="api-key-item">
                     <div class="api-key-info">
-                        <h4>UX 界面设计</h4>
-                        <p>用于生成界面设计提示词的 Dify API Key</p>
+                        <h4 data-translate="modal.apiKeys.uxDesignTitle">UX 界面设计</h4>
+                        <p data-translate="modal.apiKeys.uxDesignDesc">用于生成界面设计提示词的 Dify API Key</p>
                     </div>
                     <div class="api-key-value">
                         <input type="password" id="uxDesign-api-key" readonly>
@@ -311,30 +321,31 @@ const Header = {
 <div class="modal" id="admin-panel-modal">
     <div class="modal-content admin-modal-content">
         <div class="modal-header">
-            <h2>管理员面板</h2>
+            <h2 data-translate="modal.admin.title">管理员面板</h2>
             <button class="close-modal">&times;</button>
         </div>
         <div class="modal-body">
             <div class="admin-tabs">
-                <button class="admin-tab active" data-admin-tab="users">用户管理</button>
-                <button class="admin-tab" data-admin-tab="api-keys">API Key 配置</button>
-                <button class="admin-tab" data-admin-tab="api-endpoints">API 地址配置</button>
+                <button class="admin-tab active" data-admin-tab="users" data-translate="modal.admin.tabUsers">用户管理</button>
+                <button class="admin-tab" data-admin-tab="api-keys" data-translate="modal.admin.tabApiKeys">API Key 配置</button>
+                <button class="admin-tab" data-admin-tab="api-endpoints" data-translate="modal.admin.tabApiEndpoints">API 地址配置</button>
             </div>
             
             <div class="admin-content active" id="users-management">
                 <div class="admin-actions">
-                    <button class="btn-primary" id="add-user-button">添加用户</button>
+                    <button class="btn-primary" id="add-user-button" data-translate="modal.admin.addUserButton">添加用户</button>
+                    <button class="btn-secondary" id="cleanup-users-button" style="margin-left: 10px;" data-translate="modal.admin.cleanupButton">清理脏数据用户</button>
                 </div>
                 
                 <div class="users-table-container">
                     <table class="users-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>用户名</th>
-                                <th>角色</th>
-                                <th>创建日期</th>
-                                <th>操作</th>
+                                <th data-translate="modal.admin.usersTable.id">ID</th>
+                                <th data-translate="modal.admin.usersTable.username">用户名</th>
+                                <th data-translate="modal.admin.usersTable.role">角色</th>
+                                <th data-translate="modal.admin.usersTable.createdDate">创建日期</th>
+                                <th data-translate="modal.admin.usersTable.actions">操作</th>
                             </tr>
                         </thead>
                         <tbody id="users-table-body">
@@ -346,11 +357,11 @@ const Header = {
             
             <div class="admin-content" id="api-keys-management">
                 <div class="api-keys-management-description">
-                    <p>在这里您可以为每个用户配置不同的 Dify API 密钥。</p>
+                    <p data-translate="modal.admin.apiKeysDesc">在这里您可以为每个用户配置不同的 Dify API 密钥。</p>
                 </div>
                 
                 <div class="user-select-container">
-                    <label for="api-key-config-user-select">选择用户</label>
+                    <label for="api-key-config-user-select" data-translate="modal.admin.selectUserLabel">选择用户</label>
                     <select id="api-key-config-user-select">
                         <!-- 用户选项将在这里动态生成 -->
                     </select>
@@ -359,41 +370,41 @@ const Header = {
                 <div class="api-keys-config">
                     <div class="api-key-config-item">
                         <div class="api-key-info">
-                            <h4>User Story 生成器</h4>
-                            <p>用于生成用户故事的 Dify Workflow API Key</p>
+                            <h4 data-translate="modal.apiKeys.userStoryTitle">User Story 生成器</h4>
+                            <p data-translate="modal.apiKeys.userStoryDesc">用于生成用户故事的 Dify Workflow API Key</p>
                         </div>
                         <div class="api-key-input">
-                            <input type="text" id="user-specific-userStory-api-key" placeholder="输入 API Key">
+                            <input type="text" id="user-specific-userStory-api-key" data-translate-placeholder="modal.admin.apiKeyPlaceholder" placeholder="输入 API Key">
                         </div>
                     </div>
                     
                     <div class="api-key-config-item">
                         <div class="api-key-info">
-                            <h4>User Manual 生成器</h4>
-                            <p>用于生成用户手册的 Dify Agent API Key</p>
+                            <h4 data-translate="modal.apiKeys.userManualTitle">User Manual 生成器</h4>
+                            <p data-translate="modal.apiKeys.userManualDesc">用于生成用户手册的 Dify Agent API Key</p>
                         </div>
                         <div class="api-key-input">
-                            <input type="text" id="user-specific-userManual-api-key" placeholder="输入 API Key">
+                            <input type="text" id="user-specific-userManual-api-key" data-translate-placeholder="modal.admin.apiKeyPlaceholder" placeholder="输入 API Key">
                         </div>
                     </div>
                     
                     <div class="api-key-config-item">
                         <div class="api-key-info">
-                            <h4>需求分析助手</h4>
-                            <p>用于需求分析的 Dify API Key</p>
+                            <h4 data-translate="modal.apiKeys.requirementsAnalysisTitle">需求分析助手</h4>
+                            <p data-translate="modal.apiKeys.requirementsAnalysisDesc">用于需求分析的 Dify API Key</p>
                         </div>
                         <div class="api-key-input">
-                            <input type="text" id="user-specific-requirementsAnalysis-api-key" placeholder="输入 API Key">
+                            <input type="text" id="user-specific-requirementsAnalysis-api-key" data-translate-placeholder="modal.admin.apiKeyPlaceholder" placeholder="输入 API Key">
                         </div>
                     </div>
                     
                     <div class="api-key-config-item">
                         <div class="api-key-info">
-                            <h4>UX 界面设计</h4>
-                            <p>用于生成界面设计提示词的 Dify API Key</p>
+                            <h4 data-translate="modal.apiKeys.uxDesignTitle">UX 界面设计</h4>
+                            <p data-translate="modal.apiKeys.uxDesignDesc">用于生成界面设计提示词的 Dify API Key</p>
                         </div>
                         <div class="api-key-input">
-                            <input type="text" id="user-specific-uxDesign-api-key" placeholder="输入 API Key">
+                            <input type="text" id="user-specific-uxDesign-api-key" data-translate-placeholder="modal.admin.apiKeyPlaceholder" placeholder="输入 API Key">
                         </div>
                     </div>
                 </div>
@@ -401,53 +412,53 @@ const Header = {
                 <div class="form-message" id="admin-api-keys-message"></div>
                 
                 <div class="form-actions">
-                    <button class="btn-primary" id="save-api-keys-button">保存 API Keys</button>
+                    <button class="btn-primary" id="save-api-keys-button" data-translate="modal.admin.saveApiKeysButton">保存 API Keys</button>
                 </div>
             </div>
 
             <div class="admin-content" id="api-endpoints-management">
                 <div class="api-keys-management-description">
-                    <p>在这里您可以配置全局的Dify API地址，所有用户都将使用这些地址进行API调用。</p>
+                    <p data-translate="modal.admin.apiEndpointsDesc">在这里您可以配置全局的Dify API地址，所有用户都将使用这些地址进行API调用。</p>
                 </div>
                 
                 <div class="api-keys-config">
                     <div class="api-key-config-item">
                         <div class="api-key-info">
-                            <h4>User Story 生成器</h4>
-                            <p>用于生成用户故事的 Dify Workflow API 地址</p>
+                            <h4 data-translate="modal.apiKeys.userStoryTitle">User Story 生成器</h4>
+                            <p data-translate="modal.admin.userStoryEndpointDesc">用于生成用户故事的 Dify Workflow API 地址</p>
                         </div>
                         <div class="api-key-input">
-                            <input type="text" id="global-userStory-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
+                            <input type="text" id="global-userStory-api-endpoint" data-translate-placeholder="modal.admin.apiEndpointPlaceholder" placeholder="输入 API 地址，例如 http://localhost">
                         </div>
                     </div>
                     
                     <div class="api-key-config-item">
                         <div class="api-key-info">
-                            <h4>User Manual 生成器</h4>
-                            <p>用于生成用户手册的 Dify Agent API 地址</p>
+                            <h4 data-translate="modal.apiKeys.userManualTitle">User Manual 生成器</h4>
+                            <p data-translate="modal.admin.userManualEndpointDesc">用于生成用户手册的 Dify Agent API 地址</p>
                         </div>
                         <div class="api-key-input">
-                            <input type="text" id="global-userManual-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
+                            <input type="text" id="global-userManual-api-endpoint" data-translate-placeholder="modal.admin.apiEndpointPlaceholder" placeholder="输入 API 地址，例如 http://localhost">
                         </div>
                     </div>
                     
                     <div class="api-key-config-item">
                         <div class="api-key-info">
-                            <h4>需求分析助手</h4>
-                            <p>用于需求分析的 Dify API 地址</p>
+                            <h4 data-translate="modal.apiKeys.requirementsAnalysisTitle">需求分析助手</h4>
+                            <p data-translate="modal.admin.requirementsAnalysisEndpointDesc">用于需求分析的 Dify API 地址</p>
                         </div>
                         <div class="api-key-input">
-                            <input type="text" id="global-requirementsAnalysis-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
+                            <input type="text" id="global-requirementsAnalysis-api-endpoint" data-translate-placeholder="modal.admin.apiEndpointPlaceholder" placeholder="输入 API 地址，例如 http://localhost">
                         </div>
                     </div>
                     
                     <div class="api-key-config-item">
                         <div class="api-key-info">
-                            <h4>UX 界面设计</h4>
-                            <p>用于生成界面设计提示词的 Dify API 地址</p>
+                            <h4 data-translate="modal.apiKeys.uxDesignTitle">UX 界面设计</h4>
+                            <p data-translate="modal.admin.uxDesignEndpointDesc">用于生成界面设计提示词的 Dify API 地址</p>
                         </div>
                         <div class="api-key-input">
-                            <input type="text" id="global-uxDesign-api-endpoint" placeholder="输入 API 地址，例如 http://localhost">
+                            <input type="text" id="global-uxDesign-api-endpoint" data-translate-placeholder="modal.admin.apiEndpointPlaceholder" placeholder="输入 API 地址，例如 http://localhost">
                         </div>
                     </div>
                 </div>
@@ -455,7 +466,7 @@ const Header = {
                 <div class="form-message" id="api-endpoints-message"></div>
                 
                 <div class="form-actions">
-                    <button class="btn-primary" id="save-global-api-endpoints-button">保存 API 地址</button>
+                    <button class="btn-primary" id="save-global-api-endpoints-button" data-translate="modal.admin.saveApiEndpointsButton">保存 API 地址</button>
                 </div>
             </div>
         </div>
@@ -466,34 +477,34 @@ const Header = {
 <div class="modal" id="edit-user-modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 id="edit-user-title">添加用户</h2>
+            <h2 id="edit-user-title" data-translate="modal.editUser.titleAdd">添加用户</h2>
             <button class="close-modal">&times;</button>
         </div>
         <div class="modal-body">
             <div class="form-group">
-                <label for="user-edit-username">用户名</label>
-                <input type="text" id="user-edit-username" placeholder="输入用户名">
+                <label for="user-edit-username" data-translate="modal.editUser.usernameLabel">用户名</label>
+                <input type="text" id="user-edit-username" data-translate-placeholder="modal.editUser.usernamePlaceholder" placeholder="输入用户名">
             </div>
             
             <div class="form-group">
-                <label for="user-edit-password">密码</label>
-                <input type="password" id="user-edit-password" placeholder="输入密码">
-                <p class="form-help" id="password-help">留空则使用默认密码: password123</p>
+                <label for="user-edit-password" data-translate="modal.editUser.passwordLabel">密码</label>
+                <input type="password" id="user-edit-password" data-translate-placeholder="modal.editUser.passwordPlaceholder" placeholder="输入密码">
+                <p class="form-help" id="password-help" data-translate="modal.editUser.passwordHelpAdd">留空则使用默认密码: password123</p>
             </div>
             
             <div class="form-group">
-                <label for="user-edit-role">角色</label>
+                <label for="user-edit-role" data-translate="modal.editUser.roleLabel">角色</label>
                 <select id="user-edit-role">
-                    <option value="user">普通用户</option>
-                    <option value="admin">管理员</option>
+                    <option value="user" data-translate="modal.editUser.roleUser">普通用户</option>
+                    <option value="admin" data-translate="modal.editUser.roleAdmin">管理员</option>
                 </select>
             </div>
             
             <div class="form-message" id="edit-user-message"></div>
             
             <div class="form-actions">
-                <button class="btn-secondary" id="cancel-edit-user">取消</button>
-                <button class="btn-primary" id="save-edit-user">保存</button>
+                <button class="btn-secondary" id="cancel-edit-user" data-translate="common.cancel">取消</button>
+                <button class="btn-primary" id="save-edit-user" data-translate="common.save">保存</button>
             </div>
         </div>
     </div>
@@ -1450,6 +1461,8 @@ const Header = {
             const currentLangDisplay = document.getElementById('current-language-display');
             if (currentLangDisplay) {
                 currentLangDisplay.textContent = I18n.getCurrentLanguageName();
+                // 更新 data-translate 属性值以匹配当前语言
+                currentLangDisplay.setAttribute('data-translate', 'language.' + I18n.getCurrentLanguage());
             }
             
             // 绑定语言选项点击事件
@@ -1489,6 +1502,34 @@ const Header = {
             console.log('语言选择器初始化完成');
         } catch (error) {
             console.error('初始化语言选择器失败:', error);
+        }
+    },
+
+    /**
+     * 设置全站favicon
+     */
+    setGlobalFavicon() {
+        try {
+            // 计算根路径
+            const rootPath = this.calculateRootPath();
+            console.log('设置全站favicon, 根路径:', rootPath);
+            
+            // 检查是否已存在favicon
+            let link = document.querySelector("link[rel*='icon']");
+            
+            // 如果没有favicon链接元素，则创建一个
+            if (!link) {
+                link = document.createElement('link');
+                link.rel = 'icon';
+                link.type = 'image/png';
+                document.getElementsByTagName('head')[0].appendChild(link);
+            }
+            
+            // 设置favicon路径
+            link.href = `${rootPath}assets/images/Variant=Black, Lockup=Logomark.png`;
+            console.log('全站favicon已设置');
+        } catch (error) {
+            console.error('设置全站favicon失败:', error);
         }
     }
 };

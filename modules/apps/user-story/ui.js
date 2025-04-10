@@ -106,8 +106,14 @@ const UI = {
         const generateButton = document.getElementById('generate-story');
         generateButton.disabled = false;
         
+        // 获取国际化文本
+        let generatingText = '生成中...点击停止'; // 默认文本
+        if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') {
+            generatingText = I18n.t('common.generating');
+        }
+        
         // 使用更明显的红色加载动画
-        generateButton.innerHTML = '<div class="loading-circle-container"><div class="loading-circle" style="border-color: #ff3333; border-top-color: transparent;"></div></div> 生成中...点击停止';
+        generateButton.innerHTML = '<div class="loading-circle-container"><div class="loading-circle" style="border-color: #ff3333; border-top-color: transparent;"></div></div> ' + generatingText;
         generateButton.setAttribute('data-action', 'stop');
         // 保持使用primary样式，确保文字可见
         
@@ -121,7 +127,13 @@ const UI = {
     showGenerationCompleted() {
         const generateButton = document.getElementById('generate-story');
         generateButton.disabled = false;
-        generateButton.innerHTML = '生成 User Story';
+        
+        // 获取国际化文本
+        let buttonText = '生成 User Story'; // 默认文本
+        if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') {
+            buttonText = I18n.t('userStory.generateButton');
+        }
+        generateButton.innerHTML = buttonText;
         generateButton.setAttribute('data-action', 'generate');
         // 确保恢复为原来的样式
         generateButton.classList.remove('btn-danger', 'btn-secondary');
@@ -158,8 +170,14 @@ const UI = {
             return;
         }
         
+        // 获取国际化的"秒"后缀
+        let secondsSuffix = '秒';
+        if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') {
+            secondsSuffix = I18n.t('userStory.secondsSuffix');
+        }
+        
         // 更新UI
-        elapsedTimeElement.textContent = `${Number(elapsedTime).toFixed(2)}秒`;
+        elapsedTimeElement.textContent = `${Number(elapsedTime).toFixed(2)}${secondsSuffix}`;
         totalStepsElement.textContent = totalSteps;
         totalTokensElement.textContent = totalTokens;
         
