@@ -23,8 +23,15 @@
     --error: #FF5630;
     --info: #0065FF;
     
-    /* 字体 */
-    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    /* 字体 - 多语言支持 */
+    --font-family-en: 'Lato', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-family-zh: "Microsoft YaHei", "微软雅黑", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-family-base: var(--font-family-zh); /* 默认使用中文字体 */
+    
+    /* 行高 - 多语言支持 */
+    --line-height-zh: 1.6; /* 中文需要更大行高 */
+    --line-height-en: 1.5; /* 英文行高 */
+    --line-height-base: var(--line-height-zh); /* 默认行高 */
     
     /* 字体大小 */
     --font-size-xs: 0.75rem;   /* 12px */
@@ -49,4 +56,15 @@
     --shadow-sm: 0 1px 2px rgba(9, 30, 66, 0.1);
     --shadow-md: 0 4px 8px rgba(9, 30, 66, 0.15);
     --shadow-lg: 0 8px 16px rgba(9, 30, 66, 0.2);
+} 
+
+/* 根据语言设置不同的字体和行高 */
+html[lang="zh-CN"], html[lang="zh-TW"] {
+    --font-family-base: var(--font-family-zh);
+    --line-height-base: var(--line-height-zh);
+}
+
+html[lang="en"] {
+    --font-family-base: var(--font-family-en);
+    --line-height-base: var(--line-height-en);
 } 

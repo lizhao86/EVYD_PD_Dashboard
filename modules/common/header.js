@@ -49,6 +49,9 @@ const Header = {
             // 检查用户登录状态
             this.checkUserAuth();
             
+            // 初始化语言选择器
+            this.initLanguageSelector();
+            
             console.log('头部组件加载完成');
         } catch (error) {
             console.error('头部组件加载失败:', error);
@@ -96,6 +99,18 @@ const Header = {
             </ul>
         </nav>
         <div class="user-actions">
+            <!-- 语言选择器 -->
+            <div class="language-selector">
+                <button class="language-toggle">
+                    <span id="current-language-display">简体中文</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <div class="language-dropdown">
+                    <a href="#" class="language-option" data-lang="zh-CN">简体中文</a>
+                    <a href="#" class="language-option" data-lang="zh-TW">繁體中文</a>
+                    <a href="#" class="language-option" data-lang="en">English</a>
+                </div>
+            </div>
             <div id="user-info" style="display: none;">
                 <span id="username-display"></span>
                 <div class="user-dropdown">
@@ -1417,6 +1432,63 @@ const Header = {
         
         if (type) {
             messageElement.classList.add(type);
+        }
+    },
+
+    /**
+     * 初始化语言选择器
+     */
+    initLanguageSelector() {
+        // 确保I18n已经存在
+        if (typeof I18n === 'undefined') {
+            console.error('I18n模块未加载，无法初始化语言选择器');
+            return;
+        }
+        
+        try {
+            // 更新当前语言显示
+            const currentLangDisplay = document.getElementById('current-language-display');
+            if (currentLangDisplay) {
+                currentLangDisplay.textContent = I18n.getCurrentLanguageName();
+            }
+            
+            // 绑定语言选项点击事件
+            const languageOptions = document.querySelectorAll('.language-option');
+            languageOptions.forEach(option => {
+                option.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const lang = option.getAttribute('data-lang');
+                    if (lang) {
+                        I18n.switchLanguage(lang);
+                    }
+                });
+            });
+            
+            // 展开/收起语言下拉菜单
+            const languageToggle = document.querySelector('.language-toggle');
+            if (languageToggle) {
+                languageToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const dropdown = document.querySelector('.language-dropdown');
+                    if (dropdown) {
+                        dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+                    }
+                });
+            }
+            
+            // 点击页面其他地方关闭下拉菜单
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.language-selector')) {
+                    const dropdown = document.querySelector('.language-dropdown');
+                    if (dropdown) {
+                        dropdown.style.display = 'none';
+                    }
+                }
+            });
+            
+            console.log('语言选择器初始化完成');
+        } catch (error) {
+            console.error('初始化语言选择器失败:', error);
         }
     }
 };
