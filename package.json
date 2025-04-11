@@ -1,0 +1,32 @@
+{
+  "dependencies": {
+    "aws-amplify": "^6.14.2"
+  },
+  "devDependencies": {
+    "vite": "^6.2.6"
+  },
+  "name": "evyd_pd_dashboard",
+  "version": "1.0.0",
+  "description": "基于EVYD科技先进的人工智能技术，为产品经理提供的一站式工作平台，提升工作效率和产出质量。",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lizhao86/EVYD_PD_Dashboard.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lizhao86/EVYD_PD_Dashboard/issues"
+  },
+  "homepage": "https://github.com/lizhao86/EVYD_PD_Dashboard#readme"
+}

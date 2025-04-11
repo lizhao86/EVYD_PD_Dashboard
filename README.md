@@ -1,8 +1,11 @@
 # EVYD 产品经理 AI 工作台
 
-基于EVYD科技先进的人工智能技术，为产品经理提供的一站式工作平台，提升工作效率和产出质量。
+基于EVYD科技先进的人工智能技术和 AWS 云服务，为产品经理提供的一站式工作平台，提升工作效率和产出质量。
 
 ## 功能特点
+- **云端存储:** 用户设置和配置存储在 AWS DynamoDB。
+- **安全认证:** 用户认证由 AWS Cognito (含托管 UI) 处理。
+- **API驱动:** 通过 AWS AppSync GraphQL API 与后端交互。
 - 工作流程管理
 - 数据可视化
 - 对话型应用接口
@@ -11,197 +14,72 @@
 - 多语言界面支持（简体中文、繁体中文和英文）
 - 统一的浏览器标签图标(favicon)，提升品牌一致性
 
-## 项目结构
+## 项目结构 (简化概览)
 
 ```
 /EVYD_PD_Dashboard/
-├── assets/                  # 静态资源文件夹
-│   ├── images/              # 图片资源
-│   │   └── logo/            # 徽标相关图片
-│   ├── fonts/               # 字体文件
-│   └── icons/               # 图标资源
-│
-├── styles/                  # CSS样式文件
-│   ├── common.css           # 通用样式
-│   ├── user-story.css       # User Story生成器样式
-│   ├── user-manual.css      # 用户手册生成器样式
-│   ├── main.css             # 主样式文件
-│   └── variables.css        # CSS变量和多语言字体配置
-│
-├── scripts/                 # JavaScript脚本文件
-│   ├── core/                # 核心功能
-│   │   ├── app.js           # 应用入口
-│   │   └── config.js        # 全局配置
-│   ├── utils/               # 工具函数
-│   │   ├── helper.js        # 辅助函数
-│   │   └── api.js           # API工具
-│   ├── services/            # 服务层
-│   │   └── storage.js       # 存储服务
-│   └── i18n.js              # 国际化工具
-│
-├── locales/                 # 语言文件
-│   ├── zh-CN.js             # 简体中文
-│   ├── zh-TW.js             # 繁体中文
-│   └── en.js                # 英文
-│
-├── modules/                 # 功能模块
-│   ├── auth/                # 用户认证模块
-│   │   └── auth.js          # 用户认证功能
-│   ├── admin/               # 管理员功能
-│   │   └── admin.js         # 用户管理
-│   ├── common/              # 通用组件
-│   │   └── header.js        # 通用头部组件
-│   └── apps/                # 应用功能模块
-│       ├── user-story/      # User Story生成器
-│       │   ├── index.js     # 入口文件
-│       │   ├── api.js       # API交互
-│       │   └── ui.js        # 界面处理
-│       ├── user-manual/     # 用户手册生成器
-│       ├── ux-design/       # UX界面设计(POC)
-│       │   ├── index.js     # 入口文件
-│       │   ├── api.js       # API交互
-│       │   └── ui.js        # 界面处理
-│       └── requirements/    # 需求分析工具
-│
-├── templates/               # HTML模板
-│   └── pages/               # 页面模板
-│       ├── Homepage.html    # 主页
-│       ├── user-story.html  # User Story页面
-│       ├── user-manual.html # User Manual页面
-│       └── ux-design.html   # UX界面设计页面
-│
-├── docs/                    # 文档文件夹
-│   └── Product_Requirements_Manual.md # 产品需求手册
-├── .github/                 # GitHub相关配置
-│   └── workflows/           # GitHub Actions工作流
-│       └── deploy.yml       # 自动部署工作流配置
-├── backup/                  # 备份文件夹
-└── index.html               # 重定向入口（指向Homepage.html）
+├── amplify/           # Amplify 后端配置 (由 Amplify CLI 管理)
+├── assets/            # 静态资源 (图片, 字体, 图标)
+├── styles/            # CSS 样式
+├── scripts/           # JavaScript 脚本 (核心, 工具, 服务, 页面初始化)
+├── locales/           # 语言文件
+├── modules/           # 功能模块 (认证, 管理员, 通用组件, 各 AI 应用)
+├── templates/         # HTML 页面模板
+├── docs/              # 文档
+├── node_modules/      # npm 依赖 (本地)
+├── src/               # Amplify 生成的前端配置和代码
+│   ├── aws-exports.js # Amplify 配置
+│   └── graphql/       # GraphQL 操作 (queries, mutations)
+├── .github/           # GitHub Actions 工作流
+├── .gitignore         # Git 忽略配置
+├── index.html         # 应用入口 HTML
+├── package.json       # 项目和依赖配置
+├── vite.config.js     # (可选) Vite 配置文件
+└── README.md          # 项目说明
 ```
 
-## 功能模块
+## 功能模块 (当前状态)
 
-1. **用户认证**：
-   - 用户可通过用户名和密码登录系统
-   - 系统支持记住登录状态功能
-   - 密码找回功能（Work In Progress）
+1. **用户认证 (AWS Cognito + Hosted UI)**：
+   - 通过 Cognito Hosted UI 进行登录、注册、登出。
+   - Amplify Auth 库处理会话和令牌。
+   - 支持用户修改密码 (应用内)。
+   - 首次登录自动基于 Cognito 组同步应用角色到 DynamoDB。
+   - *待办:* 密码找回流程。
 
-2. **用户管理**：
-   - 管理员可以添加、编辑和删除用户
-   - 支持不同角色权限设置
-   - 用户可修改个人密码（支持表单验证和操作反馈）
-   - 提供脏数据清理功能，一键清理不规范的用户数据
-   - 确保用户ID格式统一（admin-timestamp或user-timestamp格式）
+2. **用户管理 (部分迁移)**：
+   - 主要用户生命周期管理需通过 Cognito 控制台。
+   - 应用内管理员面板用户管理功能**临时禁用**。
+   - 用户角色管理通过 DynamoDB `UserSettings` 表。
 
 3. **文档中心**：
-   - **产品需求手册**：产品需求文档通过docs目录下的Markdown文件提供，可直接查看源文件
-   - API文档（即将推出）
-   - 使用教程（即将推出）
+   - 产品需求手册 (Markdown)。
+   - *待办:* API 文档, 使用教程。
 
-4. **API配置**：
-   - 支持配置Dify API地址
-   - API密钥仅由管理员统一配置，普通用户无需关注API密钥设置
+4. **API 配置 (DynamoDB)**：
+   - 全局 API 地址由管理员通过面板配置 (存储在 DynamoDB `GlobalConfig`)。
+   - *待办:* 用户个人 API Key 的查看/编辑功能。
+   - *待办:* 管理员为其他用户配置 API Key 的功能。
 
 5. **多语言支持**：
-   - 支持简体中文、繁体中文和英文三种界面语言
-   - 在页面顶部导航栏提供语言切换功能
-   - 根据不同语言自动调整字体和排版：
-     - 简体中文和繁体中文使用微软雅黑字体
-     - 英文使用Lato字体
-   - 语言偏好保存在本地，下次访问自动应用
-   - 切换语言时保持用户登录状态
+   - 支持中/英语言切换。
+   - *待办:* 语言偏好持久化到 `UserSettings`。
 
-6. **AI功能**：
-   - **User Story生成器**：
-     - 用户提供Platform、System、Module和需求描述后，AI自动生成完整用户故事
-     - 仅支持Given-When-Then-And的叙述模式，契合EVYD工作环境
-     - 提供输出内容的一键复制功能
-     - 支持应急暂停正在生成的任务，节省Token
-     - 完成输出后展示生成耗时、Token消耗和步骤次数
-   
-   - **用户手册生成器**：
-     - 根据产品的需求描述自动生成用户手册文档
-     - 支持用在EVYD的User Manual内容中
-     - 提供输出内容的一键复制功能
-     - 支持应急暂停正在生成的任务，节省Token
-     - 完成输出后展示生成耗时、Token消耗和步骤次数
-   
-   - **UX界面设计(POC)**：
-     - 根据需求描述和User Story生成Figma界面设计的AI提示词
-     - 支持Markdown格式输出
-     - 提供复制功能便于直接粘贴到Figma
-     - 支持应急暂停生成任务
-     - 文本区域支持全屏展开编辑
-     - 生成按钮在生成过程中转变为带红色加载动画的停止按钮
-   
-   - **需求分析助手**：
-     - 分析需求文档，识别关键点，提取功能列表，并提供优化建议
+6. **AI 功能**：
+   - User Story 生成器 (基于 Dify Workflow)。
+   - 用户手册生成器 (基于 Dify Agent)。
+   - UX 界面设计 (POC, 基于 Dify API)。
+   - *待办:* 需求分析助手。
 
 ## 非功能特性
+- **构建:** 使用 Vite。
+- **安全:** 依赖 AWS Cognito 和 Amplify 的安全机制。
+- **可用性:** 响应式设计。
+- **可扩展性:** 模块化设计。
 
-- **性能**：页面加载时间不超过3秒，暂不支持一次性处理多个并发
-- **安全**：用户密码加密存储，API密钥安全管理，用户数据隔离
-- **可用性**：直观的用户界面，响应式设计，支持不同设备
-- **可扩展性**：支持新功能模块的快速集成
-
-## 最近更新
-
-- 新增全站统一浏览器标签图标(favicon)：
-  - 在所有页面使用统一的黑色Logomark作为浏览器标签图标
-  - 通过通用头部组件动态设置，适应不同路径的页面
-  - 增强品牌一致性，改善用户体验
-  - 确保在保存书签或添加到收藏夹时显示一致的图标
-
-- 新增多语言支持功能：
-  - 支持简体中文、繁体中文和英文三种界面语言
-  - 在顶部导航栏添加语言切换下拉菜单
-  - 根据选择的语言自动设置适合的字体和排版
-  - 简体中文和繁体中文页面使用微软雅黑字体
-  - 英文页面使用Lato字体
-  - 优化不同语言的行高和间距
-  - 语言选择保存在localStorage中，确保下次访问时应用相同语言
-
-- 新增用户管理脏数据清理功能：
-  - 添加"清理脏数据用户"按钮，支持一键清理不规范的用户数据
-  - 自动识别并清理不符合ID格式规范的用户数据
-  - 添加安全检查机制，防止误删当前登录用户或唯一管理员
-  - 优化用户数据管理，确保数据格式统一
-- 调整产品需求手册访问方式：
-  - 移除了产品需求手册HTML页面
-  - 现在通过直接查看docs/Product_Requirements_Manual.md文件访问产品需求文档
-- 修复导航菜单显示问题：
-  - 解决了"文档中心"下拉菜单在不同页面中样式不一致的问题
-  - 统一了下拉菜单的外观和行为，确保所有页面中下拉菜单都正确地显示在其父菜单项下方
-  - 保持与主页一致的白色背景和独立浮动层效果
-- 优化API密钥管理流程：
-  - 移除普通用户查看API密钥的入口
-  - 简化用户界面，减少不必要的功能入口
-  - 将API密钥的管理职责完全归属于管理员
-- 修复管理员面板功能问题：
-  - 解决了管理员面板数据无法加载的问题
-  - 修复了API Key配置和API地址配置标签页点击无效的问题
-  - 统一了通用头部组件实现，确保所有页面都能正常使用管理员功能
-  - 确保所有页面都正确引入config.js配置文件，支持API地址管理
-- 修复账号设置页面中修改密码功能：
-  - 解决了更新密码和取消按钮无法点击的问题
-  - 增加了对当前密码的验证和新密码确认功能
-  - 添加了表单验证和错误信息提示
-  - 优化了操作成功后的反馈和模态框自动关闭
-- 新增GitHub Actions自动部署功能：
-  - 配置了自动化部署流程，每次推送到main分支时自动部署到AWS S3
-  - 排除了不必要文件(.git、.github等)的部署，优化部署效率
-  - 使用IAM权限管理确保部署安全
-- 新增产品需求手册页面，提供完整的产品需求文档访问
-- 优化导航菜单，增加下拉菜单功能，提升用户体验
-- 修复UX界面设计(POC)功能的用户体验问题：
-  - 优化文本区域展开功能，实现与其他模块一致的全屏展开体验
-  - 改进生成/停止逻辑，现在生成按钮会在生成过程中变为带红色加载动画的停止按钮
-  - 统一了模块间的交互行为，提供一致的用户体验
-- 新增UX界面设计(POC)功能，帮助产品经理快速生成Figma界面设计提示词
-- **Markdown渲染**：对Markdown格式的支持，生成结果将以格式化的方式展示
-- 将全站字体统一为 Lato，提供更一致的用户体验
-- 优化所有页面的字体加载
-- 完善文档
+## 最近更新 (重点)
+- **[2025-04-12]** **重大重构:** 迁移认证至 AWS Cognito (Hosted UI)，存储至 DynamoDB (Amplify AppSync/GraphQL)，集成 Vite。
+- ... (保留其他近期更新) ...
 
 ## 字体使用
 项目使用以下字体设置：
@@ -215,47 +93,38 @@
 
 ## 开发指南
 
-### 添加新功能
+### 环境设置
+1.  安装 [Node.js](https://nodejs.org/) (包含 npm)。
+2.  安装 [AWS CLI](https://aws.amazon.com/cli/) 并配置好 AWS 凭证。
+3.  安装 [Amplify CLI](https://docs.amplify.aws/cli/start/install/): `npm install -g @aws-amplify/cli`。
+4.  配置 Amplify CLI: `amplify configure`。
+5.  克隆仓库: `git clone ...`
+6.  进入项目目录: `cd EVYD_PD_Dashboard`
+7.  安装前端依赖: `npm install`
+8.  **拉取 Amplify 后端环境:** `amplify pull` (根据提示操作，可能需要选择对应的 App 和环境)。
 
-1. 在 `modules/apps/` 目录下创建新模块文件夹
-2. 创建 `index.js`、`api.js` 和 `ui.js` 文件
-3. 在 `templates/pages/` 中添加对应的HTML模板
-4. 在 `styles/` 中添加对应的CSS样式文件
-5. 更新主页添加新功能入口
+### 项目运行 (本地开发)
+1.  启动 Vite 开发服务器: `npm run dev`。
+2.  在浏览器中打开 Vite 提示的 `http://localhost:xxxx` 地址。
 
-### 添加新语言
+### 后端部署/更新
+- 修改 Amplify 后端配置 (如 `schema.graphql`) 后，运行 `amplify push` 来部署更改到云端。
 
-1. 在 `locales/` 目录下创建新的语言文件（例如 `fr.js` 用于法语）
-2. 复制现有语言文件的结构，翻译所有键值
-3. 在 `scripts/i18n.js` 的 `supportedLanguages` 对象中添加新语言
-4. 在语言选择器下拉菜单中添加新语言选项
+### 前端部署 (手动示例，CI/CD 更佳)
+1.  构建生产版本: `npm run build` (会在 `dist` 目录生成静态文件)。
+2.  将 `dist` 目录的内容上传到你的静态托管服务 (如 AWS S3)。
 
-### 项目运行
+### CI/CD (GitHub Actions)
+- 当前配置 (`.github/workflows/deploy.yml`) 直接将**源代码**同步到 S3，这**不再适用**于需要构建步骤 (Vite) 和 Amplify 后端 的项目。
+- **需要更新 `deploy.yml`:**
+    - 添加 Node.js 环境设置。
+    - 添加 `npm install` 步骤。
+    - 添加 Amplify CLI 设置和 `amplify pull` 步骤。
+    - 添加 `npm run build` 步骤。
+    - 修改 `aws s3 sync` 命令，使其同步构建产物 (`dist` 目录) 而不是源代码，并配置正确的 S3 目标路径。
+    - **(重要)** 需要在 GitHub Secrets 中添加 Amplify 部署所需的 AWS 凭证 (或配置 Amplify Hosting)。
 
-本项目是纯前端项目，可以直接通过浏览器打开 `index.html` 文件运行（会重定向到Homepage.html），也可以使用简单的HTTP服务器：
-
-```bash
-# 使用Python启动简单HTTP服务器
-python -m http.server
-
-# 使用Node.js启动HTTP服务器
-npx serve
-```
-
-默认管理员账户：
-- 用户名：admin
-- 密码：admin 
-
-### 部署流程
-
-本项目使用GitHub Actions自动部署到AWS S3：
-
-1. 每次推送到`main`分支时，会自动触发部署工作流
-2. 工作流会将项目文件同步到AWS S3存储桶
-3. 部署排除了开发相关文件(.git、.github目录等)
-
-部署前需要在GitHub仓库的Settings > Secrets中设置以下密钥：
-- `AWS_ACCESS_KEY_ID`：AWS访问密钥ID
-- `AWS_SECRET_ACCESS_KEY`：AWS秘密访问密钥
-
-AWS IAM用户需要有对应S3存储桶的写入权限。 
+### 待办/注意事项
+- **环境变量:** 为生产环境配置 Cognito 回调/注销 URL 等。
+- **Cognito 用户管理:** 主要通过 AWS 控制台进行。
+- **首次全局配置:** 管理员需要登录并保存一次 API 地址配置。

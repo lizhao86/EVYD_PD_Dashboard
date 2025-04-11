@@ -3,9 +3,9 @@
 ## 1 文档信息
 
 - **文档名称**：EVYD 产品经理 AI 工作台产品需求手册
-- **当前版本**：1.5.1
+- **当前版本**：1.6.0
 - **创建日期**：2025-03-01
-- **最后更新**：2025-04-16
+- **最后更新**：2025-04-12
 - **文档状态**：更新中
 - **文档所有者**：EVYD产品团队
 
@@ -28,6 +28,7 @@
 | 1.4.6 | 2025-04-10 | EVYD产品团队 | 新增用户管理中的脏数据清理功能，优化用户数据管理 |
 | 1.5.0 | 2025-04-15 | EVYD产品团队 | 新增多语言支持功能，支持简体中文、繁体中文和英文界面切换 |
 | 1.5.1 | 2025-04-16 | EVYD产品团队 | 统一全站浏览器标签图标(favicon)，增强品牌一致性体验 |
+| 1.6.0 | 2025-04-12 | EVYD产品团队 | **重大重构**: 将认证迁移至 AWS Cognito (含 Hosted UI)，存储迁移至 DynamoDB (通过 Amplify AppSync & GraphQL API)。集成 Vite 构建工具。实现基于 Cognito Group 的首次登录角色同步。改进密码修改 UI 校验。 |
 
 ## 3 产品概述
 
@@ -48,26 +49,38 @@ EVYD 产品经理 AI 工作台是基于EVYD科技先进的人工智能技术，�
 
 ## 4 功能需求
 
-### 4.1 用户认证模块
+### 4.1 用户认证模块 (已迁移至 AWS Cognito)
 
-#### 4.1.1 登录功能
-- 用户应能通过用户名和密码登录系统
-- 系统应支持记住登录状态功能
-- 密码找回功能 Work In Progress
+#### 4.1.1 登录/注册/登出功能 (Hosted UI)
+- **登录/注册:** 用户通过 AWS Cognito 托管 UI (Hosted UI) 进行登录和注册，不再使用应用内自建表单。
+    - 点击应用内"登录"按钮应重定向到 Cognito Hosted UI。
+    - 支持用户名/密码认证。
+    - 注册流程由 Cognito 处理（包括可能的邮箱/短信验证）。
+- **登出:** 点击应用内"登出"按钮应触发 Cognito 全局登出流程，并重定向回应用指定的注销 URL。
+- **会话管理:** 用户会话由 AWS Amplify 库自动管理（基于 Cognito 返回的 Tokens）。
+- **首次登录处理:**
+    - 新用户（或 DynamoDB 中无记录的用户）首次登录成功后，系统应检查其 Cognito 用户组。
+    - 如果用户属于 `admin` 组，应在 DynamoDB 的 `UserSettings` 表中自动创建记录，并将 `role` 设置为 `admin`。
+    - 否则，自动创建记录并将 `role` 设置为 `user`。
+- **(已移除)** 不再支持"记住登录状态"复选框，会话持久性由 Cognito 和 Amplify 处理。
+- **(待实现)** 密码找回流程也应通过 Cognito Hosted UI 处理 (需要配置 App Client 和用户池设置)。
 
-#### 4.1.2 用户管理
-- 管理员应能添加、编辑和删除用户
-- 应支持不同角色权限设置
-- 用户应能修改个人密码
-- 用户密码修改界面应提供清晰的表单验证和反馈
-- 提供脏数据清理功能，一键清理不符合ID格式规范的用户数据
-- 确保用户ID格式统一（admin-timestamp或user-timestamp格式）
+#### 4.1.2 用户管理 (部分迁移至 Cognito)
+- **用户创建/删除:** 主要的用户生命周期管理（创建、删除、禁用、确认）应通过 **AWS Cognito 控制台**或 **Cognito API** (需要后端或 CLI) 进行，不再通过应用内管理员面板直接操作。
+- **(已移除/待调整)** 管理员面板中的添加/编辑/删除用户功能已临时禁用，需要重新设计以调用 Cognito API。
+- **角色分配:** 用户在应用程序中的角色 (`admin` vs `user`) 由 DynamoDB `UserSettings` 表中的 `role` 字段决定。管理员身份主要通过加入 Cognito 的 `admin` 用户组来初始确定。
+- **密码修改:** 用户应能通过应用内的"账号设置"修改自己的密码。
+    - 调用 Amplify Auth 的 `changePassword` API。
+    - 前端提供实时的密码策略校验反馈（长度、字符类型）。
+    - 最终策略由 Cognito 后端强制执行。
+- **(已移除)** 不再需要应用内"清理脏数据"功能，用户管理由 Cognito 负责。
 
 #### 4.1.3 管理员面板
-- 应提供统一的管理员面板，包含用户管理、API密钥配置和API地址配置功能
-- 管理员面板应在所有页面上一致可用
-- 确保数据正确加载，标签页切换功能正常工作
-- 提供清晰的表单反馈和操作结果提示
+- 应提供统一的管理员面板。
+- **(功能调整)** "用户管理"标签页功能暂时受限，提示管理员使用 Cognito 控制台。
+- **(保留)** "API 地址配置"标签页允许管理员修改存储在 DynamoDB `GlobalConfig` 表中的全局 API Endpoints。
+- **(待调整)** "API Key 配置"标签页功能暂时受限，为其他用户配置 API Key 需要更安全的后端实现。
+- 管理员面板链接仅对 `UserSettings.role` 为 `admin` 的用户可见。
 
 ### 4.2 AI功能模块
 
@@ -282,13 +295,15 @@ Follow strictly this Markdown structure:
 #### 4.2.4 需求分析助手
 - 需求待定 Work In Progress
 
-### 4.3 API配置模块
+### 4.3 API配置模块 (已迁移至 DynamoDB)
 
-- 支持配置Dify API地址
-- API密钥由管理员统一配置，不对普通用户提供查看和修改入口
-- 管理员可为所有用户配置API密钥
-- 全局API地址配置对所有用户生效
-- API密钥安全管理，确保密钥不被泄露
+- **(已移除)** 不再有独立的 API 配置模块文件 (`config.js`)。
+- **全局 API 地址:** 由管理员通过管理员面板配置，存储在 DynamoDB 的 `GlobalConfig` 表中 (需要管理员首次保存以创建记录)。应用通过 `storage.js` 中的 `getGlobalConfig` 函数获取。
+- **用户 API 密钥:**
+    - **(待实现)** 需要为登录用户提供查看/编辑**自己** API Keys 的界面（例如在账号设置中）。
+    - **(待调整)** 管理员为**其他用户**配置 API Keys 的功能需要重新设计和实现。
+    - API Keys 存储在 DynamoDB 的 `UserSettings` 表中，与用户 ID 关联。
+- **安全性:** API Keys 存储在后端数据库，不再暴露于前端 `localStorage`。
 
 ### 4.4 多语言支持
 
@@ -322,9 +337,11 @@ Follow strictly this Markdown structure:
 
 ### 5.2 安全需求
 
-- 用户密码加密存储
-- API密钥安全管理
-- 用户数据隔离
+- **认证:** 由 AWS Cognito 处理，支持标准安全实践 (如 MFA - 如果配置)。
+- **密码:** 不在应用程序数据库中存储密码哈希，由 Cognito 安全管理。
+- **令牌:** 使用 Cognito 签发的 JWT (ID Token, Access Token, Refresh Token) 进行会话管理和 API 授权。
+- **API 授权:** AppSync GraphQL API 通过 Cognito 用户池进行授权。`UserSettings` 表通过 `@auth` 规则保护。`GlobalConfig` 表通过 `@auth` 规则限制写入权限给 `admin` 组。
+- **API Keys:** 存储在后端数据库，通过用户所有权保护。
 
 ### 5.3 可用性需求
 
@@ -342,6 +359,7 @@ Follow strictly this Markdown structure:
 - 组件化设计，统一通用功能
 - 页面间共享功能保持一致的用户体验
 - 确保所有页面正确加载必要的依赖项
+- **构建工具:** 使用 Vite 进行开发和构建。
 
 ## 6 用户界面需求
 
@@ -366,21 +384,15 @@ Follow strictly this Markdown structure:
 
 ### 6.3 主要界面
 
-- 登录界面
-- 控制台/仪表板
+- **(已移除)** 登录界面 (由 Cognito Hosted UI 替代)
+- **(保留/修改)** 控制台/仪表板 (根据登录状态显示)
 - User Story生成器
 - 用户手册生成器
 - UX界面设计(POC)
 - 需求分析工具 Work In Progress
-- 用户管理界面
-  - 用户列表
-  - 添加/编辑用户表单
-  - 脏数据清理功能
-- 设置界面
-- 管理员面板
-  - 用户管理标签页
-  - API密钥配置标签页 
-  - API地址配置标签页
+- **(修改)** 用户管理界面 (管理员功能受限)
+- **(修改)** 设置界面 (包含修改密码，未来可加 API Key 和语言偏好)
+- **(修改)** 管理员面板 (用户管理功能受限)
 - 语言选择界面组件
   - 语言切换下拉菜单
   - 语言选项列表
@@ -398,20 +410,10 @@ Follow strictly this Markdown structure:
 
 ### 6.5 管理员面板交互
 
+- **(修改)** 用户管理: 显示提示信息，引导使用 Cognito 控制台。
+- **(保留)** API 地址配置: 调用 `saveGlobalConfig` 更新 DynamoDB。
+- **(修改)** API 密钥配置: 功能受限，提示待开发。
 - 标签页切换：点击顶部标签切换不同功能区域，保持当前内容状态
-- 用户管理：
-  - 显示用户列表，包含ID、用户名、角色、创建日期和操作按钮
-  - 提供添加、编辑和删除用户的功能
-  - 提供"清理脏数据用户"按钮，可一键清理不规范的用户数据
-  - 清理前进行安全检查，防止误删当前登录用户或唯一管理员
-- API密钥配置：
-  - 用户选择下拉框，选择要配置的用户
-  - 为每个功能模块单独配置API密钥
-  - 提供保存按钮和操作反馈
-- API地址配置：
-  - 为每个功能模块单独配置API地址
-  - 所有用户共享相同的API地址配置
-  - 提供保存按钮和操作反馈
 
 ### 6.6 语言切换交互
 
@@ -436,29 +438,33 @@ Follow strictly this Markdown structure:
 
 ### 7.1 前端架构
 
-- 纯前端实现，可直接在浏览器中运行
-- 模块化设计，便于维护和扩展
-- 本地存储用户配置和历史记录
-- 通用组件化设计，确保跨页面功能一致性
+- **框架/库:** Vanilla JavaScript, 使用 ES 模块。
+- **构建:** 使用 Vite 进行依赖管理、开发服务和生产构建。
+- **后端交互:** 通过 **AWS Amplify** 库与 AWS 服务交互。
+    - **认证:** 使用 `aws-amplify/auth` 对接 Cognito 用户池和 Hosted UI。
+    - **API:** 使用 `aws-amplify/api` (GraphQL) 对接 AppSync。
+- **(已移除)** 不再依赖本地存储进行核心数据持久化。
 
 ### 7.2 国际化架构
 
-- 基于JSON格式的翻译文件
-- 语言切换机制不依赖后端服务
-- 静态部署，支持无服务器环境
+- (基本不变，但语言偏好存储位置需调整)
 
 ### 7.3 外部依赖
 
-- Dify API：提供AI功能支持
-- Google Fonts：提供Lato字体
-- 图标库：提供UI资源
+- **AWS Services:**
+    - **Cognito:** 用户池、身份池(可选)、托管 UI。
+    - **DynamoDB:** 存储 `UserSettings` 和 `GlobalConfig`。
+    - **AppSync:** 提供 GraphQL API 端点。
+- Dify API
+- Google Fonts
+- 图标库
 
 ### 7.4 部署架构
 
-- 静态页面托管在AWS S3存储桶上
-- 使用GitHub Actions实现自动部署流程
-- 每次推送到main分支时自动同步到S3存储桶
-- 使用IAM权限管理确保部署安全
+- **前端构建:** 可能需要在部署前运行 `npm run build` (Vite) 生成优化后的静态文件。
+- **托管:** 静态文件托管在 AWS S3 (或其他静态托管服务)。
+- **CI/CD:** 使用 GitHub Actions 自动构建 (如果需要) 并同步到 S3。
+- **后端:** Amplify 会管理 Cognito, DynamoDB, AppSync 等资源的部署。
 
 ## 8 发布计划
 
@@ -494,6 +500,10 @@ Follow strictly this Markdown structure:
 - 生成内容受到模型能力的限制
 - 依赖Google Fonts服务可用性
 - 依赖GitHub Actions和AWS服务的可用性和稳定性
+- **AWS 服务依赖:** 应用功能现在强依赖于 AWS Cognito, DynamoDB, AppSync 等服务的可用性和正确配置。
+- **网络延迟:** 与 AWS 服务的网络通信延迟可能影响用户体验。
+- 需要有效的 AWS 账户和正确配置的 Amplify 后端环境。
+- 离线环境下无法进行认证和数据同步。
 
 ## 10 附录
 
@@ -510,6 +520,16 @@ Follow strictly this Markdown structure:
 | GitHub Actions | GitHub提供的持续集成和持续部署(CI/CD)服务 |
 | AWS S3 | Amazon Web Services提供的对象存储服务，可用于托管静态网站 |
 | i18n | Internationalization（国际化）的缩写，指支持多语言的软件设计与开发 |
+| **AWS Amplify** | AWS 提供的一套工具和服务，用于构建和部署云支持的 Web 和移动应用程序。 |
+| **Cognito** | AWS 的身份管理服务，提供用户注册、登录、访问控制功能。 |
+| **User Pool** | Cognito 中的用户目录，管理用户账户和身份验证。 |
+| **Hosted UI** | Cognito 提供的可定制的、托管的登录/注册界面。 |
+| **App Client** | Cognito 用户池中的应用程序配置，定义了应用如何与用户池交互。 |
+| **DynamoDB** | AWS 的 NoSQL 键值和文档数据库。 |
+| **AppSync** | AWS 的托管 GraphQL 服务，简化了应用程序与数据源（如 DynamoDB）的交互。 |
+| **GraphQL** | 一种用于 API 的查询语言和运行时。 |
+| **Vite** | 一种现代前端构建工具和开发服务器。 |
+| **IAM** | AWS Identity and Access Management，用于管理对 AWS 资源的访问权限。 |
 
 ### 10.2 参考资料
 

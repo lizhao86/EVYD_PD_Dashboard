@@ -178,7 +178,7 @@ export async function saveGlobalConfig(config) {
 
     const inputData = {
         id: GLOBAL_CONFIG_ID, // Always use the fixed ID
-                apiEndpoints: {
+        apiEndpoints: {
             userStory: config.apiEndpoints.userStory ?? '',
             userManual: config.apiEndpoints.userManual ?? '',
             requirementsAnalysis: config.apiEndpoints.requirementsAnalysis ?? ''

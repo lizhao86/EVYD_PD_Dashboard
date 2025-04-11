@@ -55,13 +55,10 @@
             gap: 5px !important;
         }
     </style>
-    <!-- 导入非模块化JS -->
+    <!-- 导入非模块化JS (Re-enable helper.js to test compatibility) -->
     <script src="../../scripts/utils/helper.js"></script>
-    <script src="../../scripts/services/storage.js"></script>
-    <script src="../../modules/auth/auth.js"></script>
-    <script src="../../scripts/core/config.js"></script>
-    <!-- 导入通用头部组件 -->
-    <script src="../../modules/common/header.js"></script>
+    <!-- <script src="../../scripts/core/config.js"></script> -->
+    <!-- 移除 storage.js, auth.js, header.js 的直接加载 -->
 </head>
 <body>
     <!-- 通用头部容器 -->
@@ -358,13 +355,9 @@
         </div>
     </footer>
 
-    <!-- 初始化页面脚本 -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // 初始化头部组件
-            Header.init();
-        });
-    </script>
+    <!-- 移除初始化脚本 (应由 header.js 或 main.js 处理) -->
+    <!-- Load the specific initializer for this page -->
+    <script type="module" src="/scripts/pages/homepage.js"></script>
 
 </body>
 </html> 
