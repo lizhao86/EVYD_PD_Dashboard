@@ -12,6 +12,9 @@ type UserSettings @model @auth(rules: [
   # 存储用户的角色，这部分信息从旧的 user 对象迁移过来
   role: String
 
+  # Add field for language preference
+  language: String
+
   # 存储用户专属的 API Keys，同样从旧的 user 对象迁移
   # 我们使用一个嵌套类型来组织这些 keys
   apiKeys: UserApiKeys
@@ -31,9 +34,9 @@ type UserApiKeys {
 type GlobalConfig @model @auth(rules: [
   # 规则1：允许任何通过 Cognito 登录的用户读取 (read) 配置
   { allow: private, provider: userPools, operations: [read] },
-  # 规则2：只允许属于 "Admins" 用户组的用户创建、更新、删除 (create, update, delete) 配置
-  # 你需要在 Cognito User Pool 中创建一个名为 "Admins" 的用户组
-  { allow: groups, groups: ["Admins"], operations: [create, update, delete] }
+  # 规则2：只允许属于 "admin" (lowercase) 用户组的用户创建、更新、删除 (create, update, delete) 配置
+  # 你需要在 Cognito User Pool 中创建一个名为 "admin" 的用户组
+  { allow: groups, groups: ["admin"], operations: [create, update, delete] }
 ]) {
   # 我们假设全局配置只有一条记录，并为其使用一个固定的、已知的 ID
   # 你的前端代码在读取或更新时需要知道这个 ID，例如 "GLOBAL"

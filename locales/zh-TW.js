@@ -209,7 +209,6 @@ window.zhTW = {
         settings: {
             title: '賬號設置',
             tabPassword: '修改密碼',
-            tabProfile: '個人資料',
             currentPasswordLabel: '當前密碼',
             currentPasswordPlaceholder: '輸入當前密碼',
             newPasswordLabel: '新密碼',

@@ -6,6 +6,7 @@ export const getUserSettings = /* GraphQL */ `
     getUserSettings(id: $id) {
       id
       role
+      language
       apiKeys {
         userStory
         userManual
@@ -29,6 +30,7 @@ export const listUserSettings = /* GraphQL */ `
       items {
         id
         role
+        language
         createdAt
         updatedAt
         owner

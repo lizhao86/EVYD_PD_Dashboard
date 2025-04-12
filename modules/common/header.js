@@ -30,6 +30,9 @@ import { showFormMessage } from '/scripts/utils/helper.js';
 import { Amplify } from 'aws-amplify';
 import awsconfig from '../../src/aws-exports.js'; // Adjust path relative to header.js
 
+// Import I18n module
+import I18n, { t } from '/scripts/i18n.js';
+
 // 头部组件命名空间 (We keep the structure but replace implementations)
 const Header = {
     currentUser: null, // Store current Amplify user object
@@ -79,6 +82,20 @@ const Header = {
         this.setGlobalFavicon();
         // Now check auth asynchronously
         await this.checkUserAuth();
+        
+        // NOW initialize I18n (it might use Header.currentUser/userSettings loaded by checkUserAuth)
+        try {
+            console.log("[Header.init] Initializing I18n...");
+            await I18n.init(); 
+            console.log("[Header.init] I18n initialized.");
+            // Re-apply translations specifically to the header after init if needed
+            const headerElement = document.getElementById(containerId);
+            if(headerElement) {
+                I18n.applyTranslations(headerElement); 
+            }
+        } catch (i18nError) {
+             console.error("[Header.init] Error initializing I18n:", i18nError);
+        }
     },
 
     /**
@@ -105,14 +122,7 @@ const Header = {
             // Auth check is now done in init() after loadHeader
             this.initLanguageSelector();
             
-            if (typeof I18n !== 'undefined') {
-                I18n.applyTranslations(container);
-                console.log('已应用头部翻译');
-            } else {
-                console.warn('I18n未定义，无法应用头部翻译');
-            }
-            
-            console.log('头部组件HTML加载完成，认证检查将异步进行。');
+            console.log('头部组件HTML加载完成。');
         } catch (error) {
             console.error('头部组件加载失败:', error);
             const container = document.getElementById(containerId);
@@ -841,11 +851,16 @@ const Header = {
     /** Helper function to update policy item status */
     updatePolicyStatus(elementId, isValid) {
         const element = document.getElementById(elementId);
-        if (element) {
+        const textElement = element?.querySelector('.policy-text');
+        if (element && textElement) {
+             const translationKey = textElement.getAttribute('data-translate');
+             if (translationKey) {
+                 // Re-apply translation when status changes
+                 textElement.textContent = t(translationKey); 
+             }
              if (isValid) {
                  element.classList.remove('invalid');
                  element.classList.add('valid');
-                 // Optional: Add a checkmark icon or similar visual cue via CSS
              } else {
                  element.classList.remove('valid');
                  element.classList.add('invalid');
@@ -877,6 +892,12 @@ const Header = {
         policyItems.forEach(item => {
             item.classList.remove('valid');
             item.classList.add('invalid');
+             // Re-apply initial translation from data-translate
+             const textElement = item.querySelector('.policy-text');
+             const translationKey = textElement?.getAttribute('data-translate');
+             if (textElement && translationKey) {
+                 textElement.textContent = t(translationKey);
+             }
         });
         // Reset password visibility toggles if needed
         document.querySelectorAll('.toggle-password-visibility.active').forEach(btn => {
@@ -1132,7 +1153,13 @@ const Header = {
                  
                  try {
                       // 调用保存函数创建记录，提供初始角色和空的 apiKeys
-                     const initialSettings = { role: initialRole, apiKeys: {} }; 
+                      // Also include initial language, defaulting to browser or 'zh-CN'
+                     const defaultLang = navigator.language || 'zh-CN'; // Use browser lang or default
+                     const initialSettings = { 
+                         role: initialRole, 
+                         language: defaultLang, 
+                         apiKeys: {} 
+                     }; 
                      const createdSettings = await saveCurrentUserSetting(initialSettings);
                      
                      if (createdSettings) {
@@ -1343,11 +1370,48 @@ const Header = {
      * 初始化语言选择器
      */
     initLanguageSelector() {
-        // ... (existing language selector logic - seems mostly independent of auth)
+        // Only set up structure, don't rely on I18n yet
+        const display = document.getElementById('current-language-display');
+        if (display) {
+            // Set initial text based on default or leave blank until I18n loads?
+            // Let's set a default, I18n.init will update it.
+             const langCode = localStorage.getItem('language') || 'zh-CN'; // Use LS as initial guess
+             display.textContent = I18n.supportedLanguages[langCode] || 'Language';
+        }
+        // Event listeners are set up in initLanguageSelectorListeners
     },
+    
     initLanguageSelectorListeners(container) {
-        // ... (existing language selector listeners logic - seems mostly independent of auth)
-    },
+         const languageToggle = container.querySelector('.language-toggle');
+         const languageDropdown = container.querySelector('.language-dropdown');
+         const languageOptions = container.querySelectorAll('.language-option');
+
+         if (languageToggle && languageDropdown) {
+             languageToggle.addEventListener('click', (e) => {
+                 e.stopPropagation();
+                 languageDropdown.style.display = languageDropdown.style.display === 'block' ? 'none' : 'block';
+             });
+
+             languageOptions.forEach(option => {
+                 option.addEventListener('click', async (e) => {
+                     e.preventDefault();
+                     languageDropdown.style.display = 'none'; // Hide dropdown
+                     const lang = option.getAttribute('data-lang');
+                     if (lang && lang !== I18n.getCurrentLanguage()) {
+                         // Call the async switchLanguage method
+                         await I18n.switchLanguage(lang); 
+                     }
+                 });
+             });
+
+             // Close dropdown when clicking outside
+             document.addEventListener('click', (e) => {
+                if (!e.target.closest('.language-selector')) {
+                     if (languageDropdown) languageDropdown.style.display = 'none';
+                 }
+             });
+         }
+     },
 
     /**
      * 设置全站favicon

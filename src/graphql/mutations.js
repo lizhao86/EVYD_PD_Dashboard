@@ -9,6 +9,7 @@ export const createUserSettings = /* GraphQL */ `
     createUserSettings(input: $input, condition: $condition) {
       id
       role
+      language
       apiKeys {
         userStory
         userManual
@@ -30,6 +31,7 @@ export const updateUserSettings = /* GraphQL */ `
     updateUserSettings(input: $input, condition: $condition) {
       id
       role
+      language
       apiKeys {
         userStory
         userManual
@@ -51,6 +53,7 @@ export const deleteUserSettings = /* GraphQL */ `
     deleteUserSettings(input: $input, condition: $condition) {
       id
       role
+      language
       apiKeys {
         userStory
         userManual

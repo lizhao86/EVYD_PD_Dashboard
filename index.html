@@ -12,8 +12,8 @@
     <script src="/locales/zh-CN.js"></script>
     <script src="/locales/zh-TW.js"></script>
     <script src="/locales/en.js"></script>
-    <!-- 引入国际化工具 -->
-    <script src="/scripts/i18n.js"></script>
+    <!-- 引入国际化工具 (Load as module) -->
+    <script type="module" src="/scripts/i18n.js"></script>
     <!-- 添加Lato字体 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -159,7 +159,7 @@
         </div>
     </div>
 
-    <!-- Removed inline script -->
+    <!-- Main application script -->
     <script type="module" src="/scripts/main.js"></script>
 </body>
 </html> 

@@ -209,7 +209,6 @@ window.en = {
         settings: {
             title: 'Account Settings',
             tabPassword: 'Change Password',
-            tabProfile: 'Profile',
             currentPasswordLabel: 'Current Password',
             currentPasswordPlaceholder: 'Enter current password',
             newPasswordLabel: 'New Password',

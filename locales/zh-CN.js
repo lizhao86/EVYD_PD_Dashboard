@@ -209,7 +209,6 @@ window.zhCN = {
         settings: {
             title: '账号设置',
             tabPassword: '修改密码',
-            tabProfile: '个人资料',
             currentPasswordLabel: '当前密码',
             currentPasswordPlaceholder: '输入当前密码',
             newPasswordLabel: '新密码',

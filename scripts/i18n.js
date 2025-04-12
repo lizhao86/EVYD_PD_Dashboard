@@ -3,6 +3,9 @@
  * 国际化(i18n)工具模块
  */
 
+import { getCurrentUserSettings, saveCurrentUserSetting } from '/scripts/services/storage.js';
+import { checkAuth } from '/modules/auth/auth.js'; // Needed to check login status
+
 // 国际化工具
 const I18n = {
     // 支持的语言
@@ -13,24 +16,62 @@ const I18n = {
     },
     
     // 当前语言
-    currentLang: null,
+    currentLang: 'zh-CN', // Default language
     
     // 当前翻译内容
     translations: null,
     
+    isInitialized: false,
+    currentUser: null, // Store auth info
+    userSettings: null, // Store user settings
+    
     /**
-     * 初始化国际化模块
+     * 初始化国际化模块 (async)
      */
-    init() {
-        console.log('初始化国际化模块...');
+    async init() {
+        if (this.isInitialized) return; // Prevent multiple initializations
+        console.log('初始化国际化模块 (async)...');
         
-        // 获取当前语言设置，默认为简体中文
-        const storedLang = localStorage.getItem('language');
-        this.currentLang = storedLang || 'zh-CN';
+        // Try to get logged-in user info and settings first
+        let preferredLang = null;
+        try {
+            const authInfo = await checkAuth(); // Check login status
+            if (authInfo && authInfo.user) {
+                this.currentUser = authInfo.user;
+                this.userSettings = await getCurrentUserSettings();
+                if (this.userSettings && this.userSettings.language) {
+                    preferredLang = this.userSettings.language;
+                    console.log(`从用户设置加载语言: ${preferredLang}`);
+                } else {
+                     console.log("用户设置中未找到语言偏好。");
+                     // Optional: Could try to save a default here if userSettings exists but language doesn't
+                }
+            }
+        } catch (error) {
+            console.error("检查用户认证或获取设置时出错:", error);
+        }
+
+        // Determine language: User Setting > Local Storage (fallback) > Default
+        const storedLang = localStorage.getItem('language'); // Keep LS as fallback for logged-out users
+        this.currentLang = preferredLang || storedLang || 'zh-CN';
         
+        // Validate the determined language
+        if (!this.supportedLanguages[this.currentLang]) {
+            console.warn(`无效的当前语言 '${this.currentLang}', 重置为默认 zh-CN`);
+            this.currentLang = 'zh-CN';
+             if (!preferredLang && !storedLang && this.currentUser) {
+                 // Save default to DB if user logged in but had no preference
+                 this.saveLanguagePreference(this.currentLang);
+             }
+        }
+        
+        // Update Local Storage for logged-out consistency
+         if (localStorage.getItem('language') !== this.currentLang) {
+            localStorage.setItem('language', this.currentLang);
+         }
+
         // 设置HTML的lang属性
         document.documentElement.lang = this.currentLang;
-        
         console.log(`当前语言: ${this.currentLang}`);
         
         // 加载当前语言的翻译
@@ -45,6 +86,7 @@ const I18n = {
         } else {
             document.documentElement.dir = 'ltr'; // 其他语言从左到右
         }
+        this.isInitialized = true;
     },
     
     /**
@@ -112,29 +154,54 @@ const I18n = {
     },
     
     /**
-     * 切换语言
+     * 切换语言 (async)
      * @param {string} lang 目标语言代码
      */
-    switchLanguage(lang) {
+    async switchLanguage(lang) {
         if (!this.supportedLanguages[lang]) {
             console.error(`不支持的语言: ${lang}`);
             return false;
         }
         
-        // 保存语言设置
-        localStorage.setItem('language', lang);
+        const oldLang = this.currentLang;
         this.currentLang = lang;
         
-        // 设置HTML的lang属性
+        // 1. Save to local storage immediately for instant fallback
+        localStorage.setItem('language', lang);
+
+        // 2. Attempt to save to user settings if logged in
+        if (this.currentUser) { // Check if we know the user is logged in
+            console.log(`尝试为用户 ${this.currentUser.userId} 保存语言偏好: ${lang}`);
+            await this.saveLanguagePreference(lang);
+        } else {
+             console.log("用户未登录，语言偏好仅保存到 Local Storage。");
+        }
+        
+        // 3. Update UI (reload is simplest)
         document.documentElement.lang = lang;
-        
         console.log(`切换语言到: ${lang}`);
-        
-        // 刷新页面应用新语言
         window.location.reload();
         
         return true;
     },
+    
+    /** Helper to save language preference to UserSettings */
+    async saveLanguagePreference(lang) {
+         if (!this.currentUser) return; // Should not happen if called correctly
+         try {
+              // Pass only the language to avoid overwriting other settings unintentionally
+             const result = await saveCurrentUserSetting({ language: lang }); 
+             if (result) {
+                 console.log(`语言偏好 ${lang} 已成功保存到云端。`);
+                 // Update local state if needed, though reload handles it
+                 if(this.userSettings) this.userSettings.language = lang;
+             } else {
+                 console.error("保存语言偏好到云端失败 (saveCurrentUserSetting returned null).");
+             }
+         } catch (error) {
+             console.error("保存语言偏好到云端时出错:", error);
+         }
+     },
     
     /**
      * 获取当前语言代码
@@ -202,10 +269,11 @@ const I18n = {
     }
 };
 
-// 初始化国际化模块
-document.addEventListener('DOMContentLoaded', function() {
-    I18n.init();
-});
+// Remove auto-initialization from here
+// document.addEventListener('DOMContentLoaded', async function() {
+//     await I18n.init();
+// });
 
-// 简写形式，方便使用
-const t = (key, params) => I18n.t(key, params); 
+// Export the main object and the helper function
+export const t = (key, params) => I18n.t(key, params);
+export default I18n; 

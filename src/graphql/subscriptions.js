@@ -9,6 +9,7 @@ export const onCreateUserSettings = /* GraphQL */ `
     onCreateUserSettings(filter: $filter, owner: $owner) {
       id
       role
+      language
       apiKeys {
         userStory
         userManual
@@ -30,6 +31,7 @@ export const onUpdateUserSettings = /* GraphQL */ `
     onUpdateUserSettings(filter: $filter, owner: $owner) {
       id
       role
+      language
       apiKeys {
         userStory
         userManual
@@ -51,6 +53,7 @@ export const onDeleteUserSettings = /* GraphQL */ `
     onDeleteUserSettings(filter: $filter, owner: $owner) {
       id
       role
+      language
       apiKeys {
         userStory
         userManual

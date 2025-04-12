@@ -8,10 +8,9 @@ import Header from '/modules/common/header.js';
 
 // Wait for the DOM to be fully loaded before initializing the header for this page
 document.addEventListener('DOMContentLoaded', async () => { // Make listener async
-    console.log("Initializing Header for Homepage...");
-    // Header.init now handles Amplify config and initial auth check
-    await Header.init(); 
-    console.log("Header init complete. Current user:", Header.currentUser);
+    console.log("Homepage: Initializing Header (which will init I18n)...");
+    await Header.init(); // Header.init now handles everything
+    console.log("Homepage: Header init complete.");
 
     // Removed the check for post-registration message as auto-login seems to work
     // if (!Header.currentUser && document.referrer.includes(COGNITO_DOMAIN)) {
