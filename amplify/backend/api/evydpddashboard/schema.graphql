@@ -25,6 +25,7 @@ type UserApiKeys {
   userStory: String
   userManual: String
   requirementsAnalysis: String
+  uxDesign: String
 }
 
 
@@ -52,5 +53,6 @@ type GlobalApiEndpoints {
   userStory: String
   userManual: String
   requirementsAnalysis: String
+  uxDesign: String
 }
 

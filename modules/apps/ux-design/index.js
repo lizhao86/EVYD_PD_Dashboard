@@ -2,306 +2,274 @@
  * UX界面设计主入口
  */
 
-// DOM加载完成后执行
-document.addEventListener('DOMContentLoaded', async () => {
-    // 用户认证初始化
-    if (window.AuthService) {
-        await window.AuthService.init();
-        
-        // 检查用户登录状态，更新UI
-        const user = await window.AuthService.getCurrentUser();
-        if (user) {
-            document.getElementById('user-info').style.display = 'flex';
-            document.getElementById('username-display').textContent = user.username;
-            document.getElementById('login-button').style.display = 'none';
-            
-            // 显示管理面板链接（如果是管理员）
-            if (user.role === 'admin') {
-                document.getElementById('admin-panel-link').style.display = 'block';
-            }
-        } else {
-            document.getElementById('user-info').style.display = 'none';
-            document.getElementById('login-button').style.display = 'block';
+// Import necessary modules
+import Header from '/modules/common/header.js';
+import UI from './ui.js';
+import API from './api.js';
+import { getCurrentUserSettings, getGlobalConfig } from '/scripts/services/storage.js';
+import { t } from '/scripts/i18n.js';
+
+const UXDesignApp = {
+    state: {
+        apiKey: null,
+        apiEndpoint: null,
+        currentConversationId: null, // For potential future chat-like interaction
+        currentMessageId: null
+    },
+
+    async init() {
+        console.log('Initializing UX Design App (async)...');
+        await Header.init();
+        console.log("Header initialized. Current user:", Header.currentUser);
+
+        if (!Header.currentUser) {
+            console.log('User not logged in.');
+            UI.showError(t('common.loginRequired', {default: '请先登录以使用此功能。'})); 
+            return; 
         }
-    }
-    
-    // 初始化UI功能
-    if (window.UXDesignUI) {
-        window.UXDesignUI.initUI();
-    }
-    
-    // 加载应用信息
-    await loadAppInfo();
-    
-    // 处理模态框相关事件
-    setupModals();
-    
-    // 设置管理面板按钮事件
-    setupAdminPanel();
+
+        try {
+            const userSettings = Header.userSettings || await getCurrentUserSettings(); 
+            const globalConfig = await getGlobalConfig();
+
+            // Use optional chaining and nullish coalescing for safety
+            this.state.apiKey = userSettings?.apiKeys?.uxDesign ?? null;
+            this.state.apiEndpoint = globalConfig?.apiEndpoints?.uxDesign ?? null;
+
+            if (!this.state.apiKey) {
+                 UI.showError(t('uxDesign.apiKeyError', {default: '无法获取您的 UX Design API 密钥，请检查账号设置。'}), 'user-settings-modal');
+                 return;
+            }
+             if (!this.state.apiEndpoint) {
+                 UI.showError(t('uxDesign.apiEndpointError', {default: '无法获取 UX Design API 地址，请联系管理员检查全局配置。'}), 'admin-panel-modal');
+                 return;
+            }
+            
+            console.log("API Key and Endpoint loaded for UX Design.");
+
+            UI.initUI(); // Initialize UI elements specific to this page
+            await API.getAppInfo(this.state.apiKey, this.state.apiEndpoint); // Fetch Dify app info
+            this.bindEvents();
+
+        } catch (error) {
+             console.error("Error fetching settings for UX Design app:", error);
+             UI.showError(t('common.configLoadError', {default: '加载应用配置时出错，请稍后重试。'}));
+        }
+    },
+
+    bindEvents() {
+        console.log('Binding UX Design events...');
+        
+        // App specific events
+        const retryButton = document.getElementById('retry-connection');
+        if (retryButton) retryButton.addEventListener('click', () => {
+            if (this.state.apiKey && this.state.apiEndpoint) {
+                API.getAppInfo(this.state.apiKey, this.state.apiEndpoint);
+            } else {
+                console.error("Cannot retry connection, API config missing in state.");
+            }
+        });
+
+        const requirementDesc = document.getElementById('requirement-description');
+        if (requirementDesc) requirementDesc.addEventListener('input', this.updateCharCount.bind(this));
+
+        const expandTextarea = document.getElementById('expand-textarea');
+        if (expandTextarea) expandTextarea.addEventListener('click', this.toggleTextareaExpand.bind(this));
+
+        const clearForm = document.getElementById('clear-form');
+        if (clearForm) clearForm.addEventListener('click', this.handleClearForm.bind(this));
+        
+        const generateButton = document.getElementById('generate-prompt');
+        if (generateButton) {
+            console.log('[bindEvents UX] Found button #generate-prompt, attaching listener.');
+            generateButton.addEventListener('click', this.handleGenerate.bind(this));
+        } else {
+            console.error('[bindEvents UX] Could not find button #generate-prompt!');
+        }
+        
+        // Assuming stop button exists with this ID
+        const stopGeneration = document.getElementById('stop-generation'); 
+        if (stopGeneration) stopGeneration.addEventListener('click', this.handleStopGeneration.bind(this));
+        
+        const copyResult = document.getElementById('copy-result');
+        if (copyResult) copyResult.addEventListener('click', this.handleCopyResult.bind(this));
+
+        const toggleSystemInfoButton = document.getElementById('toggle-system-info');
+        if (toggleSystemInfoButton) {
+           toggleSystemInfoButton.addEventListener('click', () => {
+                const systemInfoContent = document.getElementById('system-info-content');
+                const isHidden = systemInfoContent.style.display === 'none';
+                systemInfoContent.style.display = isHidden ? 'block' : 'none';
+                toggleSystemInfoButton.classList.toggle('collapsed', !isHidden);
+           });
+        }
+    },
+
+    /**
+     * Generate UX Prompt
+     */
+    async handleGenerate() {
+        // --- ADD ENTRY LOG ---
+        console.log("[Index UX] handleGenerate function called!");
+        // --- END LOG ---
+        const generateButton = document.getElementById('generate-prompt'); // <-- Check ID
+        const action = generateButton?.getAttribute('data-action');
+
+        if (action === 'stop') {
+            // console.log('Stop button (via generate button) clicked, Message ID:', this.state.currentMessageId);
+            this.handleStopGeneration();
+            return;
+        }
+
+        const requirementDesc = document.getElementById('requirement-description').value;
+        UI.clearInputError('requirement');
+        if (!requirementDesc) {
+             UI.showInputError('requirement', t('uxDesign.error.emptyRequirement', {default: '请填写需求描述'}));
+                return;
+            }
+            
+        if (!this.state.apiKey || !this.state.apiEndpoint || !Header.currentUser) {
+             if (typeof UI !== 'undefined' && UI.showError) UI.showError(t('common.configLoadError', {default: 'API 配置或用户信息丢失，无法生成。'}));
+             else alert(t('common.configLoadError', {default: 'API 配置或用户信息丢失，无法生成。'}));
+                return;
+            }
+        
+        // Reset IDs before starting
+        this.state.currentMessageId = null;
+        // Keep existing conversation ID if available
+        // this.state.currentConversationId = this.state.currentConversationId || null;
+        UI.showRequestingState();
+
+        try {
+            // Call API.generateUXPrompt. API will set messageId state during stream.
+            // Await to know when complete and get final conversation ID.
+            const result = await API.generateUXPrompt(requirementDesc, this.state.apiKey, this.state.apiEndpoint, Header.currentUser, this.state.currentConversationId);
+            
+            /* --- REMOVED OLD ID HANDLING ---
+            // Store IDs AFTER await
+            if (result) {
+                this.state.currentConversationId = result.conversationId;
+                this.state.currentMessageId = result.taskId; 
+                console.log(\"[Index UX] Stored Task/Message ID for stopping:\", this.state.currentMessageId);\n            } else {
+                 console.warn(\"[Index UX] API call did not return valid IDs.\");\n            }
+            */
+            // UI reset handled by API stream handler
+        } catch (error) {
+            console.error("Error caught in handleGenerate (UX Design):", error);
+            // UI completion should be handled in API/stream handler
+            // UI.showGenerationCompleted(); // Reset button on error - now redundant
+        }
+    },
+
+    /**
+     * Stop Generation (UX Design)
+     */
+    handleStopGeneration() {
+        console.log("Handling stop generation request (UX Design)...");
+        // Stop logic should now work correctly
+        if (this.state.currentMessageId && this.state.apiKey && this.state.apiEndpoint && Header.currentUser) {
+            API.stopGeneration(this.state.currentMessageId, this.state.apiKey, this.state.apiEndpoint, Header.currentUser);
+            this.state.currentMessageId = null; // Clear ID after requesting stop
+        } else {
+            console.warn("Cannot stop, missing messageId or config/user. State was:", this.state);
+            if (typeof UI !== 'undefined' && UI.showGenerationCompleted) UI.showGenerationCompleted(); 
+        }
+    },
+
+    handleCopyResult() {
+        // Similar copy logic as user-manual
+        const markdownDiv = document.getElementById('result-content-markdown');
+        let textToCopy = '';
+        if (markdownDiv && markdownDiv.style.display !== 'none') {
+            textToCopy = markdownDiv.innerText;
+                } else {
+            const resultContentEl = document.getElementById('result-content');
+            if(resultContentEl) textToCopy = resultContentEl.textContent;
+        }
+        
+        if (textToCopy) {
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                 const copyButton = document.getElementById('copy-result');
+                 const originalTitle = copyButton.title;
+                 copyButton.title = t('common.copied', { default: '已复制!' });
+                 copyButton.classList.add('copied-success');
+                 setTimeout(() => {
+                     copyButton.title = originalTitle;
+                     copyButton.classList.remove('copied-success');
+                 }, 2000);
+             }).catch(err => {
+                  console.error('Failed to copy text: ', err);
+                  alert(t('common.copyFailed', { default: '复制失败'}));
+              });
+          } else {
+              console.warn("No result content found to copy.");
+          }
+    },
+
+    updateCharCount(event) {
+        const textarea = event.target;
+        const charCount = textarea.value.length;
+        if (typeof UI !== 'undefined' && UI.updateCharCountDisplay) {
+             UI.updateCharCountDisplay(charCount);
+         } 
+     },
+    toggleTextareaExpand() {
+         const textareaContainer = document.querySelector('.textarea-container');
+         const textarea = document.getElementById('requirement-description');
+         const charCounter = document.querySelector('.char-counter');
+         if (textareaContainer?.classList.contains('textarea-expanded')) {
+             this.shrinkTextarea(textareaContainer, textarea, charCounter);
+         } else if(textareaContainer && textarea && charCounter) {
+             this.expandTextarea(textareaContainer, textarea, charCounter);
+         }
+     },
+     expandTextarea(container, textarea, charCounter) {
+        // Reuse logic from user-manual
+        const overlay = document.createElement('div');
+        overlay.className = 'textarea-overlay';
+        overlay.addEventListener('click', () => this.shrinkTextarea(container, textarea, charCounter));
+        document.body.appendChild(overlay);
+        this.originalParentElement = container.closest('.form-group');
+        this.originalNextSibling = container.nextSibling;
+        textarea.dataset.originalRows = textarea.rows;
+        container.classList.add('textarea-expanded');
+        document.body.appendChild(container);
+        textarea.rows = 20;
+        textarea.focus();
+        const expandButton = document.getElementById('expand-textarea');
+        if(expandButton) expandButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>`;
+        container.appendChild(charCounter);
+     },
+     shrinkTextarea(container, textarea, charCounter) {
+         // Reuse logic from user-manual
+        const overlay = document.querySelector('.textarea-overlay');
+        if (overlay) overlay.remove();
+        container.classList.remove('textarea-expanded');
+        textarea.rows = textarea.dataset.originalRows || 6;
+        if (this.originalParentElement) {
+            if (container.parentNode) container.parentNode.removeChild(container);
+            if (this.originalNextSibling) this.originalParentElement.insertBefore(container, this.originalNextSibling);
+            else this.originalParentElement.appendChild(container);
+            if (charCounter.parentNode) charCounter.parentNode.removeChild(charCounter);
+            this.originalParentElement.appendChild(charCounter);
+        }
+         const expandButton = document.getElementById('expand-textarea');
+         if(expandButton) expandButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M14 10l7-7M9 21H3v-6M10 14l-7 7"/></svg>`;
+     },
+     handleClearForm() {
+         const reqDesc = document.getElementById('requirement-description');
+         if(reqDesc) reqDesc.value = '';
+         if (typeof UI !== 'undefined' && UI.updateCharCountDisplay) {
+            UI.updateCharCountDisplay(0);
+         }
+     },
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    UXDesignApp.init();
 });
 
-/**
- * 加载应用信息
- */
-async function loadAppInfo() {
-    // 显示加载状态
-    document.getElementById('app-info').style.display = 'none';
-    document.getElementById('app-form').style.display = 'none';
-    document.getElementById('app-info-loading').style.display = 'block';
-    document.getElementById('app-info-error').style.display = 'none';
-    
-    try {
-        // 获取应用信息
-        const appInfo = await window.UXDesignAPI.getAppInfo();
-        
-        // 更新应用信息UI
-        document.getElementById('app-name').textContent = appInfo.name || 'UX 界面设计助手';
-        document.getElementById('app-description').textContent = appInfo.description || '该工具可以根据需求描述和User Story生成Figma界面设计的AI提示词，帮助您快速创建界面原型。请注意，由于Figma AI功能本身较为原始，生成效果不保证可用。';
-        
-        // 清空标签
-        const tagsContainer = document.getElementById('app-tags');
-        tagsContainer.innerHTML = '';
-        
-        // 添加标签
-        if (appInfo.tags && appInfo.tags.length > 0) {
-            appInfo.tags.forEach(tag => {
-                const tagElement = document.createElement('span');
-                tagElement.className = 'app-tag';
-                tagElement.textContent = tag;
-                tagsContainer.appendChild(tagElement);
-            });
-        }
-        
-        // 显示应用信息
-        document.getElementById('app-info').style.display = 'block';
-        document.getElementById('app-form').style.display = 'block';
-        document.getElementById('app-info-loading').style.display = 'none';
-    } catch (error) {
-        console.error('加载应用信息失败:', error);
-        
-        // 显示错误信息
-        document.getElementById('error-message').textContent = error.message || '无法连接到Dify API，请检查API地址和密钥设置。';
-        document.getElementById('app-info-loading').style.display = 'none';
-        document.getElementById('app-info-error').style.display = 'block';
-        
-        // 尝试使用默认信息
-        document.getElementById('app-info').style.display = 'block';
-        document.getElementById('app-form').style.display = 'block';
-    }
-}
+// export default UXDesignApp; 
 
-/**
- * 设置模态框事件处理
- */
-function setupModals() {
-    // 登录按钮点击事件
-    const loginButton = document.getElementById('login-button');
-    if (loginButton) {
-        loginButton.addEventListener('click', () => {
-            document.getElementById('login-modal').style.display = 'block';
-        });
-    }
-    
-    // 登出按钮点击事件
-    const logoutButton = document.getElementById('logout-button');
-    if (logoutButton) {
-        logoutButton.addEventListener('click', async () => {
-            if (window.AuthService) {
-                await window.AuthService.logout();
-                window.location.reload();
-            }
-        });
-    }
-    
-    // 账号设置按钮点击事件
-    const profileSettingsButton = document.getElementById('profile-settings');
-    if (profileSettingsButton) {
-        profileSettingsButton.addEventListener('click', async () => {
-            // 显示账号设置模态框
-            document.getElementById('user-settings-modal').style.display = 'block';
-            
-            // 加载用户信息
-            if (window.AuthService) {
-                const user = await window.AuthService.getCurrentUser();
-                if (user) {
-                    document.getElementById('profile-username').value = user.username;
-                    document.getElementById('profile-role').value = user.role;
-                    const createdDate = new Date(user.created_at);
-                    document.getElementById('profile-created').value = createdDate.toLocaleDateString();
-                }
-            }
-        });
-    }
-    
-    // 模态框关闭按钮点击事件
-    const closeButtons = document.querySelectorAll('.close-modal');
-    closeButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            // 获取最近的模态框父元素
-            const modal = button.closest('.modal');
-            if (modal) {
-                modal.style.display = 'none';
-            }
-        });
-    });
-    
-    // 密码可见性切换
-    const togglePasswordButtons = document.querySelectorAll('.toggle-password');
-    togglePasswordButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const input = button.previousElementSibling;
-            if (input.type === 'password') {
-                input.type = 'text';
-                button.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                        <line x1="1" y1="1" x2="23" y2="23"></line>
-                    </svg>
-                `;
-            } else {
-                input.type = 'password';
-                button.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                `;
-            }
-        });
-    });
-    
-    // 设置选项卡切换
-    const settingsTabs = document.querySelectorAll('.settings-tab');
-    settingsTabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            // 激活当前选项卡
-            document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            
-            // 显示对应内容
-            const settingsType = tab.getAttribute('data-settings');
-            document.querySelectorAll('.settings-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            document.getElementById(`${settingsType}-settings`).classList.add('active');
-        });
-    });
-    
-    // 登录表单提交
-    const submitLoginButton = document.getElementById('submit-login');
-    if (submitLoginButton) {
-        submitLoginButton.addEventListener('click', async () => {
-            const username = document.getElementById('login-username').value;
-            const password = document.getElementById('login-password').value;
-            const messageElement = document.getElementById('login-message');
-            
-            if (!username || !password) {
-                messageElement.textContent = '请输入用户名和密码';
-                messageElement.classList.add('error');
-                return;
-            }
-            
-            try {
-                const result = await window.AuthService.login(username, password);
-                if (result.success) {
-                    document.getElementById('login-modal').style.display = 'none';
-                    window.location.reload();
-                } else {
-                    messageElement.textContent = result.message || '登录失败，请检查用户名和密码';
-                    messageElement.classList.add('error');
-                }
-            } catch (error) {
-                messageElement.textContent = error.message || '登录失败，请重试';
-                messageElement.classList.add('error');
-            }
-        });
-    }
-    
-    // 修改密码表单提交
-    const submitPasswordChangeButton = document.getElementById('submit-password-change');
-    if (submitPasswordChangeButton) {
-        submitPasswordChangeButton.addEventListener('click', async () => {
-            const currentPassword = document.getElementById('current-password').value;
-            const newPassword = document.getElementById('new-password').value;
-            const confirmPassword = document.getElementById('confirm-password').value;
-            const messageElement = document.getElementById('password-message');
-            
-            if (!currentPassword || !newPassword || !confirmPassword) {
-                messageElement.textContent = '请填写所有密码字段';
-                messageElement.classList.add('error');
-                return;
-            }
-            
-            if (newPassword !== confirmPassword) {
-                messageElement.textContent = '新密码和确认密码不匹配';
-                messageElement.classList.add('error');
-                return;
-            }
-            
-            try {
-                const result = await window.AuthService.changePassword(currentPassword, newPassword);
-                if (result.success) {
-                    messageElement.textContent = '密码修改成功';
-                    messageElement.classList.remove('error');
-                    messageElement.classList.add('success');
-                    
-                    // 清空表单
-                    document.getElementById('current-password').value = '';
-                    document.getElementById('new-password').value = '';
-                    document.getElementById('confirm-password').value = '';
-                } else {
-                    messageElement.textContent = result.message || '密码修改失败';
-                    messageElement.classList.add('error');
-                }
-            } catch (error) {
-                messageElement.textContent = error.message || '密码修改失败';
-                messageElement.classList.add('error');
-            }
-        });
-    }
-    
-    // 取消密码修改
-    const cancelPasswordChangeButton = document.getElementById('cancel-password-change');
-    if (cancelPasswordChangeButton) {
-        cancelPasswordChangeButton.addEventListener('click', () => {
-            document.getElementById('user-settings-modal').style.display = 'none';
-            
-            // 清空表单
-            document.getElementById('current-password').value = '';
-            document.getElementById('new-password').value = '';
-            document.getElementById('confirm-password').value = '';
-            document.getElementById('password-message').textContent = '';
-        });
-    }
-}
-
-/**
- * 设置管理面板事件
- */
-function setupAdminPanel() {
-    const adminPanelButton = document.getElementById('admin-panel-button');
-    if (adminPanelButton) {
-        adminPanelButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            // 打开管理面板模态框
-            const adminModal = document.getElementById('admin-panel-modal');
-            if (adminModal) {
-                adminModal.style.display = 'block';
-                // 如果存在初始化函数，调用它
-                if (window.App && window.App.initAdminPanel) {
-                    window.App.initAdminPanel();
-                } else if (window.Header && window.Header.initAdminPanel) {
-                    window.Header.initAdminPanel();
-                }
-            }
-        });
-    }
-    
-    // 重试连接按钮
-    const retryConnectionButton = document.getElementById('retry-connection');
-    if (retryConnectionButton) {
-        retryConnectionButton.addEventListener('click', async () => {
-            await loadAppInfo();
-        });
-    }
-} 
+// --- ADD EXPORT ---
+export default UXDesignApp; 

@@ -60,7 +60,12 @@ window.zhTW = {
             userAddError: '添加用戶異常: {error}'
         },
         generating: '生成中...點擊停止',
-        stopGeneration: '停止生成'
+        stopGeneration: '停止生成',
+        backToHome: '返回主頁',
+        requesting: '請求中...',
+        generatingSimple: '正在生成...',
+        copied: '已複製!',
+        copyFailed: '複製失敗'
     },
     
     // 導航
@@ -295,6 +300,7 @@ window.zhTW = {
         elapsedTimeLabel: '耗時:',
         totalStepsLabel: '總步驟:',
         totalTokensLabel: '總Token:',
+        secondsSuffix: '秒',
         error: {
             emptyRequirement: '請輸入需求描述'
         }
@@ -321,7 +327,10 @@ window.zhTW = {
         totalStepsLabel: '總步驟:',
         totalTokensLabel: '總Token:',
         generating: '生成中，請稍候...',
-        secondsSuffix: '秒'
+        secondsSuffix: '秒',
+        error: {
+            emptyRequirement: '請輸入需求描述'
+        }
     },
     
     // User Story頁面
@@ -350,6 +359,12 @@ window.zhTW = {
         elapsedTimeLabel: '耗時:',
         totalStepsLabel: '總步驟:',
         totalTokensLabel: '總Token:',
-        secondsSuffix: '秒'
+        secondsSuffix: '秒',
+        error: {
+            platformRequired: '請填寫平台名稱',
+            systemRequired: '請填寫系統名稱',
+            moduleRequired: '請填寫模塊名稱',
+            requirementRequired: '請填寫需求描述'
+        }
     }
 }; 

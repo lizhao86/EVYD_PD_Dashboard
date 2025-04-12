@@ -14,6 +14,7 @@ export const createUserSettings = /* GraphQL */ `
         userStory
         userManual
         requirementsAnalysis
+        uxDesign
         __typename
       }
       createdAt
@@ -36,6 +37,7 @@ export const updateUserSettings = /* GraphQL */ `
         userStory
         userManual
         requirementsAnalysis
+        uxDesign
         __typename
       }
       createdAt
@@ -58,6 +60,7 @@ export const deleteUserSettings = /* GraphQL */ `
         userStory
         userManual
         requirementsAnalysis
+        uxDesign
         __typename
       }
       createdAt
@@ -78,6 +81,7 @@ export const createGlobalConfig = /* GraphQL */ `
         userStory
         userManual
         requirementsAnalysis
+        uxDesign
         __typename
       }
       createdAt
@@ -97,6 +101,7 @@ export const updateGlobalConfig = /* GraphQL */ `
         userStory
         userManual
         requirementsAnalysis
+        uxDesign
         __typename
       }
       createdAt
@@ -116,6 +121,7 @@ export const deleteGlobalConfig = /* GraphQL */ `
         userStory
         userManual
         requirementsAnalysis
+        uxDesign
         __typename
       }
       createdAt

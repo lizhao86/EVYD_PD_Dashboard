@@ -60,7 +60,12 @@ window.en = {
             userAddError: 'Error adding user: {error}'
         },
         generating: 'Generating...Click to stop',
-        stopGeneration: 'Stop Generation'
+        stopGeneration: 'Stop Generation',
+        backToHome: 'Back to Home',
+        requesting: 'Requesting...',
+        generatingSimple: 'Generating...',
+        copied: 'Copied!',
+        copyFailed: 'Copy Failed'
     },
     
     // Navigation
@@ -295,6 +300,7 @@ window.en = {
         elapsedTimeLabel: 'Time Elapsed:',
         totalStepsLabel: 'Total Steps:',
         totalTokensLabel: 'Total Tokens:',
+        secondsSuffix: 's',
         error: {
             emptyRequirement: 'Please enter the requirement description'
         }
@@ -321,7 +327,10 @@ window.en = {
         totalStepsLabel: 'Total Steps:',
         totalTokensLabel: 'Total Tokens:',
         generating: 'Generating, please wait...',
-        secondsSuffix: 's'
+        secondsSuffix: 's',
+        error: {
+            emptyRequirement: 'Please enter the requirement description'
+        }
     },
     
     // User Story Page
@@ -350,6 +359,12 @@ window.en = {
         elapsedTimeLabel: 'Time Elapsed:',
         totalStepsLabel: 'Total Steps:',
         totalTokensLabel: 'Total Tokens:',
-        secondsSuffix: 's'
+        secondsSuffix: 's',
+        error: {
+            platformRequired: 'Please enter Platform Name',
+            systemRequired: 'Please enter System Name',
+            moduleRequired: 'Please enter Module Name',
+            requirementRequired: 'Please enter Requirement Description'
+        }
     }
 }; 

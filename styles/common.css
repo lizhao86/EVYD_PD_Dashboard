@@ -1922,3 +1922,50 @@ a, a:visited, a:active, a:focus {
     cursor: not-allowed;
     background-color: #cccccc; /* Grey background */
 }
+
+/* === Dropdown Fix (from Homepage inline style) === */
+.main-nav .dropdown {
+    position: relative !important; /* Keep relative positioning */
+}
+
+.main-nav .dropdown-menu {
+    display: none; /* Hide by default */
+    position: absolute !important; /* Ensure absolute positioning */
+    top: 100% !important; /* Position below the parent */
+    left: 0 !important; /* Align to the left */
+    background-color: #fff !important; /* White background */
+    min-width: 180px !important;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1) !important; /* Standard shadow */
+    border-radius: 4px !important;
+    padding: 8px 0 !important;
+    z-index: 100 !important; /* Ensure it's above other content */
+    margin-top: 0 !important; /* Remove any extra top margin */
+    border: 1px solid var(--gray-200); /* Add border like other dropdowns */
+}
+
+.main-nav .dropdown-menu a {
+    /* Inherit general nav link styles but ensure block display & padding */
+    display: block !important;
+    padding: 8px 16px !important; 
+    color: #333 !important; /* Darker text for readability */
+    text-decoration: none !important;
+    transition: background-color 0.2s ease !important;
+    white-space: nowrap; /* Prevent wrapping */
+}
+
+.main-nav .dropdown-menu a:hover {
+    background-color: #f5f5f5 !important; /* Light grey hover */
+}
+
+/* Show on hover of the parent */
+.main-nav .dropdown:hover .dropdown-menu {
+    display: block !important; 
+}
+
+.main-nav .dropdown-toggle svg {
+     transition: transform 0.2s ease; /* Smooth arrow rotation */
+}
+
+.main-nav .dropdown:hover .dropdown-toggle svg {
+    transform: rotate(180deg); /* Rotate arrow on hover */
+}

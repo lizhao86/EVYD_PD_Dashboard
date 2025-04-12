@@ -12,10 +12,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const loadingText = document.getElementById('loading-text');
         const backBtn = document.getElementById('back-btn');
         const continueBtn = document.getElementById('continue-btn');
-        if(welcomeTitle) welcomeTitle.textContent = t('common.title');
-        if(loadingText) loadingText.textContent = t('common.loading');
-        if(backBtn) backBtn.textContent = t('common.back');
-        if(continueBtn) continueBtn.textContent = t('common.continue');
+        // Use t() if available, otherwise keep default text
+        const translate = (key, fallback) => (typeof t !== 'undefined' ? t(key, { default: fallback }) : fallback);
+        if(welcomeTitle) welcomeTitle.textContent = translate('common.title', '产品经理AI工作台');
+        if(loadingText) loadingText.textContent = translate('common.loading', '正在加载...');
+        if(backBtn) backBtn.textContent = translate('common.back', '返回');
+        if(continueBtn) continueBtn.textContent = translate('common.continue', '继续');
     }
 
     // 进度条动画 (This seems specific to the index.html loading page)
@@ -34,14 +36,14 @@ document.addEventListener('DOMContentLoaded', function() {
         let progress = 0;
         const interval = setInterval(() => {
             progress += 1;
-            progressFill.style.width = `${progress}%`;
-            progressPercent.textContent = `${progress}%`;
+            if (progressFill) progressFill.style.width = `${progress}%`;
+            if (progressPercent) progressPercent.textContent = `${progress}%`;
 
             if (progress >= 100) {
                 clearInterval(interval);
                 setTimeout(() => {
                     // 3秒后自动跳转
-                    window.location.href = 'templates/pages/Homepage.html';
+                    window.location.href = '/templates/pages/Homepage.html'; // Use absolute path
                 }, 500);
             }
         }, 30); // 大约3秒完成
@@ -49,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // 点击继续直接跳转
         continueBtnEl.addEventListener('click', function(e) {
             e.preventDefault();
-            window.location.href = 'templates/pages/Homepage.html';
+            window.location.href = '/templates/pages/Homepage.html'; // Use absolute path
         });
     }
 }); 

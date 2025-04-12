@@ -3,53 +3,19 @@
  * UI交互模块
  */
 
-// UI交互模块
+import { t } from '/scripts/i18n.js'; 
+import { marked } from 'marked'; // Import marked library
+// import Header from '/modules/common/header.js'; // Likely not needed directly
+
 const UI = {
-    /**
-     * 初始化用户界面
-     */
     initUserInterface() {
-        console.log('初始化UI...');
+        console.log("Initializing User Manual UI elements...");
+        const resultContainer = document.getElementById('result-container');
+        if(resultContainer) resultContainer.style.display = 'none';
         
-        // 检查用户登录状态
-        const currentUser = Auth.checkAuth();
-        console.log('当前用户:', currentUser);
-        
-        const userInfo = document.getElementById('user-info');
-        const loginButton = document.getElementById('login-button');
-        const usernameDisplay = document.getElementById('username-display');
-        
-        if (currentUser) {
-            // 用户已登录，显示用户信息
-            userInfo.style.display = 'flex';
-            loginButton.style.display = 'none';
-            
-            usernameDisplay.textContent = currentUser.username;
-            
-            // 检查用户是否是管理员
-            if (currentUser.role === 'admin') {
-                document.getElementById('admin-panel-link').style.display = 'block';
-            } else {
-                document.getElementById('admin-panel-link').style.display = 'none';
-            }
-            
-            console.log('显示登录用户:', currentUser.username);
-        } else {
-            // 用户未登录，显示登录按钮
-            userInfo.style.display = 'none';
-            loginButton.style.display = 'block';
-            console.log('未登录状态');
-        }
-        
-        // 绑定登出按钮事件
-        const logoutButton = document.getElementById('logout-button');
-        if (logoutButton) {
-            logoutButton.addEventListener('click', function(e) {
-                e.preventDefault();
-                Auth.logout();
-                UI.initUserInterface();
-                window.location.reload();
-            });
+        const requirementDesc = document.getElementById('requirement-description');
+        if (requirementDesc) {
+            this.updateCharCountDisplay(requirementDesc.value.length);
         }
     },
     
@@ -57,203 +23,244 @@ const UI = {
      * 显示加载状态
      */
     showLoading() {
-        document.getElementById('app-info-loading').style.display = 'block';
-        document.getElementById('app-info-error').style.display = 'none';
-        document.getElementById('app-info').style.display = 'none';
-        document.getElementById('app-form').style.display = 'none';
+        // Rewrite with explicit checks
+        const loadingEl = document.getElementById('app-info-loading');
+        if (loadingEl) loadingEl.style.display = 'flex';
+
+        const errorEl = document.getElementById('app-info-error');
+        if (errorEl) errorEl.style.display = 'none';
+
+        const infoEl = document.getElementById('app-info');
+        if (infoEl) infoEl.style.display = 'none';
+
+        const formEl = document.getElementById('app-form');
+        if (formEl) formEl.style.display = 'none';
     },
     
-    /**
-     * 显示错误信息
-     */
-    showError(message) {
-        console.error('显示错误:', message);
-        document.getElementById('app-info-loading').style.display = 'none';
-        document.getElementById('app-info-error').style.display = 'block';
-        document.getElementById('app-info').style.display = 'none';
-        document.getElementById('app-form').style.display = 'none';
-        
-        document.getElementById('error-message').textContent = message;
-    },
-    
-    /**
-     * 显示应用信息
-     */
-    displayAppInfo(data) {
-        console.log('显示应用信息:', data);
-        document.getElementById('app-info-loading').style.display = 'none';
-        document.getElementById('app-info-error').style.display = 'none';
-        document.getElementById('app-info').style.display = 'block';
-        document.getElementById('app-form').style.display = 'block';
-        
-        // 显示应用信息
-        document.getElementById('app-name').textContent = data.name || 'User Manual 生成器';
-        document.getElementById('app-description').textContent = data.description || '通过AI快速生成用户手册，提高产品体验和用户满意度。';
-        
-        // 显示标签
-        const tagsContainer = document.getElementById('app-tags');
-        tagsContainer.innerHTML = '';
-        
-        if (data.tags && data.tags.length > 0) {
-            data.tags.forEach(tag => {
-                const tagElement = document.createElement('span');
-                tagElement.className = 'app-tag';
-                tagElement.textContent = tag;
-                tagsContainer.appendChild(tagElement);
-            });
-        }
-    },
-    
-    /**
-     * 显示开始生成状态
-     */
-    showGenerationStarted() {
-        console.log('开始生成...');
-        
-        // 显示结果区域
-        document.getElementById('result-container').style.display = 'block';
-        
-        // 获取国际化文本
-        let generatingText = '生成中，请稍候...'; // 默认文本
-        if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') {
-            generatingText = I18n.t('userManual.generating');
-        }
-        document.getElementById('result-content').textContent = generatingText;
-        document.getElementById('result-content').style.display = 'block';
-        
-        // 如果有Markdown区域，先隐藏
-        const markdownDiv = document.getElementById('result-content-markdown');
-        if (markdownDiv) {
-            markdownDiv.style.display = 'none';
-        }
-        
-        // 隐藏统计信息
-        document.getElementById('result-stats').style.display = 'none';
-        
-        // 设置生成按钮状态为停止
-        const generateButton = document.getElementById('generate-manual');
-        
-        // 获取停止生成按钮文本
-        let stopGenerationText = '停止生成'; // 默认文本
-        if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') {
-            stopGenerationText = I18n.t('common.stopGeneration');
-        }
-        generateButton.textContent = stopGenerationText;
-        generateButton.setAttribute('data-action', 'stop');
-        generateButton.classList.add('btn-danger');
-        
-        // 显示停止按钮
-        document.getElementById('stop-generation').style.display = 'inline-block';
-        
-        // 滚动到结果区域
-        setTimeout(() => {
-            document.getElementById('result-container').scrollIntoView({ behavior: 'smooth' });
-        }, 100);
-    },
-    
-    /**
-     * 显示生成完成状态
-     */
-    showGenerationCompleted() {
-        console.log('生成完成');
-        
-        // 恢复生成按钮状态
-        const generateButton = document.getElementById('generate-manual');
-        
-        // 获取生成按钮文本
-        let generateButtonText = '生成 User Manual'; // 默认文本
-        if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') {
-            generateButtonText = I18n.t('userManual.generateButton');
-        }
-        generateButton.textContent = generateButtonText;
-        generateButton.setAttribute('data-action', 'generate');
-        generateButton.classList.remove('btn-danger');
-        
-        // 隐藏停止按钮
-        document.getElementById('stop-generation').style.display = 'none';
-    },
-    
-    /**
-     * 显示统计信息
-     */
-    displayStats(data) {
-        console.log('显示统计信息:', data);
-        
-        const statsContainer = document.getElementById('result-stats');
-        
-        if (data) {
-            // 获取国际化的"秒"后缀
-            let secondsSuffix = '秒';
-            if (typeof I18n !== 'undefined' && typeof I18n.t === 'function') {
-                secondsSuffix = I18n.t('userManual.secondsSuffix');
-            }
-            
-            // 更新统计数据
-            document.getElementById('elapsed-time').textContent = `${data.elapsed_time.toFixed(2)}${secondsSuffix}`;
-            document.getElementById('total-tokens').textContent = data.total_tokens;
-            document.getElementById('total-steps').textContent = data.total_steps || 1;
-            
-            // 显示统计区域
-            statsContainer.style.display = 'flex';
+    showError(message, modalToOpenId = null) {
+        const loadingEl = document.getElementById('app-info-loading');
+        const errorEl = document.getElementById('app-info-error');
+        const errorMessageEl = document.getElementById('error-message');
+        const appInfoEl = document.getElementById('app-info');
+        const appFormEl = document.getElementById('app-form');
+
+        if(loadingEl) loadingEl.style.display = 'none';
+        if(appInfoEl) appInfoEl.style.display = 'none';
+        if(appFormEl) appFormEl.style.display = 'none';
+
+        if(errorEl && errorMessageEl) {
+            errorEl.style.display = 'flex';
+            errorMessageEl.textContent = message;
+             // TODO: Handle modalToOpenId to suggest opening settings/admin panel
         } else {
-            statsContainer.style.display = 'none';
+            console.error("Could not display error, elements not found.");
+            alert(message); // Fallback
+        }
+    },
+
+    displayAppInfo(appInfo) {
+         // Rewrite with explicit checks instead of optional chaining
+         const loadingEl = document.getElementById('app-info-loading');
+         if (loadingEl) loadingEl.style.display = 'none';
+         
+         const appInfoEl = document.getElementById('app-info');
+         const appNameEl = document.getElementById('app-name');
+         const appDescEl = document.getElementById('app-description');
+         const tagsContainer = document.getElementById('app-tags');
+         const appFormEl = document.getElementById('app-form');
+
+         if(appInfoEl && appNameEl && appDescEl && tagsContainer && appFormEl) {
+             if (appInfoEl) appInfoEl.style.display = 'block';
+             appNameEl.textContent = appInfo.name || t('userManual.defaultAppName', { default: 'User Manual 生成器'});
+             appDescEl.textContent = appInfo.description || t('userManual.defaultAppDesc', { default: '通过AI快速生成用户手册...'});
+             tagsContainer.innerHTML = '';
+             if (appInfo.tags && appInfo.tags.length > 0) {
+                  appInfo.tags.forEach(tag => {
+                     const tagEl = document.createElement('span');
+                     let className = 'app-tag';
+                     if (tag.toLowerCase() === 'ai') className += ' tag-ai';
+                     // Add other tag classes if needed
+                     tagEl.className = className;
+                     tagEl.textContent = tag;
+                     tagsContainer.appendChild(tagEl);
+                  });
+             }
+             if (appFormEl) appFormEl.style.display = 'block';
+         } else {
+              console.error("Required app info DOM elements not found for User Manual.");
+         }
+    },
+    
+    showRequestingState() {
+        const generateButton = document.getElementById('generate-manual');
+        const stopButton = document.getElementById('stop-generation');
+
+        if (generateButton) {
+            const requestingText = t('common.requesting', { default: '请求中...' });
+            generateButton.innerHTML = '<div class="loading-circle-container"><div class="loading-circle"></div></div> ' + requestingText;
+            generateButton.disabled = true; // Disable button during request
+            generateButton.setAttribute('data-action', 'requesting'); // Optional: set action state
+        }
+        if (stopButton) {
+            stopButton.style.display = 'none'; // Ensure separate stop button is hidden
         }
     },
     
-    /**
-     * 显示用户信息
-     */
-    loadUserProfile() {
-        const currentUser = Auth.checkAuth();
-        if (!currentUser) return;
+    showGenerationStarted() {
+        const resultContainer = document.getElementById('result-container');
+        const resultStats = document.getElementById('result-stats');
+        const resultContent = document.getElementById('result-content');
+        const resultMarkdown = document.getElementById('result-content-markdown');
+        const systemInfoContainer = document.getElementById('system-info-container');
+        const systemInfoContent = document.getElementById('system-info-content');
+        const generateButton = document.getElementById('generate-manual'); // Correct button ID
+        const stopButton = document.getElementById('stop-generation');
+
+        if (resultContainer) resultContainer.style.display = 'block';
+        if (resultStats) resultStats.style.display = 'none';
+        if (resultContent) {
+             resultContent.innerHTML = t('common.generatingSimple', { default: '正在生成...'}) + '<span class="cursor"></span>';
+             resultContent.style.display = 'block';
+        }
+        if (resultMarkdown) {
+            resultMarkdown.style.display = 'none';
+            resultMarkdown.innerHTML = '';
+        }
+        if (systemInfoContainer) systemInfoContainer.style.display = 'none';
+        if (systemInfoContent) systemInfoContent.innerHTML = '';
         
-        document.getElementById('profile-username').value = currentUser.username;
-        document.getElementById('profile-role').value = currentUser.role;
-        
-        // 格式化日期
-        const createdDate = new Date(currentUser.created);
-        const formattedDate = createdDate.toLocaleDateString('zh-CN', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-        
-        document.getElementById('profile-created').value = formattedDate;
+        if (generateButton) {
+            generateButton.disabled = false; // --- MODIFY: Enable button --- 
+            const generatingText = t('common.generating', { default: '生成中...点击停止' });
+            generateButton.innerHTML = '<div class="loading-circle-container"><div class="loading-circle" style="border-color: #ff3333; border-top-color: transparent;"></div></div> ' + generatingText;
+            generateButton.setAttribute('data-action', 'stop');
+        }
+        // --- MODIFY: Hide separate stop button --- 
+        // if(stopButton) stopButton.style.display = 'inline-block'; // Show separate stop button
+        if(stopButton) stopButton.style.display = 'none'; 
     },
     
-    /**
-     * 显示API密钥
-     */
-    loadUserApiKeys() {
-        const currentUser = Auth.checkAuth();
-        if (!currentUser) return;
+    showGenerationCompleted() {
+        const generateButton = document.getElementById('generate-manual'); // Correct button ID
+        if (generateButton) {
+            generateButton.disabled = false; // --- MODIFY: Ensure button is enabled --- 
+            const buttonText = t('userManual.generateButton', { default: '生成 User Manual' });
+            generateButton.innerHTML = buttonText;
+            generateButton.setAttribute('data-action', 'generate');
+            generateButton.classList.remove('btn-danger', 'btn-secondary'); 
+            generateButton.classList.add('btn-primary');
+        }
+        const stopButton = document.getElementById('stop-generation');
+        if(stopButton) stopButton.style.display = 'none';
+    },
+    
+    displayStats(taskData) {
+        // Reuse logic from user-story UI, ensure element IDs match user-manual.html
+        console.log('Displaying stats for User Manual:', taskData);
+        const elapsedTime = taskData.elapsed_time || 0;
+        const totalSteps = taskData.total_steps || 0;
+        const totalTokens = taskData.total_tokens || 0;
         
-        // 显示各应用的API密钥
-        const userStoryKey = document.getElementById('userStory-api-key');
-        const userManualKey = document.getElementById('userManual-api-key');
-        const requirementsAnalysisKey = document.getElementById('requirementsAnalysis-api-key');
-        
-        if (userStoryKey) {
-            userStoryKey.value = currentUser.apiKeys.userStory || '';
+        const elapsedTimeElement = document.getElementById('elapsed-time');
+        const totalStepsElement = document.getElementById('total-steps');
+        const totalTokensElement = document.getElementById('total-tokens');
+        const statsContainer = document.getElementById('result-stats');
+
+        if (!elapsedTimeElement || !totalStepsElement || !totalTokensElement || !statsContainer) {
+            console.error('Stat DOM elements not found for User Manual.');
+            return;
         }
         
-        if (userManualKey) {
-            userManualKey.value = currentUser.apiKeys.userManual || '';
-        }
-        
-        if (requirementsAnalysisKey) {
-            requirementsAnalysisKey.value = currentUser.apiKeys.requirementsAnalysis || '';
+        const secondsSuffix = t('userManual.secondsSuffix', { default: '秒' });
+        elapsedTimeElement.textContent = `${Number(elapsedTime).toFixed(2)}${secondsSuffix}`;
+        totalStepsElement.textContent = totalSteps;
+        totalTokensElement.textContent = totalTokens;
+        statsContainer.style.display = 'flex';
+    },
+    
+    showTaskStatsFailed() {
+        // Reuse logic, ensure IDs match
+        const statsContainer = document.getElementById('result-stats');
+        if (statsContainer) {
+            statsContainer.style.display = 'flex';
+            const failedText = t('common.fetchFailed', { default: '获取失败'});
+            document.getElementById('elapsed-time').textContent = failedText;
+            document.getElementById('total-steps').textContent = failedText;
+            document.getElementById('total-tokens').textContent = failedText;
         }
     },
     
-    /**
-     * 显示表单信息
-     */
-    showFormMessage(elementId, message, type = 'info') {
-        const element = document.getElementById(elementId);
-        if (!element) return;
-        
-        element.textContent = message;
-        element.className = `form-message ${type}`;
+    updateCharCountDisplay(charCount) {
+        const charCountElement = document.getElementById('char-count');
+        const charCountContainer = document.querySelector('.char-counter');
+        const generateButton = document.getElementById('generate-manual'); // Correct button ID
+
+        if (charCountElement) charCountElement.textContent = charCount;
+        if (charCountContainer) charCountContainer.classList.toggle('warning', charCount > 5000);
+        if (generateButton) {
+            generateButton.disabled = charCount > 5000 && generateButton.getAttribute('data-action') === 'generate';
+        }
+    },
+     showStopMessage() {
+         const resultContent = document.getElementById('result-content');
+         if (resultContent) {
+             const stopMsg = document.createElement('i');
+             stopMsg.textContent = t('common.generationStopped', { default: '(已停止生成)' });
+             const br = document.createElement('br');
+             resultContent.appendChild(br);
+             resultContent.appendChild(br.cloneNode());
+             resultContent.appendChild(stopMsg);
+         }
+     },
+      showErrorInResult(message) {
+        const resultContent = document.getElementById('result-content');
+        const resultMarkdown = document.getElementById('result-content-markdown');
+        if (resultContent) {
+             resultContent.innerHTML = `<span style="color: red;">${message}</span>`;
+             resultContent.style.display = 'block';
+        }
+         if (resultMarkdown) {
+             resultMarkdown.style.display = 'none';
+        }
+     },
+     showInputError(fieldName, message) {
+        const errorElement = document.getElementById(`${fieldName}-error`);
+        const inputElement = document.getElementById(`${fieldName}-description`); // Assuming ID pattern
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+        if (inputElement) {
+            inputElement.classList.add('input-error'); // Optional: Add class for styling
+        }
+    },
+    clearInputError(fieldName) {
+        const errorElement = document.getElementById(`${fieldName}-error`);
+        const inputElement = document.getElementById(`${fieldName}-description`); // Assuming ID pattern
+        if (errorElement) {
+            errorElement.textContent = '';
+            errorElement.style.display = 'none';
+        }
+        if (inputElement) {
+            inputElement.classList.remove('input-error'); // Optional: Remove error class
+        }
+    },
+    displaySystemInfo(data) { // Parameter could be taskId or an object { task_id, conversation_id }
+        const systemInfoContainerEl = document.getElementById('system-info-container');
+        const systemInfoContentEl = document.getElementById('system-info-content');
+        if (systemInfoContainerEl && systemInfoContentEl && data) {
+            systemInfoContainerEl.style.display = 'block';
+            // Adapt based on what data is passed (string taskId or object)
+            if (typeof data === 'string') { 
+                systemInfoContentEl.textContent = `Message ID: ${data}`;
+            } else {
+                systemInfoContentEl.textContent = JSON.stringify(data, null, 2);
+            }
+        } else {
+            if (!data) console.warn("[UI UM] displaySystemInfo called without data.");
+            // else console.warn("[UI UM] System info container/content elements not found.");
+        }
     }
 };
+
+export default UI;

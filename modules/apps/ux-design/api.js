@@ -1,306 +1,278 @@
 /**
  * UX 界面设计API相关功能
  */
+import UI from './ui.js';
+import { getApiBaseUrl } from '/scripts/utils/helper.js';
+import { t } from '/scripts/i18n.js';
+import { marked } from 'marked';
+// Assuming index.js manages state and passes it
 
-// 全局变量
-let currentController = null; // 当前的AbortController，用于停止流
-let startTime = 0; // 开始时间
-let totalTokens = 0; // 总Token数
-let totalSteps = 0; // 总步骤数
-let taskId = null; // 当前任务ID
+// --- ADD IMPORT ---
+import UXDesignApp from './index.js'; 
+
+const API = {
+    // Removed global variables for state
 
 /**
  * 获取UX设计应用信息
- * @returns {Promise<Object>} 应用信息
  */
-async function getAppInfo() {
-    try {
-        // 获取API地址和密钥
-        const apiBaseUrl = await getApiBaseUrl('uxDesign');
-        const apiKey = await getApiKey('uxDesign');
-        
-        if (!apiBaseUrl || !apiKey) {
-            throw new Error('API地址或密钥未配置，请在管理面板中配置。');
+    async getAppInfo(apiKey, apiEndpoint) {
+        // Similar to other API modules, using passed-in config
+        if (!apiKey || !apiEndpoint) {
+             UI.showError(t('uxDesign.configMissing', { default: '缺少UX Design API配置。'}));
+             return null;
         }
+        UI.showLoading();
+        const baseUrl = getApiBaseUrl(apiEndpoint);
+        const infoUrl = `${baseUrl}/info`; // Verify Dify endpoint for app info
         
-        const response = await fetch(`${apiBaseUrl}/info`, {
+        try {
+            console.log(`[UX API] Trying to connect: ${infoUrl}`);
+            const response = await fetch(infoUrl, {
             method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json'
-            }
+                headers: { 'Authorization': `Bearer ${apiKey}` }
         });
-        
         if (!response.ok) {
-            throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
+                 let errorDetail = '';
+                 try { errorDetail = JSON.stringify(await response.json()); } catch { errorDetail = await response.text(); }
+                 throw new Error(`Request failed: ${response.status} ${response.statusText}. Details: ${errorDetail}`);
+            }
+            const data = await response.json();
+            console.log('[UX API] App info received:', data);
+            if (!data.name) data.name = 'UX 界面设计助手'; // Default name
+            UI.displayAppInfo(data);
+            return data; // Return data for index.js
+        } catch (error) {
+            console.error('[UX API] Connection Error:', error);
+            UI.showError(`无法连接到Dify API: ${error.message}`);
+             UI.displayAppInfo({ // Attempt to show form even on error
+                 name: 'UX 界面设计助手',
+                 description: '无法连接 Dify API, 但可尝试生成。',
+                 tags: ['可能离线']
+             });
+             return null;
         }
-        
-        return await response.json();
-    } catch (error) {
-        console.error('获取应用信息失败:', error);
-        throw error;
-    }
-}
+    },
+
+    // getAppParameters might not be needed if inputs are static in the HTML?
+    // If dynamic parameters are needed, implement similarly to getAppInfo
+    // async getAppParameters(apiKey, apiEndpoint) { ... }
 
 /**
- * 获取应用参数
- * @returns {Promise<Object>} 应用参数
- */
-async function getAppParameters() {
-    try {
-        // 获取API地址和密钥
-        const apiBaseUrl = await getApiBaseUrl('uxDesign');
-        const apiKey = await getApiKey('uxDesign');
-        
-        if (!apiBaseUrl || !apiKey) {
-            throw new Error('API地址或密钥未配置，请在管理面板中配置。');
+     * 生成UX界面设计提示词 (Chat Endpoint)
+     */
+    async generateUXPrompt(requirementDescription, apiKey, apiEndpoint, user, conversationId = null) {
+        if (!apiKey || !apiEndpoint || !user || !requirementDescription) {
+            console.error("Missing parameters for generateUXPrompt");
+            UI.showError('缺少必要参数，无法生成。');
+            return { conversationId: conversationId }; 
         }
         
-        const response = await fetch(`${apiBaseUrl}/parameters`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
-        }
-        
-        return await response.json();
-    } catch (error) {
-        console.error('获取应用参数失败:', error);
-        throw error;
-    }
-}
+        const baseUrl = getApiBaseUrl(apiEndpoint);
+        const chatUrl = `${baseUrl}/chat-messages`; 
+        let initialConversationId = conversationId;
 
-/**
- * 生成UX界面设计提示词
- * @param {string} requirementDescription - 需求描述
- * @returns {Promise<void>}
- */
-async function generateDesignPrompt(requirementDescription) {
-    try {
-        // 重置计数器
-        startTime = Date.now();
-        totalTokens = 0;
-        totalSteps = 0;
-        
-        // 获取API地址和密钥
-        const apiBaseUrl = await getApiBaseUrl('uxDesign');
-        const apiKey = await getApiKey('uxDesign');
-        
-        if (!apiBaseUrl || !apiKey) {
-            throw new Error('API地址或密钥未配置，请在管理面板中配置。');
-        }
-        
-        // 获取用户信息
-        const user = await getCurrentUser();
-        if (!user) {
-            throw new Error('用户未登录，请先登录。');
-        }
-        
-        // 创建AbortController用于停止流
-        currentController = new AbortController();
-        const signal = currentController.signal;
-        
-        // 准备请求数据
+        try {
         const requestData = {
             query: requirementDescription,
+                inputs: {},
+                response_mode: "streaming",
+                conversation_id: conversationId || "",
             user: user.username,
-            inputs: {},
-            response_mode: 'streaming',
-            conversation_id: '',
-            auto_generate_name: true
+                files: [],
+                auto_generate_name: !conversationId
         };
         
-        // 发送请求
-        const response = await fetch(`${apiBaseUrl}/chat-messages`, {
+            console.log('[UX API] Sending chat request:', requestData);
+            const response = await fetch(chatUrl, {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json'
-            },
+                headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
             body: JSON.stringify(requestData),
-            signal: signal
+                // Add signal if stop needs AbortController
         });
         
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`API请求失败: ${errorData.message || response.statusText}`);
+                 let errorDetail = '';
+                 try { errorDetail = JSON.stringify(await response.json()); } catch { errorDetail = await response.text(); }
+                 throw new Error(`Request failed: ${response.status} ${response.statusText}. Details: ${errorDetail}`);
+            }
+            
+            // Use a separate stream handler, potentially reusable?
+            const streamResult = await this.handleStreamResponse(response);
+            return { conversationId: streamResult.conversationId || initialConversationId };
+
+        } catch (error) {
+            console.error('[UX API] Generation failed:', error);
+            if(typeof UI !== 'undefined' && UI.showErrorInResult) {
+                 UI.showErrorInResult(t('uxDesign.generationFailed', { default: '生成失败:'}) + ` ${error.message}`);
+            } else {
+                 document.getElementById('result-content').innerHTML = `<span style="color: red;">生成失败: ${error.message}</span>`;
+            }
+            if (typeof UI !== 'undefined' && UI.showGenerationCompleted) {
+                UI.showGenerationCompleted(); 
+            }
+            return { conversationId: initialConversationId }; 
         }
+    },
         
-        // 处理流式响应
+    /**
+     * 处理流式响应 (Similar to user-manual, potentially refactor)
+     */
+    async handleStreamResponse(response) {
+        // Reuse stream handling logic, calling UI.appendRawText and UI.renderMarkdown
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
-        let buffer = '';
-        let fullContent = '';
+        let resultText = '';
+        let capturedTaskId = null;
+        let capturedConversationId = null;
+        let usageInfo = {};
+        let startTime = Date.now();
         
-        while (true) {
-            const { value, done } = await reader.read();
-            if (done) break;
-            
-            buffer += decoder.decode(value, { stream: true });
-            
-            // 处理接收到的数据块
-            const lines = buffer.split('\n\n');
-            buffer = lines.pop() || '';
-            
-            for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                    const data = line.substring(6);
-                    try {
-                        const json = JSON.parse(data);
-                        handleStreamEvent(json);
-                        
-                        if (json.event === 'message') {
-                            fullContent += json.answer || '';
-                            // 提取任务ID，用于停止生成
-                            if (json.task_id && !taskId) {
-                                taskId = json.task_id;
-                            }
-                        } else if (json.event === 'message_end') {
-                            // 处理流结束事件
-                            if (json.metadata && json.metadata.usage) {
-                                totalTokens = json.metadata.usage.total_tokens || 0;
-                            }
-                            // 计算耗时
-                            const elapsedTime = Math.round((Date.now() - startTime) / 1000);
-                            
-                            // 更新统计信息
-                            window.UXDesignUI.updateStats({
-                                elapsedTime,
-                                totalSteps,
-                                totalTokens
-                            });
-                            
-                            // 重置生成按钮
-                            const generateButton = document.getElementById('generate-manual');
-                            if (generateButton) {
-                                window.UXDesignUI.resetGenerateButton(generateButton);
-                            }
-                            
-                            // 显示为Markdown
-                            window.UXDesignUI.updateResultContent(fullContent, true);
-                        }
-                    } catch (e) {
-                        console.error('处理事件数据失败:', e);
-                    }
-                }
-            }
-        }
+        // Get elements directly
+        const resultContentEl = document.getElementById('result-content');
+        const resultMarkdownEl = document.getElementById('result-content-markdown');
+        // ... (get system info elements if needed) ...
         
-    } catch (error) {
-        if (error.name === 'AbortError') {
-            console.log('操作已取消');
-        } else {
-            console.error('生成失败:', error);
-            window.UXDesignUI.showError(error.message);
-            
-            // 重置生成按钮
-            const generateButton = document.getElementById('generate-manual');
-            if (generateButton) {
-                window.UXDesignUI.resetGenerateButton(generateButton);
-            }
+        if(!resultContentEl || !resultMarkdownEl) {
+            console.error("Result display elements not found inside handleStreamResponse (UX Design)!");
+            return { conversationId: null }; 
         }
-    } finally {
-        currentController = null;
-        taskId = null;
-    }
-}
+
+        // Reset UI state here
+        resultContentEl.innerHTML = ''; 
+        resultMarkdownEl.innerHTML = '';
+        resultMarkdownEl.style.display = 'none';
+        resultContentEl.style.display = 'block'; 
+        // ... (reset system info display) ...
+
+         while (true) {
+             const { value, done } = await reader.read();
+             if (done) break;
+             const chunk = decoder.decode(value, { stream: true });
+             let lines = chunk.split('\n\n');
+             for (let line of lines) {
+                  if (!line.trim() || !line.startsWith('data: ')) continue;
+                  line = line.substring(6);
+                  try {
+                      const data = JSON.parse(line);
+                      if (data.message_id && !capturedTaskId) {
+                          capturedTaskId = data.message_id;
+                          if (UXDesignApp && UXDesignApp.state) {
+                              UXDesignApp.state.currentMessageId = capturedTaskId;
+                              console.log('[UX API Stream] Updated UXDesignApp.state.currentMessageId:', UXDesignApp.state.currentMessageId);
+                              if (!capturedConversationId && typeof UI !== 'undefined' && UI.showGenerationStarted) {
+                                  UI.showGenerationStarted();
+                              }
+                          } else {
+                              console.warn('[UX API Stream] UXDesignApp state not accessible to update messageId.');
+                          }
+                      }
+                      if (data.conversation_id && !capturedConversationId) {
+                          capturedConversationId = data.conversation_id;
+                           if (UXDesignApp && UXDesignApp.state) {
+                              UXDesignApp.state.currentConversationId = capturedConversationId;
+                              console.log('[UX API Stream] Updated UXDesignApp.state.currentConversationId:', UXDesignApp.state.currentConversationId);
+                          } else {
+                              console.warn('[UX API Stream] UXDesignApp state not accessible to update conversationId.');
+                          }
+                      }
+                      
+                      let textChunk = '';
+                      if (data.event === 'message' && data.answer) { textChunk = data.answer; }
+                      else if (data.event === 'message_end' && data.metadata?.usage) {
+                         usageInfo = data.metadata.usage;
+                         const endTime = Date.now();
+                         const elapsedTime = (endTime - startTime) / 1000;
+                         console.log(`[UX API Stream] Preparing to call UI.displayStats. Data:`, { elapsed_time: elapsedTime, total_tokens: usageInfo.total_tokens || 0, total_steps: 1 });
+                         if(typeof UI !== 'undefined' && UI.displayStats) { 
+                            console.log("[UX API Stream] UI.displayStats function found. Attempting call...");
+                            try {
+                                UI.displayStats({ 
+                                    elapsed_time: elapsedTime, 
+                                    total_tokens: usageInfo.total_tokens || 0, 
+                                    total_steps: 1 
+                                });
+                                console.log("[UX API Stream] Call to UI.displayStats completed.");
+                            } catch (uiError) {
+                                console.error("[UX API Stream] Error occurred *during* UI.displayStats execution:", uiError);
+                            }
+                         } else {
+                             console.error("[UX API Stream] UI object or UI.displayStats function NOT found!");
+                         }
+                      } else if (data.event === 'error') { textChunk = `\n*Error: ${data.error}*`; }
+
+                      if(textChunk) {
+                           resultText += textChunk;
+                           resultContentEl.textContent = resultText; // Update raw text view directly
+                           resultContentEl.scrollTop = resultContentEl.scrollHeight; // Scroll raw text view
+                      }
+                      // Update system info if UI method exists
+                      if(typeof UI !== 'undefined' && UI.displaySystemInfo) {
+                         UI.displaySystemInfo({message_id: capturedTaskId, conversation_id: capturedConversationId});
+                      }
+
+                  } catch (e) { console.warn('Failed to parse stream line:', line, e); }
+             }
+         }
+         
+         // Final Render after stream ends
+         console.log("[UX Stream] Rendering final Markdown content.");
+         try {
+             const html = marked(resultText);
+             resultMarkdownEl.innerHTML = html;
+             resultMarkdownEl.style.display = 'block';
+             resultContentEl.style.display = 'none';
+             resultMarkdownEl.scrollTop = resultMarkdownEl.scrollHeight;
+         } catch (markdownError) {
+             console.error("Error converting final markdown:", markdownError);
+             resultContentEl.textContent = resultText; // Fallback to text
+             resultContentEl.style.display = 'block';
+             resultMarkdownEl.style.display = 'none';
+         }
+         
+         // Call UI completion *after* rendering
+         if (typeof UI !== 'undefined' && UI.showGenerationCompleted) {
+              UI.showGenerationCompleted();
+         }
+
+         return { conversationId: capturedConversationId }; 
+    },
 
 /**
- * 处理流事件
- * @param {Object} event - 事件对象
+     * 停止生成 (Chat Endpoint)
  */
-function handleStreamEvent(event) {
-    if (event.event === 'message') {
-        // 更新聊天内容
-        if (event.answer) {
-            window.UXDesignUI.appendStreamContent(event.answer);
-        }
-        totalSteps++;
-    } else if (event.event === 'error') {
-        console.error('流错误:', event.error);
-        window.UXDesignUI.showError(event.error);
-    }
-}
-
-/**
- * 停止生成流
- */
-async function stopStream() {
-    if (currentController) {
-        currentController.abort();
-    }
-    
-    if (taskId) {
+    async stopGeneration(messageId, apiKey, apiEndpoint, user) {
+        // Reuse logic from user-manual/api.js stopGeneration
+        if (!messageId || !apiKey || !apiEndpoint || !user) {
+             console.error("Missing parameters for stopGeneration (UX Design)");
+             return;
+         }
+        const baseUrl = getApiBaseUrl(apiEndpoint);
+        const stopUrl = `${baseUrl}/chat-messages/${messageId}/stop`; 
         try {
-            // 获取API地址和密钥
-            const apiBaseUrl = await getApiBaseUrl('uxDesign');
-            const apiKey = await getApiKey('uxDesign');
-            
-            if (!apiBaseUrl || !apiKey) {
-                throw new Error('API地址或密钥未配置');
-            }
-            
-            // 获取用户信息
-            const user = await getCurrentUser();
-            if (!user) {
-                throw new Error('用户未登录');
-            }
-            
-            // 发送停止请求
-            const response = await fetch(`${apiBaseUrl}/chat-messages/${taskId}/stop`, {
+            console.log(`[UX API] Sending stop request: ${stopUrl}`);
+            const response = await fetch(stopUrl, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${apiKey}`,
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user: user.username })
             });
-            
-            if (!response.ok) {
-                throw new Error('停止生成失败');
+            if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+            const data = await response.json();
+            console.log('[UX API] Stop generation response:', data);
+            if (data.result === 'success') {
+                 if (typeof UI !== 'undefined' && UI.showStopMessage) UI.showStopMessage();
+                 if (typeof UI !== 'undefined' && UI.showGenerationCompleted) UI.showGenerationCompleted();
+            } else {
+                 throw new Error(data.message || 'Stop request failed.');
             }
         } catch (error) {
-            console.error('停止生成失败:', error);
+            console.error('[UX API] Stop generation failed:', error);
+             if (typeof UI !== 'undefined' && UI.showError) UI.showError('停止生成失败: ' + error.message);
+             if (typeof UI !== 'undefined' && UI.showGenerationCompleted) {
+                UI.showGenerationCompleted();
+             }
         }
-    }
-}
-
-/**
- * 获取API地址
- * @param {string} type - API类型
- * @returns {Promise<string>} API地址
- */
-async function getApiBaseUrl(type) {
-    return Storage.getGlobalConfig().apiEndpoints[type] || '';
-}
-
-/**
- * 获取API密钥
- * @param {string} type - API类型
- * @returns {Promise<string>} API密钥
- */
-async function getApiKey(type) {
-    const currentUser = await getCurrentUser();
-    return currentUser ? (currentUser.apiKeys[type] || '') : '';
-}
-
-/**
- * 获取当前登录用户
- * @returns {Promise<Object>} 用户信息
- */
-async function getCurrentUser() {
-    return Auth.checkAuth();
-}
-
-// 导出API函数
-window.UXDesignAPI = {
-    getAppInfo,
-    getAppParameters,
-    generateDesignPrompt,
-    stopStream
+    },
 }; 
+
+export default API; 

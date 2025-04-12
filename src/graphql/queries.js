@@ -11,6 +11,7 @@ export const getUserSettings = /* GraphQL */ `
         userStory
         userManual
         requirementsAnalysis
+        uxDesign
         __typename
       }
       createdAt
@@ -49,6 +50,7 @@ export const getGlobalConfig = /* GraphQL */ `
         userStory
         userManual
         requirementsAnalysis
+        uxDesign
         __typename
       }
       createdAt

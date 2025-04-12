@@ -7,10 +7,10 @@ import Header from '/modules/common/header.js';
 // const COGNITO_DOMAIN = "login.auth.ap-southeast-1.amazoncognito.com";
 
 // Wait for the DOM to be fully loaded before initializing the header for this page
-document.addEventListener('DOMContentLoaded', async () => { // Make listener async
-    console.log("Homepage: Initializing Header (which will init I18n)...");
-    await Header.init(); // Header.init now handles everything
-    console.log("Homepage: Header init complete.");
+document.addEventListener('DOMContentLoaded', async () => { 
+    // console.log("Homepage: Initializing Header...");
+    await Header.init(); 
+    // console.log("Homepage: Header init complete.");
 
     // Removed the check for post-registration message as auto-login seems to work
     // if (!Header.currentUser && document.referrer.includes(COGNITO_DOMAIN)) {

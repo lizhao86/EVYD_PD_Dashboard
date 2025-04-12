@@ -5,60 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-translate="homepage.title">EVYD 产品经理AI工作台</title>
     <!-- 样式文件 -->
-    <link rel="stylesheet" href="../../styles/common.css?v=<?php echo time(); ?>">
-    <link rel="stylesheet" href="../../styles/user-story.css?v=<?php echo time(); ?>">
-    <!-- 引入语言文件 -->
-    <script src="../../locales/zh-CN.js"></script>
-    <script src="../../locales/zh-TW.js"></script>
-    <script src="../../locales/en.js"></script>
-    <!-- 引入国际化工具 -->
-    <script src="../../scripts/i18n.js"></script>
-    <style>
-        /* 只保留导航下拉菜单样式 */
-        .main-nav .dropdown {
-            position: relative !important;
-        }
-        
-        .main-nav .dropdown-menu {
-            display: none !important;
-            position: absolute !important;
-            top: 100% !important;
-            left: 0 !important;
-            background-color: #fff !important;
-            min-width: 180px !important;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1) !important;
-            border-radius: 4px !important;
-            padding: 8px 0 !important;
-            z-index: 100 !important;
-            margin-top: 0 !important;
-        }
-        
-        .main-nav .dropdown-menu a {
-            display: block !important;
-            padding: 8px 16px !important;
-            color: #333 !important;
-            text-decoration: none !important;
-            transition: background-color 0.2s ease !important;
-        }
-        
-        .main-nav .dropdown-menu a:hover {
-            background-color: #f5f5f5 !important;
-        }
-        
-        .main-nav .dropdown:hover .dropdown-menu {
-            display: block !important;
-        }
-        
-        .main-nav .dropdown-toggle {
-            display: flex !important;
-            align-items: center !important;
-            gap: 5px !important;
-        }
-    </style>
-    <!-- 导入非模块化JS (Re-enable helper.js to test compatibility) -->
-    <script src="../../scripts/utils/helper.js"></script>
+    <link rel="stylesheet" href="/styles/common.css">
+    <link rel="stylesheet" href="/styles/user-story.css">
+    <!-- 添加字体 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- 引入语言文件 (Sets Globals) -->
+    <script src="/locales/zh-CN.js"></script>
+    <script src="/locales/zh-TW.js"></script>
+    <script src="/locales/en.js"></script>
+    <!-- Remove direct script loads for modules -->
+    <!-- <script src="../../scripts/i18n.js"></script> -->
+    <!-- <script src="../../scripts/utils/helper.js"></script> -->
     <!-- <script src="../../scripts/core/config.js"></script> -->
-    <!-- 移除 storage.js, auth.js, header.js 的直接加载 -->
+    
+    <!-- Remove inline styles for dropdown -->
+
+    <!-- 应用入口脚本 (Load as module) -->
+    <script type="module" src="/scripts/pages/homepage.js"></script>
 </head>
 <body>
     <!-- 通用头部容器 -->
@@ -354,10 +319,6 @@
             </div>
         </div>
     </footer>
-
-    <!-- 移除初始化脚本 (应由 header.js 或 main.js 处理) -->
-    <!-- Load the specific initializer for this page -->
-    <script type="module" src="/scripts/pages/homepage.js"></script>
 
 </body>
 </html> 

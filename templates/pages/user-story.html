@@ -5,70 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-translate="userStory.pageTitle">EVYD 产品经理AI工作台 - User Story 生成器</title>
     <!-- 样式文件 -->
-    <link rel="stylesheet" href="../../styles/common.css">
-    <link rel="stylesheet" href="../../styles/user-story.css">
+    <link rel="stylesheet" href="/styles/common.css">
+    <link rel="stylesheet" href="/styles/user-story.css">
     <!-- 添加字体 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- 引入语言文件 -->
-    <script src="../../locales/zh-CN.js"></script>
-    <script src="../../locales/zh-TW.js"></script>
-    <script src="../../locales/en.js"></script>
-    <!-- 引入国际化工具 -->
-    <script src="../../scripts/i18n.js"></script>
-    <!-- 内联样式修复导航下拉菜单 -->
-    <style>
-        .main-nav .dropdown {
-            position: relative !important;
-        }
-        
-        .main-nav .dropdown-menu {
-            display: none !important;
-            position: absolute !important;
-            top: 100% !important;
-            left: 0 !important;
-            background-color: #fff !important;
-            min-width: 180px !important;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1) !important;
-            border-radius: 4px !important;
-            padding: 8px 0 !important;
-            z-index: 100 !important;
-            margin-top: 0 !important;
-        }
-        
-        .main-nav .dropdown-menu a {
-            display: block !important;
-            padding: 8px 16px !important;
-            color: #333 !important;
-            text-decoration: none !important;
-            transition: background-color 0.2s ease !important;
-        }
-        
-        .main-nav .dropdown-menu a:hover {
-            background-color: #f5f5f5 !important;
-        }
-        
-        .main-nav .dropdown:hover .dropdown-menu {
-            display: block !important;
-        }
-        
-        .main-nav .dropdown-toggle {
-            display: flex !important;
-            align-items: center !important;
-            gap: 5px !important;
-        }
-    </style>
-    <!-- 导入非模块化JS -->
-    <script src="../../scripts/utils/helper.js"></script>
-    <script src="../../scripts/services/storage.js"></script>
-    <script src="../../modules/auth/auth.js"></script>
-    <script src="../../scripts/core/config.js"></script>
-    <!-- 导入通用头部组件 -->
-    <script src="../../modules/common/header.js"></script>
-    <script src="../../modules/apps/user-story/ui.js"></script>
-    <script src="../../modules/apps/user-story/api.js"></script>
-    <script src="../../modules/apps/user-story/index.js"></script>
+    <script src="/locales/zh-CN.js"></script>
+    <script src="/locales/zh-TW.js"></script>
+    <script src="/locales/en.js"></script>
+    <!-- 应用入口脚本 (Load as module) -->
+    <script type="module" src="/modules/apps/user-story/index.js"></script>
 </head>
 <body>
     <!-- 通用头部容器 -->
@@ -117,16 +65,19 @@
             <div class="form-group">
                 <label for="platform-name" data-translate="userStory.platformLabel">平台名称</label>
                 <input type="text" id="platform-name" data-translate-placeholder="userStory.platformPlaceholder" placeholder="例如：App, Console">
+                <div class="form-error-message" id="platform-error" style="display: none; color: red; font-size: 0.9em; margin-top: 5px;"></div>
             </div>
             
             <div class="form-group">
                 <label for="system-name" data-translate="userStory.systemLabel">系统名称</label>
                 <input type="text" id="system-name" data-translate-placeholder="userStory.systemPlaceholder" placeholder="例如：Routines, OVA">
+                <div class="form-error-message" id="system-error" style="display: none; color: red; font-size: 0.9em; margin-top: 5px;"></div>
             </div>
             
             <div class="form-group">
                 <label for="module-name" data-translate="userStory.moduleLabel">模块名称</label>
                 <input type="text" id="module-name" data-translate-placeholder="userStory.modulePlaceholder" placeholder="例如：Logging, Calendar">
+                <div class="form-error-message" id="module-error" style="display: none; color: red; font-size: 0.9em; margin-top: 5px;"></div>
             </div>
             
             <div class="form-group" id="requirement-group">
@@ -144,6 +95,7 @@
                 <div class="char-counter">
                     <span id="char-count">0</span>/5000
                 </div>
+                <div class="form-error-message" id="requirement-error" style="display: none; color: red; font-size: 0.9em; margin-top: 5px;"></div>
             </div>
             
             <div class="form-actions">
@@ -184,7 +136,7 @@
                     <!-- 系统信息将在这里显示 -->
                 </div>
             </div>
-            <div class="result-stats" id="result-stats" style="display: none;">
+            <div class="result-stats" id="result-stats">
                 <div class="stat-item">
                     <span class="stat-label" data-translate="userStory.elapsedTimeLabel">耗时:</span>
                     <span class="stat-value" id="elapsed-time">0秒</span>
@@ -219,15 +171,5 @@
             </div>
         </div>
     </footer>
-
-    <!-- 初始化页面脚本 -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // 设置页面语言
-            if (typeof I18n !== 'undefined') {
-                document.documentElement.lang = I18n.getCurrentLanguage();
-            }
-        });
-    </script>
 </body>
 </html> 

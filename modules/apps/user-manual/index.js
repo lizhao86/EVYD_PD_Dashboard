@@ -3,12 +3,21 @@
  * 模块入口文件
  */
 
+// Import necessary modules
+import Header from '/modules/common/header.js';
+import UI from './ui.js';
+import API from './api.js';
+import { getCurrentUserSettings, getGlobalConfig } from '/scripts/services/storage.js';
+import { t } from '/scripts/i18n.js'; // Assuming t is needed, maybe in UI
+
 // 命名空间
 const UserManualApp = {
     // 全局状态
     state: {
         currentMessageId: null,
-        currentConversationId: null
+        currentConversationId: null,
+        apiKey: null,
+        apiEndpoint: null
     },
     
     // 功能模块
@@ -17,32 +26,49 @@ const UserManualApp = {
     /**
      * 初始化应用
      */
-    init() {
-        console.log('初始化User Manual应用...');
+    async init() {
+        console.log('Initializing User Manual App (async)...');
         
-        // 初始化UI
-        UI.initUserInterface();
+        // 1. Init Header (Handles Amplify, Auth, I18n)
+        await Header.init(); 
+        console.log("Header initialized. Current user:", Header.currentUser);
         
-        // 绑定事件
-        this.bindEvents();
-        
-        // 检查登录状态
-        const currentUser = Auth.checkAuth();
-        console.log('当前用户:', currentUser);
-        
-        if (!currentUser) {
-            console.log('用户未登录，显示登录框');
-            // 确保登录框可见
-            const loginModal = document.getElementById('login-modal');
-            if (loginModal) {
-                loginModal.style.display = 'block';
-            } else {
-                console.error('找不到登录模态框元素');
+        // 2. Check login
+        if (!Header.currentUser) {
+            console.log('User not logged in.');
+            UI.showError(t('common.loginRequired', {default: '请先登录以使用此功能。'})); 
+            return; 
+        }
+
+        // 3. Fetch config
+        try {
+            const userSettings = Header.userSettings || await getCurrentUserSettings(); 
+            const globalConfig = await getGlobalConfig();
+
+            if (!userSettings?.apiKeys?.userManual) {
+                 UI.showError(t('userManual.apiKeyError', {default: '无法获取您的 User Manual API 密钥，请检查账号设置。'}), 'user-settings-modal');
+                 return;
             }
-        } else {
-            console.log('用户已登录，获取应用信息');
-            // 获取应用信息
-            setTimeout(() => API.fetchAppInfo(), 500);
+             if (!globalConfig?.apiEndpoints?.userManual) {
+                 UI.showError(t('userManual.apiEndpointError', {default: '无法获取 User Manual API 地址，请联系管理员检查全局配置。'}), 'admin-panel-modal');
+                 return;
+            }
+
+            this.state.apiKey = userSettings.apiKeys.userManual;
+            this.state.apiEndpoint = globalConfig.apiEndpoints.userManual;
+            console.log("API Key and Endpoint loaded for User Manual.");
+            
+            // 4. Init UI and fetch Dify App Info
+            UI.initUserInterface();
+            // Pass config to fetchAppInfo
+            await API.fetchAppInfo(this.state.apiKey, this.state.apiEndpoint); 
+
+            // 5. Bind events
+            this.bindEvents();
+
+        } catch (error) {
+             console.error("Error fetching settings for User Manual app:", error);
+             UI.showError(t('common.configLoadError', {default: '加载应用配置时出错，请稍后重试。'}));
         }
     },
     
@@ -50,228 +76,118 @@ const UserManualApp = {
      * 绑定所有事件
      */
     bindEvents() {
-        console.log('绑定事件...');
+        console.log('Binding User Manual events...');
         
-        // 登录相关
-        const loginButton = document.getElementById('login-button');
-        if (loginButton) {
-            loginButton.addEventListener('click', function(e) {
-                e.preventDefault();
-                console.log('点击登录按钮');
-                const loginModal = document.getElementById('login-modal');
-                if (loginModal) {
-                    loginModal.style.display = 'block';
-                } else {
-                    console.error('找不到登录模态框元素');
-                }
-            });
+        // Remove login/logout/password handlers (delegated to Header)
+
+        // Keep App specific events
+        const retryButton = document.getElementById('retry-connection');
+        if (retryButton) retryButton.addEventListener('click', () => {
+            // Re-fetch app info using stored state
+            if (this.state.apiKey && this.state.apiEndpoint) {
+                API.fetchAppInfo(this.state.apiKey, this.state.apiEndpoint);
         } else {
-            console.error('找不到登录按钮元素');
+                console.error("Cannot retry connection, API config missing in state.");
         }
-        
-        // 提交登录
-        const submitLoginButton = document.getElementById('submit-login');
-        if (submitLoginButton) {
-            submitLoginButton.addEventListener('click', this.handleLogin.bind(this));
-        } else {
-            console.error('找不到提交登录按钮元素');
-        }
-        
-        // 账号设置相关
-        document.getElementById('profile-settings').addEventListener('click', function(e) {
-            e.preventDefault();
-            document.getElementById('user-settings-modal').style.display = 'block';
-            UI.loadUserProfile();
         });
-        document.getElementById('submit-password-change').addEventListener('click', this.handlePasswordChange.bind(this));
+
+        const requirementDesc = document.getElementById('requirement-description');
+        if (requirementDesc) requirementDesc.addEventListener('input', this.updateCharCount.bind(this));
+
+        const expandTextarea = document.getElementById('expand-textarea');
+        if (expandTextarea) expandTextarea.addEventListener('click', this.toggleTextareaExpand.bind(this));
         
-        // 模态框操作
-        const closeButtons = document.querySelectorAll('.close-modal');
-        closeButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const modal = this.closest('.modal');
-                modal.style.display = 'none';
-            });
-        });
+        const clearForm = document.getElementById('clear-form');
+        if (clearForm) clearForm.addEventListener('click', this.handleClearForm.bind(this));
         
-        const modals = document.querySelectorAll('.modal');
-        modals.forEach(modal => {
-            modal.addEventListener('click', function(event) {
-                if (event.target === this) {
-                    this.style.display = 'none';
-                }
-            });
-        });
+        const generateManualButton = document.getElementById('generate-manual'); 
+        if (generateManualButton) generateManualButton.addEventListener('click', this.handleGenerateManual.bind(this));
         
-        // 密码可见性切换
-        const togglePasswordButtons = document.querySelectorAll('.toggle-password');
-        togglePasswordButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const input = this.previousElementSibling;
-                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
-                input.setAttribute('type', type);
-            });
-        });
+        const stopGenerationButton = document.getElementById('stop-generation');
+        if (stopGenerationButton) stopGenerationButton.addEventListener('click', this.handleStopGeneration.bind(this));
         
-        // 系统信息折叠/展开
+        const copyResult = document.getElementById('copy-result');
+        if (copyResult) copyResult.addEventListener('click', this.handleCopyResult.bind(this));
+
         const toggleSystemInfoButton = document.getElementById('toggle-system-info');
         if (toggleSystemInfoButton) {
-            toggleSystemInfoButton.addEventListener('click', function() {
+           toggleSystemInfoButton.addEventListener('click', () => {
                 const systemInfoContent = document.getElementById('system-info-content');
-                if (systemInfoContent.style.display === 'none') {
-                    systemInfoContent.style.display = 'block';
-                    this.classList.remove('collapsed');
-                } else {
-                    systemInfoContent.style.display = 'none';
-                    this.classList.add('collapsed');
-                }
-            });
-        }
-        
-        // 重试连接
-        document.getElementById('retry-connection').addEventListener('click', function() {
-            API.fetchAppInfo();
-        });
-        
-        // 需求描述字数统计和放大功能
-        const requirementDescription = document.getElementById('requirement-description');
-        if (requirementDescription) {
-            requirementDescription.addEventListener('input', this.updateCharCount.bind(this));
-            // 初始化字数统计
-            this.updateCharCount({ target: requirementDescription });
-        }
-        
-        // 放大按钮功能
-        const expandTextarea = document.getElementById('expand-textarea');
-        if (expandTextarea) {
-            expandTextarea.addEventListener('click', this.toggleTextareaExpand.bind(this));
-        }
-        
-        // User Manual 相关
-        document.getElementById('clear-form').addEventListener('click', this.handleClearForm.bind(this));
-        document.getElementById('generate-manual').addEventListener('click', this.handleGenerateManual.bind(this));
-        document.getElementById('stop-generation').addEventListener('click', this.handleStopGeneration.bind(this));
-        document.getElementById('copy-result').addEventListener('click', this.handleCopyResult.bind(this));
-    },
-    
-    /**
-     * 处理登录
-     */
-    handleLogin() {
-        const username = document.getElementById('login-username').value;
-        const password = document.getElementById('login-password').value;
-        
-        if (!username || !password) {
-            UI.showFormMessage('login-message', '请输入用户名和密码', 'error');
-            return;
-        }
-        
-        console.log('尝试登录:', username);
-        const result = Auth.login(username, password);
-        console.log('登录结果:', result);
-        
-        if (result.success) {
-            // 登录成功
-            document.getElementById('login-modal').style.display = 'none';
-            UI.initUserInterface();
-            setTimeout(() => API.fetchAppInfo(), 500);
-            
-            // 清空表单
-            document.getElementById('login-username').value = '';
-            document.getElementById('login-password').value = '';
-            document.getElementById('login-message').className = 'form-message';
-        } else {
-            // 登录失败
-            UI.showFormMessage('login-message', result.message, 'error');
+                const isHidden = systemInfoContent.style.display === 'none';
+                systemInfoContent.style.display = isHidden ? 'block' : 'none';
+                toggleSystemInfoButton.classList.toggle('collapsed', !isHidden);
+           });
         }
     },
     
     /**
-     * 处理登出
+     * Generate User Manual
      */
-    handleLogout() {
-        Auth.logout();
-        UI.initUserInterface();
-        window.location.href = 'Homepage.html';
-    },
-    
-    /**
-     * 处理密码修改
-     */
-    handlePasswordChange() {
-        const currentUser = Auth.checkAuth();
-        if (!currentUser) return;
-        
-        const currentPassword = document.getElementById('current-password').value;
-        const newPassword = document.getElementById('new-password').value;
-        const confirmPassword = document.getElementById('confirm-password').value;
-        
-        if (!currentPassword || !newPassword || !confirmPassword) {
-            UI.showFormMessage('password-message', '请填写所有密码字段', 'error');
-            return;
-        }
-        
-        if (newPassword !== confirmPassword) {
-            UI.showFormMessage('password-message', '新密码和确认密码不匹配', 'error');
-            return;
-        }
-        
-        const result = Auth.changePassword(currentUser.id, currentPassword, newPassword);
-        
-        if (result.success) {
-            UI.showFormMessage('password-message', result.message, 'success');
-            
-            // 清空表单
-            document.getElementById('current-password').value = '';
-            document.getElementById('new-password').value = '';
-            document.getElementById('confirm-password').value = '';
-            
-            // 3秒后关闭模态框
-            setTimeout(() => {
-                document.getElementById('user-settings-modal').style.display = 'none';
-            }, 3000);
-        } else {
-            UI.showFormMessage('password-message', result.message, 'error');
-        }
-    },
-    
-    /**
-     * 生成User Manual
-     */
-    handleGenerateManual() {
+    async handleGenerateManual() {
         const generateButton = document.getElementById('generate-manual');
-        const action = generateButton.getAttribute('data-action');
+        const action = generateButton?.getAttribute('data-action');
         
-        // 如果当前是停止状态，则调用停止生成方法
         if (action === 'stop') {
-            console.log('触发停止生成，当前消息ID:', UserManualApp.state.currentMessageId);
-            if (UserManualApp.state.currentMessageId) {
-                API.stopGeneration(UserManualApp.state.currentMessageId);
-            } else {
-                console.warn('没有正在进行的任务ID，无法停止');
-                // 即使没有任务ID也恢复UI状态
-                UI.showGenerationCompleted();
-            }
+            this.handleStopGeneration(); 
             return;
         }
         
-        // 否则，正常执行生成逻辑
         const requirementDesc = document.getElementById('requirement-description').value;
-
+        UI.clearInputError('requirement');
         if (!requirementDesc) {
-            alert('请填写需求描述');
+            UI.showInputError('requirement', t('userManual.error.emptyRequirement', {default: '请填写需求描述'}));
             return;
         }
 
-        API.generateUserManual(requirementDesc);
+        if (!this.state.apiKey || !this.state.apiEndpoint || !Header.currentUser) {
+             if (typeof UI !== 'undefined' && UI.showError) UI.showError(t('common.configLoadError', {default: 'API 配置或用户信息丢失，无法生成。'}));
+            else alert(t('common.configLoadError', {default: 'API 配置或用户信息丢失，无法生成。'}));
+            return;
+        }
+        
+        // Reset IDs before starting generation
+        this.state.currentMessageId = null;
+        // Keep existing conversation ID if available, otherwise null. API will update if a new one is created.
+        // this.state.currentConversationId = this.state.currentConversationId || null;
+        // UI.showGenerationStarted() is called in API now, or keep here? Let's ensure it's called before API call.
+        UI.showRequestingState();
+
+        try {
+            // Call API.generateUserManual. The API will handle setting state.currentMessageId during the stream.
+            // We await to know when the process is complete and potentially get the final conversation ID.
+            const result = await API.generateUserManual(
+                requirementDesc,
+                this.state.apiKey,
+                this.state.apiEndpoint,
+                Header.currentUser,
+                this.state.currentConversationId // Pass the current conversation ID
+            );
+            
+            // API now sets state.currentConversationId directly during stream if new one created.
+            // Optionally, update from result if needed as fallback or confirmation.
+            // if (result && result.conversationId) {
+            //     this.state.currentConversationId = result.conversationId;
+            //     console.log("[Index] Updated Conversation ID from API result:", this.state.currentConversationId);
+            // }
+        } catch (error) {
+             console.error("Error caught in handleGenerateManual:", error);
+             // UI completion is handled within API/Stream response handler now, including errors.
+             // UI.showGenerationCompleted();
+        }
     },
     
     /**
-     * 停止生成
+     * Stop Generation
      */
     handleStopGeneration() {
-        if (UserManualApp.state.currentMessageId) {
-            API.stopGeneration(UserManualApp.state.currentMessageId);
+        console.log("Handling stop generation request...");
+        // This condition should now work correctly as state.currentMessageId is set earlier by the API stream handler
+        if (this.state.currentMessageId && this.state.apiKey && this.state.apiEndpoint && Header.currentUser) {
+            API.stopGeneration(this.state.currentMessageId, this.state.apiKey, this.state.apiEndpoint, Header.currentUser);
+            this.state.currentMessageId = null; // Clear the ID after requesting stop
+        } else {
+            console.warn("Cannot stop, missing messageId or config/user. State was:", this.state);
+            if (typeof UI !== 'undefined' && UI.showGenerationCompleted) UI.showGenerationCompleted();
         }
     },
     
@@ -279,26 +195,34 @@ const UserManualApp = {
      * 复制结果
      */
     handleCopyResult() {
-        // 检查是否显示的是Markdown内容
         const markdownDiv = document.getElementById('result-content-markdown');
-        let resultContent;
+        let textToCopy = '';
         if (markdownDiv && markdownDiv.style.display !== 'none') {
-            // 从markdown内容中获取纯文本
-            resultContent = markdownDiv.textContent;
+            // Basic conversion from simple markdown HTML back to text if needed
+            // Or just copy the innerText which might be good enough
+            textToCopy = markdownDiv.innerText; // Prioritize innerText
         } else {
-            // 获取普通结果内容
-            resultContent = document.getElementById('result-content').textContent;
+            const resultContentEl = document.getElementById('result-content');
+            if(resultContentEl) textToCopy = resultContentEl.textContent;
         }
         
-        navigator.clipboard.writeText(resultContent).then(() => {
-            // 复制成功反馈
+        if (textToCopy) {
+            navigator.clipboard.writeText(textToCopy).then(() => {
             const copyButton = document.getElementById('copy-result');
-            const originalTitle = copyButton.getAttribute('title');
-            copyButton.setAttribute('title', '已复制!');
+                const originalTitle = copyButton.title;
+                copyButton.title = t('common.copied', { default: '已复制!' });
+                copyButton.classList.add('copied-success'); // Add class for feedback
             setTimeout(() => {
-                copyButton.setAttribute('title', originalTitle);
+                    copyButton.title = originalTitle;
+                    copyButton.classList.remove('copied-success');
             }, 2000);
+            }).catch(err => {
+                 console.error('Failed to copy text: ', err);
+                 alert(t('common.copyFailed', { default: '复制失败'}));
         });
+         } else {
+             console.warn("No result content found to copy.");
+         }
     },
     
     /**
@@ -307,19 +231,8 @@ const UserManualApp = {
     updateCharCount(event) {
         const textarea = event.target;
         const charCount = textarea.value.length;
-        const charCountElement = document.getElementById('char-count');
-        const charCountContainer = document.querySelector('.char-counter');
-        const generateButton = document.getElementById('generate-manual');
-        
-        charCountElement.textContent = charCount;
-        
-        // 超出字数限制时的处理
-        if (charCount > 5000) {
-            charCountContainer.classList.add('warning');
-            generateButton.disabled = true;
-        } else {
-            charCountContainer.classList.remove('warning');
-            generateButton.disabled = false;
+        if (typeof UI !== 'undefined' && UI.updateCharCountDisplay) {
+            UI.updateCharCountDisplay(charCount);
         }
     },
     
@@ -330,12 +243,9 @@ const UserManualApp = {
         const textareaContainer = document.querySelector('.textarea-container');
         const textarea = document.getElementById('requirement-description');
         const charCounter = document.querySelector('.char-counter');
-        
-        if (textareaContainer.classList.contains('textarea-expanded')) {
-            // 恢复正常大小
+        if (textareaContainer?.classList.contains('textarea-expanded')) {
             this.shrinkTextarea(textareaContainer, textarea, charCounter);
-        } else {
-            // 放大文本框
+        } else if(textareaContainer && textarea && charCounter) {
             this.expandTextarea(textareaContainer, textarea, charCounter);
         }
     },
@@ -429,20 +339,10 @@ const UserManualApp = {
      * 清空表单
      */
     handleClearForm() {
-        document.getElementById('requirement-description').value = '';
-        
-        // 重置字数统计
-        const charCountElement = document.getElementById('char-count');
-        if (charCountElement) {
-            charCountElement.textContent = '0';
-        }
-        const charCountContainer = document.querySelector('.char-counter');
-        if (charCountContainer) {
-            charCountContainer.classList.remove('warning');
-        }
-        const generateButton = document.getElementById('generate-manual');
-        if (generateButton) {
-            generateButton.disabled = false;
+        const reqDesc = document.getElementById('requirement-description');
+        if(reqDesc) reqDesc.value = '';
+        if (typeof UI !== 'undefined' && UI.updateCharCountDisplay) {
+            UI.updateCharCountDisplay(0);
         }
     }
 };
@@ -451,3 +351,6 @@ const UserManualApp = {
 document.addEventListener('DOMContentLoaded', function() {
     UserManualApp.init();
 }); 
+
+// --- ADD EXPORT ---
+export default UserManualApp; 

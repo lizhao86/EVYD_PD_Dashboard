@@ -60,7 +60,12 @@ window.zhCN = {
             userAddError: '添加用户异常: {error}'
         },
         generating: '生成中...点击停止',
-        stopGeneration: '停止生成'
+        stopGeneration: '停止生成',
+        backToHome: '返回主页',
+        requesting: '请求中...',
+        generatingSimple: '正在生成...',
+        copied: '已复制!',
+        copyFailed: '复制失败'
     },
     
     // 导航
@@ -295,6 +300,7 @@ window.zhCN = {
         elapsedTimeLabel: '耗时:',
         totalStepsLabel: '总步骤:',
         totalTokensLabel: '总Token:',
+        secondsSuffix: '秒',
         error: {
             emptyRequirement: '请输入需求描述'
         }
@@ -321,7 +327,10 @@ window.zhCN = {
         totalStepsLabel: '总步骤:',
         totalTokensLabel: '总Token:',
         generating: '生成中，请稍候...',
-        secondsSuffix: '秒'
+        secondsSuffix: '秒',
+        error: {
+            emptyRequirement: '请输入需求描述'
+        }
     },
     
     // User Story页面
@@ -351,6 +360,12 @@ window.zhCN = {
         totalStepsLabel: '总步骤:',
         totalTokensLabel: '总Token:',
         retryConnection: '重试连接',
-        secondsSuffix: '秒'
+        secondsSuffix: '秒',
+        error: {
+            platformRequired: '请填写平台名称',
+            systemRequired: '请填写系统名称',
+            moduleRequired: '请填写模块名称',
+            requirementRequired: '请填写需求描述'
+        }
     }
 }; 

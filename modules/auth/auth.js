@@ -23,21 +23,11 @@ import { getCurrentUserSettings } from '/scripts/services/storage.js';
  */
 export async function checkAuth() {
     try {
-        // 1. Check authentication status
-        const currentUser = await getCurrentUser(); // Throws if not authenticated
-        console.log("Amplify user authenticated (via getCurrentUser):", currentUser);
-
-        // 2. Fetch session tokens to get group information
-        // We force refresh to ensure we have the latest token claims
+        const currentUser = await getCurrentUser();
         const session = await fetchAuthSession({ forceRefresh: true }); 
         const groups = session.tokens?.accessToken?.payload["cognito:groups"] || [];
-        console.log("User Cognito Groups:", groups);
-
         return { user: currentUser, groups: groups }; 
-
     } catch (error) {
-        // Catches error if user is not authenticated
-        console.log("Amplify session not valid or user not logged in (checkAuth). Error:", error);
         return null;
     }
 }
@@ -49,45 +39,27 @@ export async function checkAuth() {
  * @returns {Promise<{success: boolean, message?: string, user?: any}>}
  */
 export async function login(username, password) {
-    console.log("Inside login function, about to call signIn...");
     try {
         const { isSignedIn, nextStep } = await signIn({ username, password });
-
         if (isSignedIn) {
-            console.log("Amplify sign in successful");
             const user = await getCurrentUser();
             return { success: true, user: user };
         } else {
-            // Handle MFA or other steps if configured
-            console.log('Amplify sign in requires next step:', nextStep);
-            // Check for forced new password
             if (nextStep.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED') {
-                return { 
-                    success: false, // Not fully signed in yet
-                    nextStep: nextStep.signInStep, // Indicate the required step
-                    message: '需要设置新密码才能完成登录。' 
-                };
+                return { success: false, nextStep: nextStep.signInStep, message: '需要设置新密码才能完成登录。' };
             }
-            // Handle other potential next steps (MFA, etc.) if needed
-            return { 
-                 success: false, 
-                 nextStep: nextStep.signInStep, 
-                 message: `登录需要额外步骤: ${nextStep.signInStep}` 
-            };
+            return { success: false, nextStep: nextStep.signInStep, message: `登录需要额外步骤: ${nextStep.signInStep}` };
         }
-
     } catch (error) {
         console.error('Amplify sign in error:', error);
-        // Provide user-friendly messages based on error type
         let message = '登录失败，请检查您的凭据。';
         if (error.name === 'UserNotFoundException') {
             message = '用户名不存在。';
         } else if (error.name === 'NotAuthorizedException') {
             message = '用户名或密码不正确。';
         } else if (error.name === 'UserNotConfirmedException') {
-            message = '用户尚未验证，请检查您的邮箱或短信。你需要先完成注册确认流程。'; // You might need a resend confirmation code flow
+            message = '用户尚未验证，请检查您的邮箱或短信。你需要先完成注册确认流程。';
         }
-        // Add more specific error handling as needed
         return { success: false, message: message };
     }
 }
@@ -98,8 +70,7 @@ export async function login(username, password) {
  */
 export async function logout() {
     try {
-        await signOut();
-        console.log("Amplify sign out successful");
+        await signOut({ global: true });
         return { success: true };
     } catch (error) {
         console.error('Amplify sign out error:', error);
@@ -116,17 +87,15 @@ export async function logout() {
 export async function changePassword(currentPassword, newPassword) {
     try {
         await updatePassword({ oldPassword: currentPassword, newPassword });
-        console.log("Amplify password update successful");
         return { success: true, message: '密码修改成功。' };
     } catch (error) {
         console.error('Amplify password update error:', error);
-         let message = '密码修改失败。请稍后再试。';
-         if (error.name === 'NotAuthorizedException') {
+        let message = '密码修改失败。请稍后再试。';
+        if (error.name === 'NotAuthorizedException') {
             message = '当前密码不正确。';
-         } else if (error.message?.includes('Password does not conform to policy')){
-             message = '新密码不符合要求 (例如，长度、字符类型等)。';
-         }
-        // Add more specific error handling as needed
+        } else if (error.message?.includes('Password does not conform to policy')){
+            message = '新密码不符合要求 (例如，长度、字符类型等)。';
+        }
         return { success: false, message: message };
     }
 }
@@ -138,26 +107,17 @@ export async function changePassword(currentPassword, newPassword) {
  */
 export async function isAdmin() {
     try {
-        // 1. Check if user is logged in
-        const user = await getCurrentUser(); // Throws if not logged in
+        const authInfo = await checkAuth();
+        if (!authInfo || !authInfo.user) return false;
 
-        // 2. Fetch user settings from DynamoDB via GraphQL
-        const settings = await getCurrentUserSettings(); // Uses the function from storage.js
-
+        const settings = await getCurrentUserSettings();
         if (settings && settings.role === 'admin') {
-             console.log("User is admin.");
             return true;
         } else {
-            console.log("User is not admin or settings not found/loaded.", settings);
             return false;
         }
     } catch (error) {
-        // Catches error if user is not logged in or error fetching settings
-         if (error.name === 'UserUnAuthenticatedException' || error.message === 'User is not authenticated') {
-           console.log("User not logged in, cannot check admin status.");
-        } else{
-            console.error('Error checking admin status:', error);
-        }
+        console.error('Error checking admin status:', error);
         return false;
     }
 }

@@ -45,7 +45,7 @@ const Header = {
     async init(containerId = 'header-container') { // Made async
         // --- BEGIN AMPLIFY CONFIGURATION (moved here) ---
         try {
-            console.log("[Header.init] Configuring Amplify...");
+            // console.log("[Header.init] Configuring Amplify...");
             // Construct the final config, adding oauth section for Hosted UI
             const updatedConfig = {
                 ...awsconfig, // Spread existing config from aws-exports.js
@@ -62,9 +62,9 @@ const Header = {
                     responseType: 'code' // Recommended for Amplify with Hosted UI
                 }
             };
-            console.log("[Header.init] Using updated config with OAuth:", updatedConfig); 
+            // console.log("[Header.init] Using updated config with OAuth:", updatedConfig); 
             Amplify.configure(updatedConfig);
-            console.log("[Header.init] Amplify configured successfully!");
+            // console.log("[Header.init] Amplify configured successfully!");
         } catch (error) {
             console.error("[Header.init] Error configuring Amplify:", error); 
              // Optionally notify the user or fallback
@@ -76,7 +76,7 @@ const Header = {
         }
         // --- END AMPLIFY CONFIGURATION ---
 
-        console.log('初始化头部组件...');
+        // console.log('初始化头部组件...');
         this.loadHeader(containerId); // Keep this synchronous for initial HTML load
         // 设置全站favicon
         this.setGlobalFavicon();
@@ -85,9 +85,9 @@ const Header = {
         
         // NOW initialize I18n (it might use Header.currentUser/userSettings loaded by checkUserAuth)
         try {
-            console.log("[Header.init] Initializing I18n...");
+            // console.log("[Header.init] Initializing I18n...");
             await I18n.init(); 
-            console.log("[Header.init] I18n initialized.");
+            // console.log("[Header.init] I18n initialized.");
             // Re-apply translations specifically to the header after init if needed
             const headerElement = document.getElementById(containerId);
             if(headerElement) {
@@ -111,7 +111,7 @@ const Header = {
             }
 
             const rootPath = this.calculateRootPath();
-            console.log('根路径:', rootPath);
+            // console.log('根路径:', rootPath);
 
             let html = this.getHeaderTemplate();
             html = html.replace(/ROOT_PATH\//g, rootPath);
@@ -122,7 +122,7 @@ const Header = {
             // Auth check is now done in init() after loadHeader
             this.initLanguageSelector();
             
-            console.log('头部组件HTML加载完成。');
+            // console.log('头部组件HTML加载完成。');
         } catch (error) {
             console.error('头部组件加载失败:', error);
             const container = document.getElementById(containerId);
@@ -211,13 +211,15 @@ const Header = {
         <div class="modal-body">
             <div class="settings-tabs">
                 <button class="settings-tab active" data-settings="password" data-translate="modal.settings.tabPassword">修改密码</button>
+                <button class="settings-tab" data-settings="api-keys" data-translate="modal.settings.tabApiKeys">API 密钥</button>
+                <button class="settings-tab" data-settings="profile" data-translate="modal.settings.tabProfile">个人资料</button>
             </div>
             
             <div class="settings-content active" id="password-settings">
                 <div class="form-group">
                     <label for="current-password" data-translate="modal.settings.currentPasswordLabel">当前密码</label>
                     <div class="password-input-container">
-                        <input type="password" id="current-password" data-translate-placeholder="modal.settings.currentPasswordPlaceholder" placeholder="输入当前密码">
+                    <input type="password" id="current-password" data-translate-placeholder="modal.settings.currentPasswordPlaceholder" placeholder="输入当前密码">
                         <button type="button" class="toggle-password-visibility" data-target="current-password" aria-label="Toggle password visibility">
                             <!-- Icon will be handled by CSS -->
                         </button>
@@ -227,7 +229,7 @@ const Header = {
                 <div class="form-group">
                     <label for="new-password" data-translate="modal.settings.newPasswordLabel">新密码</label>
                     <div class="password-input-container">
-                        <input type="password" id="new-password" data-translate-placeholder="modal.settings.newPasswordPlaceholder" placeholder="输入新密码">
+                    <input type="password" id="new-password" data-translate-placeholder="modal.settings.newPasswordPlaceholder" placeholder="输入新密码">
                          <button type="button" class="toggle-password-visibility" data-target="new-password" aria-label="Toggle password visibility">
                             <!-- Icon will be handled by CSS -->
                         </button>
@@ -245,7 +247,7 @@ const Header = {
                 <div class="form-group">
                     <label for="confirm-password" data-translate="modal.settings.confirmPasswordLabel">确认新密码</label>
                      <div class="password-input-container">
-                        <input type="password" id="confirm-password" data-translate-placeholder="modal.settings.confirmPasswordPlaceholder" placeholder="再次输入新密码">
+                    <input type="password" id="confirm-password" data-translate-placeholder="modal.settings.confirmPasswordPlaceholder" placeholder="再次输入新密码">
                          <button type="button" class="toggle-password-visibility" data-target="confirm-password" aria-label="Toggle password visibility">
                             <!-- Icon will be handled by CSS -->
                         </button>
@@ -257,6 +259,48 @@ const Header = {
                 <div class="form-actions">
                     <button class="btn-secondary" id="cancel-password-change" data-translate="common.cancel">取消</button>
                     <button class="btn-primary" id="submit-password-change" data-translate="modal.settings.updatePasswordButton">更新密码</button>
+                </div>
+            </div>
+            
+            <div class="settings-content" id="api-keys-settings">
+                <div class="api-keys-description">
+                     <p data-translate="modal.settings.apiKeysDesc">管理用于访问 AI 功能的 Dify API 密钥。这些密钥将安全地存储在您的用户设置中。</p>
+                </div>
+                <div class="form-group">
+                    <label for="setting-userStory-key" data-translate="modal.apiKeys.userStoryTitle">User Story 生成器</label>
+                     <div class="password-input-container">
+                        <input type="password" id="setting-userStory-key" data-translate-placeholder="modal.settings.apiKeyPlaceholder" placeholder="输入 User Story API Key">
+                        <button type="button" class="toggle-password-visibility" data-target="setting-userStory-key" aria-label="Toggle API Key visibility"></button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="setting-userManual-key" data-translate="modal.apiKeys.userManualTitle">User Manual 生成器</label>
+                     <div class="password-input-container">
+                        <input type="password" id="setting-userManual-key" data-translate-placeholder="modal.settings.apiKeyPlaceholder" placeholder="输入 User Manual API Key">
+                         <button type="button" class="toggle-password-visibility" data-target="setting-userManual-key" aria-label="Toggle API Key visibility"></button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="setting-requirementsAnalysis-key" data-translate="modal.apiKeys.requirementsAnalysisTitle">需求分析助手</label>
+                    <div class="password-input-container">
+                        <input type="password" id="setting-requirementsAnalysis-key" data-translate-placeholder="modal.settings.apiKeyPlaceholder" placeholder="输入需求分析 API Key">
+                         <button type="button" class="toggle-password-visibility" data-target="setting-requirementsAnalysis-key" aria-label="Toggle API Key visibility"></button>
+                    </div>
+                </div>
+                <!-- Add UX Design Key Input -->
+                <div class="form-group">
+                    <label for="setting-uxDesign-key" data-translate="modal.apiKeys.uxDesignTitle">UX 界面设计 (POC)</label>
+                    <div class="password-input-container">
+                        <input type="password" id="setting-uxDesign-key" data-translate-placeholder="modal.settings.apiKeyPlaceholder" placeholder="输入 UX 设计 API Key">
+                        <button type="button" class="toggle-password-visibility" data-target="setting-uxDesign-key" aria-label="Toggle API Key visibility"></button>
+                    </div>
+                </div>
+                <!-- Add more API keys here if needed -->
+                
+                <div class="form-message" id="api-keys-settings-message"></div>
+                
+                <div class="form-actions">
+                    <button class="btn-primary" id="submit-api-keys-change" data-translate="modal.settings.saveApiKeysButton">保存 API 密钥</button>
                 </div>
             </div>
             
@@ -581,7 +625,7 @@ const Header = {
     setNavigationState() {
         // 获取当前页面路径
         const currentPath = window.location.pathname;
-        console.log('当前路径:', currentPath);
+        // console.log('当前路径:', currentPath);
         
         // 清除所有激活状态
         document.querySelectorAll('.main-nav a').forEach(link => {
@@ -606,7 +650,7 @@ const Header = {
      * 初始化事件监听 (Updated for async auth)
      */
     initEventListeners() {
-        console.log('初始化头部事件监听...');
+        // console.log('初始化头部事件监听...');
         const container = document.getElementById('header-container');
         if (!container) return; // Ensure container exists before adding listeners
 
@@ -616,7 +660,7 @@ const Header = {
             // 登录按钮 (Redirect to Hosted UI)
             if (event.target.matches('#login-button')) {
                 event.preventDefault();
-                console.log("Login button clicked, redirecting to hosted UI...");
+                // console.log("Login button clicked, redirecting to hosted UI...");
                 this.showLoading('跳转到登录页面...');
                 try {
                      // Use Amplify's function to redirect to the Hosted UI (v6)
@@ -637,7 +681,7 @@ const Header = {
                     // Calling signOut with oauth configured triggers redirect
                     await signOut({ global: true }); // global:true invalidates tokens everywhere
                     // Redirect is handled by Amplify based on oauth.redirectSignOut
-                     console.log("Sign out initiated. Amplify will handle redirect.");
+                     // console.log("Sign out initiated. Amplify will handle redirect.");
                      // hideLoading might be preempted by redirect
                      // this.hideLoading(); 
                 } catch (error) {
@@ -648,17 +692,23 @@ const Header = {
                 }
             }
 
-            // 账号设置按钮
+            // 账号设置按钮 (Now also loads API Keys)
             if (event.target.matches('#profile-settings')) {
                 event.preventDefault();
                 const settingsModal = document.getElementById('user-settings-modal');
                 if (settingsModal) {
+                    // Reset to default tab (e.g., password) on open
+                    document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelector('.settings-tab[data-settings="password"]')?.classList.add('active');
+                    document.querySelectorAll('.settings-content').forEach(c => c.classList.remove('active'));
+                    document.getElementById('password-settings')?.classList.add('active');
+                    
                     settingsModal.style.display = 'block';
-                    this.loadUserProfile(); // Load profile data into modal
+                    await this.loadUserProfileAndApiKeys(); // Load data into modal
                 }
-            }
-            
-            // 管理面板按钮
+        }
+        
+        // 管理面板按钮
             if (event.target.matches('#admin-panel-button')) {
                 event.preventDefault();
                 const adminModal = document.getElementById('admin-panel-modal');
@@ -679,17 +729,22 @@ const Header = {
                 }
             }
             
-            // 设置标签页切换
+            // 设置标签页切换 (Handles new API Keys tab)
             if (event.target.matches('.settings-tab')) {
+                const activeTab = event.target;
                 document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
-                event.target.classList.add('active');
-                const settingsType = event.target.getAttribute('data-settings');
+                activeTab.classList.add('active');
+                const settingsType = activeTab.getAttribute('data-settings');
                 document.querySelectorAll('.settings-content').forEach(content => content.classList.remove('active'));
-                document.getElementById(`${settingsType}-settings`)?.classList.add('active'); // Check element exists
-                 document.getElementById(`${settingsType}-settings-content`)?.classList.add('active'); // Also for profile tab
+                // Construct ID based on convention (e.g., password-settings, api-keys-settings)
+                document.getElementById(`${settingsType}-settings`)?.classList.add('active');
+                 // Special case for profile ID which might be different
+                 if (settingsType === 'profile') {
+                     document.getElementById('profile-settings-content')?.classList.add('active');
+                 }
             }
-            
-            // 管理员面板标签页切换
+        
+        // 管理员面板标签页切换
             if (event.target.matches('.admin-tab')) {
                 document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
                 event.target.classList.add('active');
@@ -753,7 +808,8 @@ const Header = {
 
             // 保存用户特定 API Keys 按钮 (Admin Panel)
             if (event.target.matches('#save-api-keys-button')) {
-                await this.handleSaveUserApiKeys(); // Needs implementation
+                // Renamed the handler to avoid confusion and ensure it's not called accidentally
+                await this.handleAdminSaveUserApiKeys_Placeholder(); 
             }
 
             // 保存全局 API Endpoints 按钮 (Admin Panel)
@@ -784,6 +840,11 @@ const Header = {
                // }
             }
 
+            // Save API Keys button (From User Settings Modal)
+            if (event.target.matches('#submit-api-keys-change')) {
+                await this.handleSaveApiKeys(); // Ensure this calls the NEW function below
+            }
+
         });
         
         // Handle modal closing when clicking outside (Trigger form reset)
@@ -792,9 +853,9 @@ const Header = {
                 event.target.style.display = 'none';
                 if (event.target.id === 'user-settings-modal') {
                      this.clearPasswordForm(); // Clear form on clicking outside
-                 }
-            }
-        });
+                    }
+                }
+            });
 
          // Handle language selection dropdown
          this.initLanguageSelectorListeners(container);
@@ -845,7 +906,7 @@ const Header = {
         }
         // --- End Password Policy Validation Listener ---
 
-        console.log('头部事件监听初始化完成。');
+        // console.log('头部事件监听初始化完成。');
     },
     
     /** Helper function to update policy item status */
@@ -870,7 +931,7 @@ const Header = {
 
     /** Helper function to clear password change form */
     clearPasswordForm() {
-        console.log("Clearing password change form...");
+        // console.log("Clearing password change form...");
         const currentPasswordInput = document.getElementById('current-password');
         const newPasswordInput = document.getElementById('new-password');
         const confirmPasswordInput = document.getElementById('confirm-password');
@@ -906,12 +967,12 @@ const Header = {
             btn.classList.remove('active');
         });
     },
-
+    
     /**
      * 初始化管理员面板 (部分功能待定)
      */
     initAdminPanel() {
-        console.log('初始化管理员面板...');
+        // console.log('初始化管理员面板...');
         // 默认加载用户列表（或提示功能调整）
         this.loadUsersList();
         // Reset tabs
@@ -925,6 +986,7 @@ const Header = {
      * 加载用户列表 (管理员 - 功能待调整)
      */
     loadUsersList() {
+        // console.warn("loadUsersList: User listing/management needs rework...");
         const tableBody = document.getElementById('users-table-body');
         if (tableBody) {
             tableBody.innerHTML = '<tr><td colspan="5" data-translate="modal.admin.usersTable.needsRework">用户管理功能需要针对 Amplify Cognito 进行调整。请使用 AWS Cognito 控制台管理用户。</td></tr>';
@@ -1062,56 +1124,72 @@ const Header = {
      * 加载全局 API Endpoints 配置 (管理员)
      */
     async loadApiEndpointsConfig() {
-        console.log('加载全局 API Endpoints 配置...');
+        // console.log('加载全局 API Endpoints 配置...');
         this.showLoading('加载配置...');
+        const messageElementId = 'api-endpoints-message'; // Define for error message
         try {
             const config = await getGlobalConfig(); // Use the new async function
             this.hideLoading();
             if (config && config.apiEndpoints) {
-                document.getElementById('global-userStory-api-endpoint').value = config.apiEndpoints.userStory || '';
-                document.getElementById('global-userManual-api-endpoint').value = config.apiEndpoints.userManual || '';
-                document.getElementById('global-requirementsAnalysis-api-endpoint').value = config.apiEndpoints.requirementsAnalysis || '';
-                 // document.getElementById('global-uxDesign-api-endpoint').value = config.apiEndpoints.uxDesign || ''; // Assuming uxDesign exists
+                document.getElementById('global-userStory-api-endpoint').value = config.apiEndpoints.userStory ?? '';
+                document.getElementById('global-userManual-api-endpoint').value = config.apiEndpoints.userManual ?? '';
+                document.getElementById('global-requirementsAnalysis-api-endpoint').value = config.apiEndpoints.requirementsAnalysis ?? '';
+                // Add loading for uxDesign
+                document.getElementById('global-uxDesign-api-endpoint').value = config.apiEndpoints.uxDesign ?? ''; 
                         } else {
-                 console.warn('Global config not found or apiEndpoints missing. Needs creation.');
-                // Clear fields or show message
-                 document.getElementById('api-endpoints-message').textContent = '全局配置尚未创建，请先保存一次。'
+                 // console.warn('Global config not found or apiEndpoints missing. Needs creation.');
+                 // Clear fields or show message
+                 showFormMessage(messageElementId, '全局配置尚未创建，请先保存一次。', 'info'); // Use info type
+                 // Clear fields explicitly
+                 document.getElementById('global-userStory-api-endpoint').value = '';
+                 document.getElementById('global-userManual-api-endpoint').value = '';
+                 document.getElementById('global-requirementsAnalysis-api-endpoint').value = '';
+                 document.getElementById('global-uxDesign-api-endpoint').value = '';
                         }
                     } catch (error) {
              this.hideLoading();
             console.error("Error loading global API endpoints config:", error);
-            showFormMessage('api-endpoints-message', '加载全局配置失败', 'error');
-        }
+            showFormMessage(messageElementId, '加载全局配置失败', 'error'); // Use imported function
+                    }
     },
     
     /**
      * 处理保存全局API Endpoints (管理员)
      */
     async handleSaveGlobalApiEndpoints() {
-        console.log('保存全局 API Endpoints...');
+        // console.log('保存全局 API Endpoints...');
+        const messageElementId = 'api-endpoints-message'; // Define for messages
         const configInput = {
             apiEndpoints: {
                 userStory: document.getElementById('global-userStory-api-endpoint').value,
                 userManual: document.getElementById('global-userManual-api-endpoint').value,
                 requirementsAnalysis: document.getElementById('global-requirementsAnalysis-api-endpoint').value,
-                 // uxDesign: document.getElementById('global-uxDesign-api-endpoint').value, // Assuming uxDesign exists
+                 // Add reading for uxDesign
+                 uxDesign: document.getElementById('global-uxDesign-api-endpoint').value 
             }
         };
+
+        // Ensure the input structure is valid (basic check)
+        if (!configInput || !configInput.apiEndpoints) {
+            console.error("Invalid global config format provided for saving.");
+             showFormMessage(messageElementId, '无效的配置格式', 'error'); 
+            return; // Changed from return null
+        }
 
         this.showLoading('保存中...');
         try {
             const result = await saveGlobalConfig(configInput); // Use the new async function
              this.hideLoading();
             if (result) {
-                 showFormMessage('api-endpoints-message', 'API 地址保存成功', 'success');
+                 showFormMessage(messageElementId, 'API 地址保存成功', 'success');
             } else {
                  // Error should have been caught by saveGlobalConfig, but double-check
-                 showFormMessage('api-endpoints-message', '保存失败，请检查权限或查看控制台日志。', 'error');
+                 showFormMessage(messageElementId, '保存失败，请检查权限或查看控制台日志。', 'error');
             }
         } catch (error) { // Catch potential network errors etc.
              this.hideLoading();
             console.error("Error saving global API endpoints:", error);
-            showFormMessage('api-endpoints-message', `保存失败: ${error.message}`, 'error');
+            showFormMessage(messageElementId, `保存失败: ${error.message}`, 'error');
         }
     },
 
@@ -1120,7 +1198,7 @@ const Header = {
      * 检查用户认证状态并更新UI (Updated for Amplify)
      */
     async checkUserAuth() {
-        console.log('检查 Amplify 用户认证状态...');
+        // console.log('检查 Amplify 用户认证状态...');
         this.showLoading('检查登录状态...'); 
         const authInfo = await checkAuth(); // Returns { user, groups } or null
         this.hideLoading();
@@ -1133,7 +1211,7 @@ const Header = {
         if (authInfo && authInfo.user) {
             this.currentUser = authInfo.user;
             const userGroups = authInfo.groups;
-            console.log('用户已登录 (Amplify):', this.currentUser.username, 'Groups:', userGroups);
+            // console.log('用户已登录 (Amplify):', this.currentUser.username, 'Groups:', userGroups);
             
             // 用户已登录 - 更新UI
             if (userInfo) userInfo.style.display = 'flex';
@@ -1142,14 +1220,14 @@ const Header = {
 
             // 尝试获取用户在 DynamoDB 中的设置
             this.userSettings = await getCurrentUserSettings();
-            console.log("用户设置 (from DB):", this.userSettings);
+            // console.log("用户设置 (from DB):", this.userSettings);
 
             // 如果 DynamoDB 中没有用户设置记录 (例如首次登录)
             if (!this.userSettings) {
-                 console.log("No user settings found in DB, attempting to create initial record...");
+                 // console.log("No user settings found in DB, attempting to create initial record...");
                  // 根据 Cognito 组决定初始角色 (Use lowercase 'admin' to match Cognito group name)
                  const initialRole = userGroups.includes('admin') ? 'admin' : 'user';
-                 console.log(`Initial role based on Cognito groups: ${initialRole}`);
+                 // console.log(`Initial role based on Cognito groups: ${initialRole}`);
                  
                  try {
                       // 调用保存函数创建记录，提供初始角色和空的 apiKeys
@@ -1163,7 +1241,7 @@ const Header = {
                      const createdSettings = await saveCurrentUserSetting(initialSettings);
                      
                      if (createdSettings) {
-                         console.log("Successfully created initial user settings:", createdSettings);
+                         // console.log("Successfully created initial user settings:", createdSettings);
                          this.userSettings = createdSettings; // 更新 Header 对象的 userSettings
                      } else {
                           console.error("Failed to create initial user settings record in DB.");
@@ -1179,15 +1257,15 @@ const Header = {
             // 检查管理员权限 (现在基于 this.userSettings, 可能刚刚创建)
             const isAdminUser = this.userSettings && this.userSettings.role === 'admin';
             if (isAdminUser) {
-                 console.log('用户是管理员 (based on userSettings.role)');
+                 // console.log('用户是管理员 (based on userSettings.role)');
                  if (adminPanelLink) adminPanelLink.style.display = 'block';
             } else {
-                 console.log('用户不是管理员 (based on userSettings.role)', this.userSettings);
+                 // console.log('用户不是管理员 (based on userSettings.role)', this.userSettings);
                  if (adminPanelLink) adminPanelLink.style.display = 'none';
             }
             
         } else {
-             console.log('用户未登录 (Amplify)');
+             // console.log('用户未登录 (Amplify)');
              // 用户未登录 - 更新UI
              this.currentUser = null;
              this.userSettings = null;
@@ -1305,7 +1383,7 @@ const Header = {
         // User settings should load their *own* keys in a different modal/section if needed
         // Let's assume this is for the *currently logged in* user viewing their own keys.
 
-        console.log('加载用户 API Keys...');
+        // console.log('加载用户 API Keys...');
         const userStoryKeyInput = document.getElementById('userStory-api-key'); // Assuming IDs in a user-facing modal
         const userManualKeyInput = document.getElementById('userManual-api-key');
         const requirementsAnalysisKeyInput = document.getElementById('requirementsAnalysis-api-key');
@@ -1392,33 +1470,135 @@ const Header = {
                  languageDropdown.style.display = languageDropdown.style.display === 'block' ? 'none' : 'block';
              });
 
-             languageOptions.forEach(option => {
+            languageOptions.forEach(option => {
                  option.addEventListener('click', async (e) => {
-                     e.preventDefault();
+                    e.preventDefault();
                      languageDropdown.style.display = 'none'; // Hide dropdown
-                     const lang = option.getAttribute('data-lang');
+                    const lang = option.getAttribute('data-lang');
                      if (lang && lang !== I18n.getCurrentLanguage()) {
                          // Call the async switchLanguage method
                          await I18n.switchLanguage(lang); 
-                     }
-                 });
-             });
-
+                    }
+                });
+            });
+            
              // Close dropdown when clicking outside
              document.addEventListener('click', (e) => {
                 if (!e.target.closest('.language-selector')) {
                      if (languageDropdown) languageDropdown.style.display = 'none';
-                 }
-             });
-         }
-     },
+                }
+            });
+        }
+    },
 
     /**
      * 设置全站favicon
      */
     setGlobalFavicon() {
        // ... (existing favicon logic)
-    }
+    },
+
+    // New function to load both profile and keys
+    async loadUserProfileAndApiKeys() {
+        // console.log('加载用户资料和 API Keys...');
+        // Ensure user data and settings are loaded
+        if (!this.currentUser) {
+             this.currentUser = (await checkAuth())?.user; // Get only user part
+        }
+        if (!this.userSettings && this.currentUser) {
+            this.userSettings = await getCurrentUserSettings();
+        }
+        // console.log("Loaded data for settings modal:", this.currentUser, this.userSettings);
+
+        // Populate Profile Tab
+        const usernameInput = document.getElementById('profile-username');
+        const roleInput = document.getElementById('profile-role');
+        const createdInput = document.getElementById('profile-created'); 
+        if (this.currentUser && usernameInput) usernameInput.value = this.currentUser.username;
+        if (this.userSettings && roleInput) roleInput.value = this.userSettings.role || 'N/A';
+        if (createdInput) createdInput.value = 'N/A'; // Creation date still tricky
+
+        // Populate API Keys Tab
+        this.loadApiKeysToSettings();
+        
+        // Clear any previous messages
+        const apiKeyMessage = document.getElementById('api-keys-settings-message');
+        if(apiKeyMessage) apiKeyMessage.textContent = '';
+        const passwordMessage = document.getElementById('password-message');
+        if(passwordMessage) passwordMessage.textContent = '';
+    },
+    
+    // Renamed from loadUserApiKeys to be more specific to the settings modal form
+    loadApiKeysToSettings() {
+        // console.log('填充 API Keys 到设置表单...');
+        const userStoryKeyInput = document.getElementById('setting-userStory-key'); 
+        const userManualKeyInput = document.getElementById('setting-userManual-key');
+        const requirementsAnalysisKeyInput = document.getElementById('setting-requirementsAnalysis-key');
+        const uxDesignKeyInput = document.getElementById('setting-uxDesign-key'); // Get new input
+
+        if (this.userSettings && this.userSettings.apiKeys) {
+            if (userStoryKeyInput) userStoryKeyInput.value = this.userSettings.apiKeys.userStory ?? '';
+            if (userManualKeyInput) userManualKeyInput.value = this.userSettings.apiKeys.userManual ?? '';
+            if (requirementsAnalysisKeyInput) requirementsAnalysisKeyInput.value = this.userSettings.apiKeys.requirementsAnalysis ?? '';
+            if (uxDesignKeyInput) uxDesignKeyInput.value = this.userSettings.apiKeys.uxDesign ?? ''; // Load value
+        } else {
+             // Clear fields if no settings found
+             if (userStoryKeyInput) userStoryKeyInput.value = '';
+            if (userManualKeyInput) userManualKeyInput.value = '';
+            if (requirementsAnalysisKeyInput) requirementsAnalysisKeyInput.value = '';
+            if (uxDesignKeyInput) uxDesignKeyInput.value = ''; // Clear new field
+        }
+        // Reset visibility toggles for API keys
+        document.querySelectorAll('#api-keys-settings .toggle-password-visibility.active').forEach(btn => {
+            const targetInput = document.getElementById(btn.getAttribute('data-target'));
+            if(targetInput) targetInput.type = 'password';
+            btn.classList.remove('active');
+        });
+    },
+    
+    // New function to handle saving API Keys
+    async handleSaveApiKeys() {
+        // console.log("Handling save API Keys for current user..."); 
+        const apiKeys = {
+            userStory: document.getElementById('setting-userStory-key').value.trim(),
+            userManual: document.getElementById('setting-userManual-key').value.trim(),
+            requirementsAnalysis: document.getElementById('setting-requirementsAnalysis-key').value.trim(),
+            uxDesign: document.getElementById('setting-uxDesign-key').value.trim() // Read value from new input
+        };
+        
+        const messageElementId = 'api-keys-settings-message';
+        showFormMessage(messageElementId, '保存中...', 'info');
+        this.showLoading('保存 API 密钥...');
+
+        try {
+            // Call the refactored storage function
+            const result = await saveCurrentUserSetting({ apiKeys: apiKeys }); 
+            this.hideLoading();
+            if (result) {
+                 showFormMessage(messageElementId, 'API 密钥保存成功！', 'success');
+                 this.userSettings = result; 
+            } else {
+                 showFormMessage(messageElementId, '保存失败，请稍后重试。', 'error');
+            }
+        } catch (error) {
+             this.hideLoading();
+             console.error("Error saving API keys:", error);
+             showFormMessage(messageElementId, '保存时发生错误。', 'error');
+        }
+    },
+
+    // Renamed the old placeholder function for the Admin Panel
+    async handleAdminSaveUserApiKeys_Placeholder() {
+         console.warn("handleAdminSaveUserApiKeys_Placeholder: Needs rework for Amplify Cognito & GraphQL permissions.");
+         alert("管理员为其他用户保存 API Keys 的功能需要针对 Amplify Cognito 和后台权限进行调整。"); // Updated alert message
+         const userId = document.getElementById('api-key-config-user-select')?.value;
+         if (!userId) {
+             // Avoid using showFormMessage here if the admin panel structure might change
+             console.error('Admin Panel: Please select a user first.');
+             return;
+         }
+         // Placeholder logic removed as it's non-functional
+     },
 };
 
 // Expose Header for potential external calls if needed, otherwise can be removed
