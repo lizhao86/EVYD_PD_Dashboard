@@ -19,38 +19,26 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Install Amplify CLI
-        run: npm install -g @aws-amplify/cli
-
-      # Use AWS credentials for Amplify pull
-      # Note: The credentials configuration might need to happen before Amplify CLI install depending on permissions,
-      # but configuring it here ensures it's set before 'amplify pull'.
-      - name: Configure AWS Credentials for Amplify
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Amplify Pull - Fetch backend config
-        run: |
-          amplify pull --appId du9jzij3tzrt5 --envName dev --yes
-        env: # Pass credentials explicitly as env vars for Amplify CLI, just in case
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-
-
-      - name: Build project with Vite
-        run: npm run build
-
+      # Configure AWS credentials BEFORE installing/running Amplify CLI
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION }} # Should be ap-southeast-1
 
+      - name: Install Amplify CLI
+        run: npm install -g @aws-amplify/cli
+
+      - name: Amplify Pull - Fetch backend config
+        # Rely on credentials configured by the previous step
+        run: amplify pull --appId du9jzij3tzrt5 --envName dev --yes
+
+      - name: Build project with Vite
+        run: npm run build
+
+      # Credentials should persist from the earlier configure step
+      # No need to reconfigure unless facing issues
       - name: Sync dist/ directory to S3 bucket
         run: |
           aws s3 sync ./dist s3://amplify-evydpddashboard-dev-f5d1e-deployment --delete
