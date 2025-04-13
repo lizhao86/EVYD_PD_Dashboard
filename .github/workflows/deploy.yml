@@ -41,10 +41,10 @@ jobs:
       # No need to reconfigure unless facing issues
       - name: Sync dist/ directory to S3 bucket
         run: |
-          aws s3 sync ./dist s3://amplify-evydpddashboard-dev-f5d1e-deployment --delete
-          # Important: If using CloudFront, S3 objects should likely remain private.
-          # If NOT using CloudFront and need public access, uncomment below:
-          # aws s3 sync ./dist s3://amplify-evydpddashboard-dev-f5d1e-deployment --delete --acl public-read
+          aws s3 sync ./dist s3://amplify-evydpddashboard-dev-f5d1e-deployment --delete --acl public-read
+          # Note: --acl public-read makes objects publicly readable. This is okay for direct S3 hosting.
+          # If you later add CloudFront with OAI/OAC, you might want to remove this flag
+          # and make the bucket private again, relying on a bucket policy for CloudFront access.
 
       # Optional: Add step to invalidate CloudFront cache if using CloudFront
       # - name: Invalidate CloudFront Cache
