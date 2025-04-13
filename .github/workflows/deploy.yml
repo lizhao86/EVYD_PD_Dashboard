@@ -16,10 +16,6 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install dependencies
-        run: npm install
-
-      # Configure AWS credentials BEFORE installing/running Amplify CLI
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -27,21 +23,15 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }} # Should be ap-southeast-1
 
-      - name: Install Amplify CLI
-        run: npm install -g @aws-amplify/cli
-
-      - name: Amplify Pull - Fetch backend config
-        # Rely on credentials configured by the previous step
-        run: amplify pull --appId du9jzij3tzrt5 --envName dev --yes
+      - name: Install dependencies
+        run: npm install
 
       - name: Build project with Vite
         run: npm run build
 
-      # Credentials should persist from the earlier configure step
-      # No need to reconfigure unless facing issues
       - name: Sync dist/ directory to S3 bucket
         run: |
-          # Remove --acl public-read because the bucket likely has ACLs disabled (Object Ownership: Bucket owner enforced)
+          # Remove --acl public-read because the bucket likely has ACLs disabled
           aws s3 sync ./dist s3://amplify-evydpddashboard-dev-f5d1e-deployment --delete
 
       # Optional: Add step to invalidate CloudFront cache if using CloudFront
