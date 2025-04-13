@@ -69,7 +69,7 @@ const I18n = {
         document.documentElement.lang = this.currentLang;
         
         // 加载当前语言的翻译
-        this.loadTranslations();
+        await this.loadTranslations();
         
         // 应用翻译到带有 data-translate 属性的元素
         this.applyTranslations();
@@ -85,27 +85,67 @@ const I18n = {
     },
     
     /**
-     * 加载翻译内容
+     * 動態加載語言文件
+     * @param {string} lang 語言代碼
+     * @returns {Promise} 加載完成的Promise
      */
-    loadTranslations() {
-        // 根据当前语言获取对应的翻译对象
-        // 注意：在实际实现中，这些变量必须已经在页面中加载
-        switch (this.currentLang) {
-            case 'zh-CN':
-                this.translations = window.zhCN || {};
-                break;
-            case 'zh-TW':
-                this.translations = window.zhTW || {};
-                break;
-            case 'en':
-                this.translations = window.en || {};
-                break;
-            default:
-                this.translations = window.zhCN || {};
-                break;
+    async loadLanguageFile(lang) {
+        // 檢查window對象上是否已有該語言對象
+        const langCode = lang.replace('-', ''); // 轉換 zh-CN 為 zhCN 格式
+        if (window[langCode]) {
+            return Promise.resolve();
         }
         
-        this.applyTranslations();
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = `/locales/${lang}.js`;
+            script.onload = () => {
+                console.log(`語言文件 ${lang}.js 加載成功`);
+                resolve();
+            };
+            script.onerror = () => {
+                console.error(`無法加載語言文件: ${lang}.js`);
+                reject(new Error(`無法加載語言文件: ${lang}.js`));
+            };
+            document.head.appendChild(script);
+        });
+    },
+    
+    /**
+     * 加载翻译内容
+     */
+    async loadTranslations() {
+        try {
+            // 根據當前語言加載對應的語言文件
+            switch (this.currentLang) {
+                case 'zh-CN':
+                    if (!window.zhCN) await this.loadLanguageFile('zh-CN');
+                    this.translations = window.zhCN || {};
+                    break;
+                case 'zh-TW':
+                    if (!window.zhTW) await this.loadLanguageFile('zh-TW');
+                    this.translations = window.zhTW || {};
+                    break;
+                case 'en':
+                    if (!window.en) await this.loadLanguageFile('en');
+                    this.translations = window.en || {};
+                    break;
+                default:
+                    if (!window.zhCN) await this.loadLanguageFile('zh-CN');
+                    this.translations = window.zhCN || {};
+                    break;
+            }
+            
+            if (!this.translations || Object.keys(this.translations).length === 0) {
+                console.warn(`警告: 語言包 ${this.currentLang} 加載失敗或為空`);
+            }
+            
+            this.applyTranslations();
+        } catch (error) {
+            console.error(`加載翻譯內容時出錯:`, error);
+            // 使用空對象作為後備，避免整個應用崩潰
+            this.translations = {};
+        }
     },
     
     /**
@@ -128,14 +168,18 @@ const I18n = {
                 value = value[k];
             } else {
                 console.warn(`翻译键不存在: ${key}`);
+                // 如果提供了默認值，則使用默認值
+                if (params.default) {
+                    return params.default;
+                }
                 return key;
             }
         }
         
-        // 如果找到的值不是字符串，返回键名
+        // 如果找到的值不是字符串，返回键名或默認值
         if (typeof value !== 'string') {
             console.warn(`翻译值不是字符串: ${key}`);
-            return key;
+            return params.default || key;
         }
         
         // 替换参数 {name} 形式的占位符

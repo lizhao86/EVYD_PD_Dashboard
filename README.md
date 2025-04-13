@@ -80,6 +80,7 @@
 - **可扩展性:** 模块化设计。
 
 ## 最近更新 (重点)
+- **[2025-04-14]** **UI/UX优化与国际化改进:** 统一三个AI应用(User Story, User Manual, UX Design)的生成按钮文案，从"发送给AI"改为"发送给Dify"，提升品牌一致性。完善所有缺失的翻译键，标准化按钮状态文本（发送、处理中、生成中）。修复按钮状态流转BUG，确保生成过程中UI状态正确变化。
 - **[2025-04-14]** **UI改进与Bug修复:** 修复所有页面的favicon加载问题，确保统一的浏览器标签图标显示。统一三个AI应用(User Story, User Manual, UX Design)的Markdown渲染功能，修复生成结果显示问题。解决API流处理和UI交互中的命名不一致问题，如"UI.setGeneratingState is not a function"错误。
 - **[2025-04-13]** **代码清理 (续)**: 移除项目中所有JS文件中用于调试的 `console.log` 语句。
 - **[2025-04-13]** **代码清理**: 移除 `scripts/utils/helper.js` 中未被使用的工具函数 (`generateUUID`, `formatDate`, `debounce`, `throttle`)，完成 `helper.js` 整合。

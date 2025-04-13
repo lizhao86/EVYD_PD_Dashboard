@@ -136,7 +136,7 @@ const UXDesignUI = {
     showRequestingState() {
         // console.log("[UX UI] Showing requesting state...");
         if (this.generateButton) {
-            const requestingText = t('common.requesting', { default: '请求中...' });
+            const requestingText = t('common.button.processing', { default: '处理中...' });
             this.generateButton.innerHTML = '<div class="loading-circle-container"><div class="loading-circle"></div></div> ' + requestingText;
             this.generateButton.disabled = true; // Disable button
             this.generateButton.setAttribute('data-action', 'requesting');
@@ -147,6 +147,7 @@ const UXDesignUI = {
     },
 
     showGenerationStarted() {
+        // console.log("[UX UI] Showing generation started...");
         // 确保结果容器显示
         if (this.resultContainerEl) {
             this.resultContainerEl.style.display = 'block';
@@ -157,15 +158,15 @@ const UXDesignUI = {
         
         if (this.generateButton) {
             this.generateButton.disabled = false;
-            const generatingText = t('common.generating', { default: '生成中...点击停止' });
+            const generatingText = t('common.button.generating', { default: '生成中...点击停止' });
             this.generateButton.innerHTML = '<div class="loading-circle-container"><div class="loading-circle" style="border-color: #ff3333; border-top-color: transparent;"></div></div> ' + generatingText;
             this.generateButton.setAttribute('data-action', 'stop');
         }
         if (this.stopButton) this.stopButton.style.display = 'none';
         
         if (this.resultContentEl) {
-             this.resultContentEl.innerHTML = t('common.generatingSimple', { default: '正在生成...'}) + '<span class="cursor"></span>';
-             this.resultContentEl.style.display = 'block'; // Show text initially
+            this.resultContentEl.innerHTML = t('common.generatingSimple', { default: '正在生成...'}) + '<span class="cursor"></span>';
+            this.resultContentEl.style.display = 'block'; // Show text initially
         }
         if (this.resultMarkdownEl) {
             this.resultMarkdownEl.style.display = 'none'; // Hide markdown initially
@@ -176,16 +177,17 @@ const UXDesignUI = {
     },
 
     showGenerationCompleted() {
-         if (this.generateButton) {
+        // console.log("[UX UI] Showing generation completed...");
+        if (this.generateButton) {
             this.generateButton.disabled = false;
-            const buttonText = t('uxDesign.generateButton', { default: '生成设计提示词' });
+            const buttonText = t('common.button.generate', { default: '发送给AI' });
             this.generateButton.innerHTML = buttonText;
             this.generateButton.setAttribute('data-action', 'generate');
             this.generateButton.classList.remove('btn-danger');
             this.generateButton.classList.add('btn-primary');
-            this.updateCharCountDisplay(this.textareaElement?.value?.length ?? 0); 
+            this.updateCharCountDisplay(this.textareaElement?.value?.length ?? 0);
         }
-        if (this.stopButton) this.stopButton.style.display = 'none'; 
+        if (this.stopButton) this.stopButton.style.display = 'none';
     },
     
     /**

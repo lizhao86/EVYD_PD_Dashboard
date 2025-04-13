@@ -96,7 +96,7 @@ const UI = {
         const stopButton = document.getElementById('stop-generation');
 
         if (generateButton) {
-            const requestingText = t('common.requesting', { default: '请求中...' });
+            const requestingText = t('common.button.processing', { default: '处理中...' });
             generateButton.innerHTML = '<div class="loading-circle-container"><div class="loading-circle"></div></div> ' + requestingText;
             generateButton.disabled = true; // Disable button during request
             generateButton.setAttribute('data-action', 'requesting'); // Optional: set action state
@@ -106,6 +106,9 @@ const UI = {
         }
     },
     
+    /**
+     * 显示生成开始状态
+     */
     showGenerationStarted() {
         const resultContainer = document.getElementById('result-container');
         const resultStats = document.getElementById('result-stats');
@@ -121,8 +124,8 @@ const UI = {
         
         if (resultStats) resultStats.style.display = 'none';
         if (resultContent) {
-             resultContent.innerHTML = t('common.generatingSimple', { default: '正在生成...'}) + '<span class="cursor"></span>';
-             resultContent.style.display = 'block';
+            resultContent.innerHTML = t('userManual.generating', { default: '生成中，请稍候...'}) + '<span class="cursor"></span>';
+            resultContent.style.display = 'block';
         }
         if (resultMarkdown) {
             resultMarkdown.style.display = 'none';
@@ -133,7 +136,7 @@ const UI = {
         
         if (generateButton) {
             generateButton.disabled = false; // --- MODIFY: Enable button --- 
-            const generatingText = t('common.generating', { default: '生成中...点击停止' });
+            const generatingText = t('common.button.generating', { default: '生成中...点击停止' });
             generateButton.innerHTML = '<div class="loading-circle-container"><div class="loading-circle" style="border-color: #ff3333; border-top-color: transparent;"></div></div> ' + generatingText;
             generateButton.setAttribute('data-action', 'stop');
         }
@@ -146,7 +149,7 @@ const UI = {
         const generateButton = document.getElementById('generate-manual'); // Correct button ID
         if (generateButton) {
             generateButton.disabled = false; // --- MODIFY: Ensure button is enabled --- 
-            const buttonText = t('userManual.generateButton', { default: '生成 User Manual' });
+            const buttonText = t('common.button.generate', { default: '发送给AI' });
             generateButton.innerHTML = buttonText;
             generateButton.setAttribute('data-action', 'generate');
             generateButton.classList.remove('btn-danger', 'btn-secondary'); 

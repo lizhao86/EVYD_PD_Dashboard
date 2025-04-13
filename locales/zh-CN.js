@@ -64,8 +64,16 @@ window.zhCN = {
         backToHome: '返回主页',
         requesting: '请求中...',
         generatingSimple: '正在生成...',
+        generationStopped: '(已停止生成)',
         copied: '已复制!',
-        copyFailed: '复制失败'
+        copyFailed: '复制失败',
+        
+        // 统一的按钮状态
+        button: {
+            generate: '发送给Dify',
+            processing: '处理中...',
+            generating: '生成中...点击停止'
+        }
     },
     
     // 导航
@@ -214,6 +222,8 @@ window.zhCN = {
         settings: {
             title: '账号设置',
             tabPassword: '修改密码',
+            tabApiKeys: 'API 密钥管理',
+            tabProfile: '个人资料',
             currentPasswordLabel: '当前密码',
             currentPasswordPlaceholder: '输入当前密码',
             newPasswordLabel: '新密码',
@@ -223,7 +233,10 @@ window.zhCN = {
             updatePasswordButton: '更新密码',
             profileUsernameLabel: '用户名',
             profileRoleLabel: '角色',
-            profileCreatedLabel: '创建日期'
+            profileCreatedLabel: '创建日期',
+            apiKeysDesc: '这里您可以管理您的 Dify API 密钥，这些密钥用于连接到 Dify 服务并使用 AI 功能。',
+            apiKeyPlaceholder: '输入 API Key',
+            saveApiKeysButton: '保存 API Keys'
         },
         // API密钥模态框
         apiKeys: {
@@ -246,12 +259,14 @@ window.zhCN = {
             tabApiEndpoints: 'API 地址配置',
             addUserButton: '添加用户',
             cleanupButton: '清理脏数据用户',
+            loadUsersError: '加载用户列表失败，请重试',
             usersTable: {
                 id: 'ID',
                 username: '用户名',
                 role: '角色',
                 createdDate: '创建日期',
-                actions: '操作'
+                actions: '操作',
+                needsRework: '需要修改'
             },
             apiKeysDesc: '在这里您可以为每个用户配置不同的 Dify API 密钥。',
             selectUserLabel: '选择用户',
@@ -302,7 +317,8 @@ window.zhCN = {
         totalTokensLabel: '总Token:',
         secondsSuffix: '秒',
         error: {
-            emptyRequirement: '请输入需求描述'
+            emptyRequirement: '请输入需求描述',
+            promptRequired: '请输入设计提示词要求'
         }
     },
     
@@ -329,7 +345,8 @@ window.zhCN = {
         generating: '生成中，请稍候...',
         secondsSuffix: '秒',
         error: {
-            emptyRequirement: '请输入需求描述'
+            emptyRequirement: '请输入需求描述',
+            promptRequired: '请输入手册内容要求'
         }
     },
     
@@ -367,5 +384,14 @@ window.zhCN = {
             moduleRequired: '请填写模块名称',
             requirementRequired: '请填写需求描述'
         }
+    },
+
+    // 密码策略
+    policy: {
+        length: '密码长度必须至少为8个字符',
+        number: '必须包含至少一个数字',
+        special: '必须包含至少一个特殊字符',
+        uppercase: '必须包含至少一个大写字母',
+        lowercase: '必须包含至少一个小写字母'
     }
 }; 

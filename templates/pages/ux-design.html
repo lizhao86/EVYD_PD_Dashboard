@@ -15,6 +15,12 @@
         window.process = { env: {} };
         var exports = {};
     </script>
+    
+    <!-- 載入翻譯文件 -->
+    <script src="/locales/zh-CN.js"></script>
+    <script src="/locales/zh-TW.js"></script>
+    <script src="/locales/en.js"></script>
+    
     <!-- 样式文件 -->
     <link rel="stylesheet" href="/styles/common.css">
     <link rel="stylesheet" href="/styles/user-manual.css">
@@ -89,7 +95,7 @@
             
             <div class="form-actions">
                 <button class="btn-secondary" id="clear-form" data-translate="uxDesign.clearButton">清空</button>
-                <button class="btn-primary" id="generate-prompt" data-action="generate" data-translate="uxDesign.generateButton">生成设计提示词</button>
+                <button class="btn-primary" id="generate-prompt" data-action="generate" data-translate="common.button.generate">发送给AI</button>
             </div>
         </div>
 

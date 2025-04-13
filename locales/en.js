@@ -64,8 +64,16 @@ window.en = {
         backToHome: 'Back to Home',
         requesting: 'Requesting...',
         generatingSimple: 'Generating...',
+        generationStopped: '(Generation stopped)',
         copied: 'Copied!',
-        copyFailed: 'Copy Failed'
+        copyFailed: 'Copy Failed',
+        
+        // Unified button states
+        button: {
+            generate: 'Send to Dify',
+            processing: 'Processing...',
+            generating: 'Generating...Click to stop'
+        }
     },
     
     // Navigation
@@ -214,6 +222,8 @@ window.en = {
         settings: {
             title: 'Account Settings',
             tabPassword: 'Change Password',
+            tabApiKeys: 'API Key Management',
+            tabProfile: 'Profile',
             currentPasswordLabel: 'Current Password',
             currentPasswordPlaceholder: 'Enter current password',
             newPasswordLabel: 'New Password',
@@ -223,7 +233,10 @@ window.en = {
             updatePasswordButton: 'Update Password',
             profileUsernameLabel: 'Username',
             profileRoleLabel: 'Role',
-            profileCreatedLabel: 'Date Created'
+            profileCreatedLabel: 'Date Created',
+            apiKeysDesc: 'Here you can manage your Dify API keys used to connect to Dify services and use AI features.',
+            apiKeyPlaceholder: 'Enter API Key',
+            saveApiKeysButton: 'Save API Keys'
         },
         // API Keys Modal
         apiKeys: {
@@ -246,12 +259,14 @@ window.en = {
             tabApiEndpoints: 'API Address Config',
             addUserButton: 'Add User',
             cleanupButton: 'Cleanup Dirty Data Users',
+            loadUsersError: 'Failed to load user list, please try again',
             usersTable: {
                 id: 'ID',
                 username: 'Username',
                 role: 'Role',
                 createdDate: 'Date Created',
-                actions: 'Actions'
+                actions: 'Actions',
+                needsRework: 'Needs Rework'
             },
             apiKeysDesc: 'Here you can configure different Dify API keys for each user.',
             selectUserLabel: 'Select User',
@@ -302,7 +317,8 @@ window.en = {
         totalTokensLabel: 'Total Tokens:',
         secondsSuffix: 's',
         error: {
-            emptyRequirement: 'Please enter the requirement description'
+            emptyRequirement: 'Please enter the requirement description',
+            promptRequired: 'Please enter design prompt requirements'
         }
     },
     
@@ -329,7 +345,8 @@ window.en = {
         generating: 'Generating, please wait...',
         secondsSuffix: 's',
         error: {
-            emptyRequirement: 'Please enter the requirement description'
+            emptyRequirement: 'Please enter the requirement description',
+            promptRequired: 'Please enter manual content requirements'
         }
     },
     
@@ -366,5 +383,14 @@ window.en = {
             moduleRequired: 'Please enter Module Name',
             requirementRequired: 'Please enter Requirement Description'
         }
+    },
+
+    // Password Policy
+    policy: {
+        length: 'Password must be at least 8 characters long',
+        number: 'Must contain at least one number',
+        special: 'Must contain at least one special character',
+        uppercase: 'Must contain at least one uppercase letter',
+        lowercase: 'Must contain at least one lowercase letter'
     }
 }; 

@@ -141,7 +141,7 @@ const UI = {
         const stopButton = document.getElementById('stop-generation');
 
         if (generateButton) {
-            const requestingText = t('common.requesting', { default: '请求中...' });
+            const requestingText = t('common.button.processing', { default: '处理中...' });
             generateButton.innerHTML = '<div class="loading-circle-container"><div class="loading-circle"></div></div> ' + requestingText;
             generateButton.disabled = true; // Disable button
             generateButton.setAttribute('data-action', 'requesting');
@@ -178,7 +178,7 @@ const UI = {
         if (generateButton) {
             // --- MODIFY: Enable button --- 
             generateButton.disabled = false; 
-            const generatingText = t('common.generating', { default: '生成中...点击停止' });
+            const generatingText = t('common.button.generating', { default: '生成中...点击停止' });
             generateButton.innerHTML = '<div class="loading-circle-container"><div class="loading-circle" style="border-color: #ff3333; border-top-color: transparent;"></div></div> ' + generatingText;
             generateButton.setAttribute('data-action', 'stop');
         }
@@ -194,13 +194,13 @@ const UI = {
         if (generateButton) {
             // --- MODIFY: Ensure button is enabled --- 
             generateButton.disabled = false;
-            const buttonText = t('userStory.generateButton', { default: '生成 User Story' });
+            const buttonText = t('common.button.generate', { default: '发送给AI' });
             generateButton.innerHTML = buttonText;
             generateButton.setAttribute('data-action', 'generate');
         }
-       // --- MODIFY: Hide separate stop button ---
-       const stopButton = document.getElementById('stop-generation');
-       if(stopButton) stopButton.style.display = 'none';
+        // --- MODIFY: Hide separate stop button ---
+        const stopButton = document.getElementById('stop-generation');
+        if(stopButton) stopButton.style.display = 'none';
     },
     
     /**

@@ -64,8 +64,16 @@ window.zhTW = {
         backToHome: '返回主頁',
         requesting: '請求中...',
         generatingSimple: '正在生成...',
+        generationStopped: '(已停止生成)',
         copied: '已複製!',
-        copyFailed: '複製失敗'
+        copyFailed: '複製失敗',
+        
+        // 統一的按鈕狀態
+        button: {
+            generate: '發送給Dify',
+            processing: '處理中...',
+            generating: '生成中...點擊停止'
+        }
     },
     
     // 導航
@@ -214,6 +222,8 @@ window.zhTW = {
         settings: {
             title: '賬號設置',
             tabPassword: '修改密碼',
+            tabApiKeys: 'API 密鑰管理',
+            tabProfile: '個人資料',
             currentPasswordLabel: '當前密碼',
             currentPasswordPlaceholder: '輸入當前密碼',
             newPasswordLabel: '新密碼',
@@ -223,7 +233,10 @@ window.zhTW = {
             updatePasswordButton: '更新密碼',
             profileUsernameLabel: '用戶名',
             profileRoleLabel: '角色',
-            profileCreatedLabel: '創建日期'
+            profileCreatedLabel: '創建日期',
+            apiKeysDesc: '這裡您可以管理您的 Dify API 密鑰，這些密鑰用於連接到 Dify 服務並使用 AI 功能。',
+            apiKeyPlaceholder: '輸入 API Key',
+            saveApiKeysButton: '保存 API Keys'
         },
         // API密鑰模態框
         apiKeys: {
@@ -246,12 +259,14 @@ window.zhTW = {
             tabApiEndpoints: 'API 地址配置',
             addUserButton: '添加用戶',
             cleanupButton: '清理髒數據用戶',
+            loadUsersError: '加載用戶列表失敗，請重試',
             usersTable: {
                 id: 'ID',
                 username: '用戶名',
                 role: '角色',
                 createdDate: '創建日期',
-                actions: '操作'
+                actions: '操作',
+                needsRework: '需要修改'
             },
             apiKeysDesc: '在這裡您可以為每個用戶配置不同的 Dify API 密鑰。',
             selectUserLabel: '選擇用戶',
@@ -302,7 +317,8 @@ window.zhTW = {
         totalTokensLabel: '總Token:',
         secondsSuffix: '秒',
         error: {
-            emptyRequirement: '請輸入需求描述'
+            emptyRequirement: '請輸入需求描述',
+            promptRequired: '請輸入設計提示詞要求'
         }
     },
     
@@ -329,7 +345,8 @@ window.zhTW = {
         generating: '生成中，請稍候...',
         secondsSuffix: '秒',
         error: {
-            emptyRequirement: '請輸入需求描述'
+            emptyRequirement: '請輸入需求描述',
+            promptRequired: '請輸入手冊內容要求'
         }
     },
     
@@ -366,5 +383,14 @@ window.zhTW = {
             moduleRequired: '請填寫模塊名稱',
             requirementRequired: '請填寫需求描述'
         }
+    },
+
+    // 密碼策略
+    policy: {
+        length: '密碼長度必須至少為8個字符',
+        number: '必須包含至少一個數字',
+        special: '必須包含至少一個特殊字符',
+        uppercase: '必須包含至少一個大寫字母',
+        lowercase: '必須包含至少一個小寫字母'
     }
 }; 
