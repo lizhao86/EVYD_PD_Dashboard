@@ -1,6 +1,12 @@
 // scripts/pages/homepage.js
 
-// Import the Header object
+// 首先导入并配置 Amplify
+import { configureAmplify } from '/scripts/amplify-config.js';
+
+// 确保 Amplify 在所有其他代码之前完成配置
+configureAmplify();
+
+// 然后导入依赖 Amplify 的模块
 import Header from '/modules/common/header.js';
 
 // Domain for checking referrer (No longer needed for post-reg message)

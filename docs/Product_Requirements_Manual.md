@@ -3,9 +3,9 @@
 ## 1 文档信息
 
 - **文档名称**：EVYD 产品经理 AI 工作台产品需求手册
-- **当前版本**：1.6.2
+- **当前版本**：1.6.3
 - **创建日期**：2025-03-01
-- **最后更新**：2025-04-13
+- **最后更新**：2025-04-19
 - **文档状态**：更新中
 - **文档所有者**：EVYD产品团队
 
@@ -31,6 +31,7 @@
 | 1.6.0 | 2025-04-12 | EVYD产品团队 | **重大重构**: 将认证迁移至 AWS Cognito (含 Hosted UI)，存储迁移至 DynamoDB (通过 Amplify AppSync & GraphQL API)。集成 Vite 构建工具。实现基于 Cognito Group 的首次登录角色同步。改进密码修改 UI 校验。 |
 | 1.6.1 | 2025-04-12 | EVYD产品团队 | 实现用户语言偏好持久化存储到 DynamoDB UserSettings。 |
 | 1.6.2 | 2025-04-13 | EVYD产品团队 | 修复三大AI应用(User Story, User Manual, UX Design)的多项交互Bug(停止生成、按钮状态、验证提示、国际化、结果显示等)，确保使用云端配置，并统一相关代码实现。 |
+| 1.6.3 | 2025-04-19 | EVYD产品团队 | **技术稳定性优化**：从 AWS Amplify V6 迁移回 V5，解决了与 Vite 环境兼容性问题导致的 OAuth 登录失败。全面更新所有页面脚本，统一 Amplify 配置加载流程，确保认证服务在所有功能页面正常工作。优化环境变量配置应用于开发与生产环境。 |
 
 ## 3 产品概述
 
@@ -60,6 +61,7 @@ EVYD 产品经理 AI 工作台是基于EVYD科技先进的人工智能技术，�
     - 注册流程由 Cognito 处理（包括可能的邮箱/短信验证）。
 - **登出:** 点击应用内"登出"按钮应触发 Cognito 全局登出流程，并重定向回应用指定的注销 URL。
 - **会话管理:** 用户会话由 AWS Amplify 库自动管理（基于 Cognito 返回的 Tokens）。
+- **认证库版本:** 项目使用 AWS Amplify V5 (aws-amplify@5.3.x)，因其在 Vite 环境下更加稳定，尤其是处理 OAuth 重定向流程。
 - **首次登录处理:**
     - 新用户（或 DynamoDB 中无记录的用户）首次登录成功后，系统应检查其 Cognito 用户组。
     - 如果用户属于 `admin` 组，应在 DynamoDB 的 `UserSettings` 表中自动创建记录，并将 `role` 设置为 `admin`。
@@ -443,9 +445,11 @@ Follow strictly this Markdown structure:
 
 - **框架/库:** Vanilla JavaScript, 使用 ES 模块。
 - **构建:** 使用 Vite 进行依赖管理、开发服务和生产构建。
-- **后端交互:** 通过 **AWS Amplify** 库与 AWS 服务交互。
-    - **认证:** 使用 `aws-amplify/auth` 对接 Cognito 用户池和 Hosted UI。
-    - **API:** 使用 `aws-amplify/api` (GraphQL) 对接 AppSync。
+- **后端交互:** 通过 **AWS Amplify V5** 库与 AWS 服务交互。
+    - **认证:** 使用 `aws-amplify` 中的 `Auth` 服务对接 Cognito 用户池和 Hosted UI。
+    - **API:** 使用 `aws-amplify` 中的 API、graphqlOperation 对接 AppSync。
+    - **配置管理:** 基于 `scripts/amplify-config.js` 统一初始化 Amplify。
+- **环境变量:** 使用 `.env` 和 `.env.production` 文件配置环境特定参数（如登录回调URL）。
 - **(已移除)** 不再依赖本地存储进行核心数据持久化。
 
 ### 7.2 国际化架构
@@ -461,6 +465,9 @@ Follow strictly this Markdown structure:
     - **Cognito:** 用户池、身份池(可选)、托管 UI。
     - **DynamoDB:** 存储 `UserSettings` 和 `GlobalConfig`。
     - **AppSync:** 提供 GraphQL API 端点。
+- **JS库依赖:**
+    - **AWS Amplify V5:** 提供 AWS 服务集成，特别是认证和 GraphQL 支持。
+    - **Marked:** 用于 Markdown 渲染。
 - Dify API
 - Google Fonts
 - 图标库
@@ -487,6 +494,7 @@ Follow strictly this Markdown structure:
 | 功能修复版本 | 2025-04-06 | 修复账号设置页面密码修改功能，确保用户可以正常更新密码 |
 | 管理面板优化版本 | 2025-04-09 | 修复管理员面板数据加载和API配置功能，统一通用头部组件实现 |
 | 多语言支持版本 | 2025-04-15 | 添加多语言支持，支持简体中文、繁体中文和英文界面切换 |
+| Amplify V5迁移 | 2025-04-19 | 从Amplify V6迁移到V5，解决登录兼容性问题，优化配置加载 |
 | 功能扩展计划 | 2025-06-10 | 计划新增高级数据分析功能 |
 
 ## 9 风险与限制
@@ -510,6 +518,7 @@ Follow strictly this Markdown structure:
 - **网络延迟:** 与 AWS 服务的网络通信延迟可能影响用户体验。
 - 需要有效的 AWS 账户和正确配置的 Amplify 后端环境。
 - 离线环境下无法进行认证和数据同步。
+- **浏览器兼容性:** 依赖于现代浏览器支持ES modules和Promise等特性，不兼容IE11及更早版本。
 
 ## 10 附录
 
@@ -526,7 +535,7 @@ Follow strictly this Markdown structure:
 | GitHub Actions | GitHub提供的持续集成和持续部署(CI/CD)服务 |
 | AWS S3 | Amazon Web Services提供的对象存储服务，可用于托管静态网站 |
 | i18n | Internationalization（国际化）的缩写，指支持多语言的软件设计与开发 |
-| **AWS Amplify** | AWS 提供的一套工具和服务，用于构建和部署云支持的 Web 和移动应用程序。 |
+| **AWS Amplify V5** | AWS 提供的工具和服务库（版本5），用于构建和部署云支持的 Web 和移动应用程序 |
 | **Cognito** | AWS 的身份管理服务，提供用户注册、登录、访问控制功能。 |
 | **User Pool** | Cognito 中的用户目录，管理用户账户和身份验证。 |
 | **Hosted UI** | Cognito 提供的可定制的、托管的登录/注册界面。 |
@@ -536,6 +545,7 @@ Follow strictly this Markdown structure:
 | **GraphQL** | 一种用于 API 的查询语言和运行时。 |
 | **Vite** | 一种现代前端构建工具和开发服务器。 |
 | **IAM** | AWS Identity and Access Management，用于管理对 AWS 资源的访问权限。 |
+| **OAuth** | 开放授权协议，允许第三方应用访问用户资源而无需共享凭证。|
 
 ### 10.2 参考资料
 
@@ -546,3 +556,5 @@ Follow strictly this Markdown structure:
 - Figma API与设计系统文档 
 - GitHub Actions工作流文档
 - AWS S3静态网站托管文档 
+- [AWS Amplify V5 文档](https://docs.amplify.aws/) - 官方参考文档
+- [Vite 环境变量指南](https://vitejs.dev/guide/env-and-mode.html) - 环境变量配置参考 

@@ -43,4 +43,13 @@ export default defineConfig({
   //   port: 5173, // Default port
   //   open: true, // Automatically open browser
   // },
+  
+  // 添加此配置，为 AWS Amplify V5 创建必要的全局变量
+  define: {
+    global: 'window', // 解决 'global is not defined' 错误
+    process: {
+      env: {}, // 提供空的 process.env 对象
+      browser: true // 设置为浏览器环境
+    },
+  },
 }); 

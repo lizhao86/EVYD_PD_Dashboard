@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-translate="userStory.pageTitle">EVYD 产品经理AI工作台 - User Story 生成器</title>
+    
+    <!-- AWS Amplify V5 兼容性脚本 - 解决 'global is not defined' 错误 -->
+    <script>
+        // 为 AWS Amplify V5 提供必要的全局变量
+        window.global = window;
+        window.process = { env: {} };
+        var exports = {};
+    </script>
+    
     <!-- 样式文件 -->
     <link rel="stylesheet" href="/styles/common.css">
     <link rel="stylesheet" href="/styles/user-story.css">

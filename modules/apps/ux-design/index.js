@@ -2,6 +2,12 @@
  * UX界面设计主入口
  */
 
+// 首先导入并配置 Amplify
+import { configureAmplify } from '/scripts/amplify-config.js';
+
+// 确保 Amplify 在所有其他代码之前完成配置
+configureAmplify();
+
 // Import necessary modules
 import Header from '/modules/common/header.js';
 import UI from './ui.js';

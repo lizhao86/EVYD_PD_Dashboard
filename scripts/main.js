@@ -1,6 +1,12 @@
 // scripts/main.js
 // Amplify configuration moved to Header.init to ensure it runs in the correct context
 
+// 首先导入并配置 Amplify
+import { configureAmplify } from '/scripts/amplify-config.js';
+
+// 确保 Amplify 在所有其他代码之前完成配置
+configureAmplify();
+
 // 初始化语言，在页面加载完成后更新文本
 document.addEventListener('DOMContentLoaded', function() {
     // 如果I18n已加载，则更新文本

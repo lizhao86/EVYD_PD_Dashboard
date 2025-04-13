@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EVYD 产品经理AI工作台</title>
+    
+    <!-- AWS Amplify V5 兼容性脚本 - 解决 'global is not defined' 错误 -->
+    <script>
+        // 为 AWS Amplify V5 提供必要的全局变量
+        window.global = window;
+        window.process = { env: {} };
+        var exports = {};
+    </script>
+    
     <!-- 浏览器标签页图标 -->
     <link rel="icon" href="/assets/images/Variant=Black, Lockup=Logomark.png" type="image/png">
     <!-- 注释掉自动跳转，改为使用JS控制 -->

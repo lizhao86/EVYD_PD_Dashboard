@@ -3,13 +3,10 @@
  * 云存储服务模块 (Powered by AWS Amplify)
  */
 
-import { generateClient } from 'aws-amplify/api';
-import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
+import { API, Auth, graphqlOperation } from 'aws-amplify';
 // Adjust the path based on your project structure if src/graphql is incorrect
 import * as queries from '../../src/graphql/queries';
 import * as mutations from '../../src/graphql/mutations';
-
-const client = generateClient();
 
 // --- User Settings ---
 
@@ -19,11 +16,12 @@ const client = generateClient();
  */
 export async function getCurrentUserSettings() {
     try {
-        const { userId } = await getCurrentUser();
-        const result = await client.graphql({
-            query: queries.getUserSettings,
-            variables: { id: userId }
-        });
+        const user = await Auth.currentAuthenticatedUser();
+        const userId = user.username; // 或者使用 user.attributes.sub
+
+        const result = await API.graphql(
+            graphqlOperation(queries.getUserSettings, { id: userId })
+        );
         return result.data.getUserSettings;
     } catch (error) {
         console.error('Error fetching user settings:', error);
@@ -38,12 +36,16 @@ export async function getCurrentUserSettings() {
  */
 export async function saveCurrentUserSetting(settings) {
     try {
-        const { userId } = await getCurrentUser();
+        const user = await Auth.currentAuthenticatedUser();
+        const userId = user.username; // 或者使用 user.attributes.sub
+        
         let existingSettingsData = null;
         try {
             existingSettingsData = await getCurrentUserSettings(); 
         } catch (fetchError) {
+            // 如果fetchError，可能是找不到现有设置
         }
+        
         let payload;
         let isCreating = false;
 
@@ -76,17 +78,14 @@ export async function saveCurrentUserSetting(settings) {
 
         let result;
         if (isCreating) {
-            result = await client.graphql({
-                query: mutations.createUserSettings,
-                variables: { input: payload }
-            });
+            result = await API.graphql(
+                graphqlOperation(mutations.createUserSettings, { input: payload })
+            );
             return result.data.createUserSettings;
         } else {
-            const updateInput = { ...payload };
-            result = await client.graphql({
-                query: mutations.updateUserSettings, 
-                variables: { input: payload }
-            });
+            result = await API.graphql(
+                graphqlOperation(mutations.updateUserSettings, { input: payload })
+            );
             return result.data.updateUserSettings;
         }
 
@@ -95,7 +94,6 @@ export async function saveCurrentUserSetting(settings) {
         return null;
     }
 }
-
 
 // --- Global Config ---
 
@@ -108,10 +106,9 @@ const GLOBAL_CONFIG_ID = "GLOBAL_CONFIG";
  */
 export async function getGlobalConfig() {
     try {
-        const result = await client.graphql({
-            query: queries.getGlobalConfig,
-            variables: { id: GLOBAL_CONFIG_ID }
-        });
+        const result = await API.graphql(
+            graphqlOperation(queries.getGlobalConfig, { id: GLOBAL_CONFIG_ID })
+        );
         if (result.data.getGlobalConfig) {
             return result.data.getGlobalConfig;
         } else {
@@ -153,19 +150,20 @@ export async function saveGlobalConfig(config) {
     try {
         let result;
         try {
-            result = await client.graphql({
-                query: mutations.updateGlobalConfig,
-                variables: { input: inputData }
-            });
+            result = await API.graphql(
+                graphqlOperation(mutations.updateGlobalConfig, { input: inputData })
+            );
             return result.data.updateGlobalConfig;
         } catch (updateError) {
-            const isNotFoundError = updateError.errors?.some(e => e.errorType?.includes('ConditionalCheckFailed') || e.message?.includes('conditional request failed'));
+            const isNotFoundError = updateError.errors?.some(e => 
+                e.errorType?.includes('ConditionalCheckFailed') || 
+                e.message?.includes('conditional request failed')
+            );
 
             if (isNotFoundError) {
-                result = await client.graphql({
-                    query: mutations.createGlobalConfig,
-                    variables: { input: inputData }
-                });
+                result = await API.graphql(
+                    graphqlOperation(mutations.createGlobalConfig, { input: inputData })
+                );
                 return result.data.createGlobalConfig;
             } else {
                 throw updateError;
@@ -177,6 +175,22 @@ export async function saveGlobalConfig(config) {
     }
 }
 
-// Removed the old Storage object and the Storage.init() call.
-// Initialization (like ensuring GlobalConfig exists) should now be handled
-// within the application logic, possibly after admin login. 
+// 为实现兼容性，添加V6 API风格的函数
+// 这些帮助我们平滑过渡，让依赖这些方法的代码可以继续工作
+export const generateClient = () => {
+    // 返回一个与V6 API风格类似的客户端对象
+    return {
+        graphql: async (params) => {
+            const { query, variables } = params;
+            const result = await API.graphql(graphqlOperation(query, variables));
+            return result;
+        }
+    };
+};
+
+export async function getCurrentUser() {
+    const user = await Auth.currentAuthenticatedUser();
+    return {
+        userId: user.username // 或 user.attributes.sub
+    };
+} 

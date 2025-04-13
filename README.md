@@ -77,6 +77,7 @@
 - **可扩展性:** 模块化设计。
 
 ## 最近更新 (重点)
+- **[2025-04-19]** **重大修复:** 成功从 AWS Amplify V6 迁移回 V5，解决了与 Vite 环境下 OAuth 重定向登录的兼容性问题。统一配置加载，确保所有页面正确初始化 Amplify。
 - **[2025-04-12]** **重大重构:** 迁移认证至 AWS Cognito (Hosted UI)，存储至 DynamoDB (Amplify AppSync/GraphQL)，集成 Vite。
 - **[2025-04-12]** **功能:** 实现用户语言偏好持久化存储到 DynamoDB。
 - **[2025-04-13]** **修复与统一 (v1.6.2):** 
@@ -127,7 +128,37 @@
     - 修改 `aws s3 sync` 命令，使其同步构建产物 (`dist` 目录) 而不是源代码，并配置正确的 S3 目标路径。
     - **(重要)** 需要在 GitHub Secrets 中添加 Amplify 部署所需的 AWS 凭证 (或配置 Amplify Hosting)。
 
+### 环境变量配置
+- 项目使用 `.env` (开发环境) 和 `.env.production` (生产环境) 文件配置环境特定参数
+- 主要配置有:
+  - `VITE_COGNITO_REDIRECT_SIGNIN` - Cognito登录成功后的重定向URL
+  - `VITE_COGNITO_REDIRECT_SIGNOUT` - Cognito登出后的重定向URL
+- Vite自动处理带有`VITE_`前缀的环境变量
+
 ### 待办/注意事项
 - **环境变量:** 为生产环境配置 Cognito 回调/注销 URL 等。
 - **Cognito 用户管理:** 主要通过 AWS 控制台进行。
 - **首次全局配置:** 管理员需要登录并保存一次 API 地址配置。
+
+## 已解决问题 (Amplify V6 + Vite 登录)
+
+**状态:** 已解决 ✅
+
+**问题描述:**
+在尝试为项目引入环境变量（用于区分开发环境和生产环境的 Cognito 回调 URL）并调整 Amplify V6 配置加载方式后，通过 Cognito Hosted UI 进行登录的功能 (`signInWithRedirect`) 持续失败。
+
+**症状:**
+- 点击登录按钮后，无法跳转到 Cognito 托管登录页面 (`login.auth.ap-southeast-1.amazoncognito.com`)。
+- 前端 JavaScript 抛出错误，通常是 `AuthUserPoolException: Auth UserPool not configured.` 或 `OAuthNotConfigureException: oauth param not configured.`。
+- **令人困惑的是：** 通过 `console.log(Amplify.getConfig())` 在 `signInWithRedirect` 调用前检查，运行时配置**看起来是正确的**，包含了所有必需的 `Auth.Cognito` 和 `Auth.Cognito.loginWith.oauth` 参数。
+
+**解决方案:**
+由于 Amplify V6 在 Vite 环境下有兼容性问题，我们回退到了 Amplify V5，具体改动包括：
+
+1. **修改 package.json** - 将 AWS Amplify 依赖设置为 V5 版本 (5.3.x)
+2. **更新 API 调用** - 将所有 V6 风格的模块化导入 (`aws-amplify/auth`) 改为 V5 风格 (`aws-amplify`)
+3. **统一配置** - 创建了 `scripts/amplify-config.js` 确保所有页面正确初始化 Amplify
+4. **兼容性脚本** - 添加了浏览器全局变量兼容性脚本，解决 `global is not defined` 错误
+5. **Vite 配置** - 修改 `vite.config.js`，添加 `define` 选项支持 Amplify V5
+
+这些修改成功解决了登录问题，现在所有功能（登录、登出、保存API密钥、修改密码等）均正常工作。

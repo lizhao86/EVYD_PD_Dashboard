@@ -13,8 +13,11 @@ import {
     // Remove federatedSignIn and signOut from here
 } from '/modules/auth/auth.js'; // Use absolute path
 
-// Import Amplify Auth functions directly for Hosted UI
-import { signInWithRedirect, signOut } from 'aws-amplify/auth'; // Use signInWithRedirect for v6
+// Import Amplify directly - we don't need individual auth functions anymore
+import { Auth, Amplify } from 'aws-amplify';
+
+// 导入 Amplify 配置辅助函数
+import { configureAmplify } from '/scripts/amplify-config.js';
 
 import {
     getCurrentUserSettings,
@@ -26,8 +29,7 @@ import {
 // Import the specific helper function needed
 import { showFormMessage } from '/scripts/utils/helper.js';
 
-// Import Amplify and config here as well
-import { Amplify } from 'aws-amplify';
+// Import config here as well
 import awsconfig from '../../src/aws-exports.js'; // Adjust path relative to header.js
 
 // Import I18n module
@@ -45,43 +47,12 @@ const Header = {
     async init(containerId = 'header-container') { // Made async
         // --- BEGIN AMPLIFY CONFIGURATION (moved here) ---
         try {
-            // console.log("[Header.init] Configuring Amplify...");
+            // 使用配置辅助函数初始化 Amplify
+            configureAmplify();
+            console.log("[Header.init] Amplify configured using amplify-config helper (V5 target).");
 
-            // Construct the final config, ensuring oauth block exists and uses env vars
-            const updatedConfig = {
-                ...awsconfig, // Spread existing config from aws-exports.js
-                Auth: { // Ensure Auth block exists
-                    ...(awsconfig.Auth || {}), // Spread existing Auth settings if they exist
-                    Cognito: { // Ensure Cognito block exists
-                        ...(awsconfig.Auth?.Cognito || {}), // Spread existing Cognito settings
-                        // Ensure IDs are present (take from awsconfig or add manually if needed)
-                        userPoolId: awsconfig.aws_user_pools_id || 'ap-southeast-1_r5O88umzn',
-                        userPoolWebClientId: awsconfig.aws_user_pools_web_client_id || '4b9noidv0iu0rjn3l7cr3n27sb',
-                        // Define or overwrite the loginWith.oauth section
-                        loginWith: {
-                            oauth: {
-                                domain: "login.auth.ap-southeast-1.amazoncognito.com", // Use the correct domain
-                                scopes: [ // Standard scopes, ensure they match Cognito App Client config
-                                    'openid',
-                                    'profile',
-                                    'email',
-                                    'aws.cognito.signin.user.admin' // If needed for admin actions
-                                ],
-                                // Load redirect URLs from environment variables
-                                redirectSignIn: [import.meta.env.VITE_COGNITO_REDIRECT_SIGNIN],
-                                redirectSignOut: [import.meta.env.VITE_COGNITO_REDIRECT_SIGNOUT],
-                                responseType: 'code' // Standard for Hosted UI
-                            }
-                        }
-                    }
-                }
-            };
-
-            // console.log("[Header.init] Using updated config with OAuth:", updatedConfig);
-            Amplify.configure(updatedConfig);
-            // console.log("[Header.init] Amplify configured successfully!");
         } catch (error) {
-            console.error("[Header.init] Error configuring Amplify:", error);
+             console.error("[Header.init] Error configuring Amplify:", error);
              // Optionally notify the user or fallback
              const container = document.getElementById(containerId);
              if (container) {
@@ -675,33 +646,28 @@ const Header = {
             // 登录按钮 (Redirect to Hosted UI)
             if (event.target.matches('#login-button')) {
                 event.preventDefault();
-                // console.log("Login button clicked, redirecting to hosted UI...");
-                this.showLoading('跳转到登录页面...'); // Translate this?
+                this.showLoading('跳转到登录页面...');
                 try {
-                     // Use Amplify's function to redirect to the Hosted UI (v6)
-                    await signInWithRedirect(); // Changed from federatedSignIn
-                    // Note: Browser will navigate away, hideLoading might not execute here
+                    console.log("[Login] 使用 Amplify V5 登录");
+                    
+                    // V5 风格登录：不传递复杂参数，让配置文件处理细节
+                    await Auth.federatedSignIn();
                 } catch (error) {
-                     this.hideLoading(); // Hide loading on error
-                     // Log the detailed error object to the console
-                     console.error("[Login Error] Failed to redirect to hosted UI:", error);
-                     // Provide a more informative alert if possible, fallback to generic
-                     const errorMessage = error instanceof Error ? error.message : String(error);
-                     alert(`无法跳转到登录页面，请稍后再试。\n错误详情: ${errorMessage}`);
+                    this.hideLoading();
+                    console.error("[Login Error] Failed to redirect to hosted UI:", error);
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    alert(`无法跳转到登录页面，请稍后再试。\n错误详情: ${errorMessage}`);
                 }
             }
 
-            // 登出按钮 (Use Amplify signOut, handles redirect)
+            // 登出按钮 (Use Amplify Auth.signOut, handles redirect)
             if (event.target.matches('#logout-button')) {
                 event.preventDefault();
                 this.showLoading('登出中...'); 
                 try {
-                    // Calling signOut with oauth configured triggers redirect
-                    await signOut({ global: true }); // global:true invalidates tokens everywhere
+                    // 调用Auth.signOut而不是signOut
+                    await Auth.signOut({ global: true });
                     // Redirect is handled by Amplify based on oauth.redirectSignOut
-                     // console.log("Sign out initiated. Amplify will handle redirect.");
-                     // hideLoading might be preempted by redirect
-                     // this.hideLoading(); 
                 } catch (error) {
                     this.hideLoading();
                     console.error('Amplify sign out error:', error);
@@ -1619,7 +1585,13 @@ const Header = {
      },
 };
 
-// Expose Header for potential external calls if needed, otherwise can be removed
-// window.Header = Header;
+// 为了向后兼容V6风格的API调用，提供一些辅助函数
+export const signInWithRedirect = () => {
+    return Auth.federatedSignIn();
+};
+
+export const signOut = (options) => {
+    return Auth.signOut(options);
+};
 
 export default Header; // Export the Header object 
