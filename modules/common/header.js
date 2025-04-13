@@ -46,31 +46,46 @@ const Header = {
         // --- BEGIN AMPLIFY CONFIGURATION (moved here) ---
         try {
             // console.log("[Header.init] Configuring Amplify...");
-            // Construct the final config, adding oauth section for Hosted UI
+
+            // Construct the final config, ensuring oauth block exists and uses env vars
             const updatedConfig = {
                 ...awsconfig, // Spread existing config from aws-exports.js
-                oauth: {
-                    domain: "login.auth.ap-southeast-1.amazoncognito.com", // User provided domain
-                    scope: [ // Standard scopes, ensure they match Cognito App Client config
-                        'openid',
-                        'profile',
-                        'email',
-                        'aws.cognito.signin.user.admin' // Add this scope for user admin actions like updatePassword
-                    ],
-                    redirectSignIn: "http://localhost:5173/templates/pages/Homepage.html", // User provided callback
-                    redirectSignOut: "http://localhost:5173/index.html", // Updated to match user's Cognito setting
-                    responseType: 'code' // Recommended for Amplify with Hosted UI
+                Auth: { // Ensure Auth block exists
+                    ...(awsconfig.Auth || {}), // Spread existing Auth settings if they exist
+                    Cognito: { // Ensure Cognito block exists
+                        ...(awsconfig.Auth?.Cognito || {}), // Spread existing Cognito settings
+                        // Ensure IDs are present (take from awsconfig or add manually if needed)
+                        userPoolId: awsconfig.aws_user_pools_id || 'ap-southeast-1_r5O88umzn',
+                        userPoolWebClientId: awsconfig.aws_user_pools_web_client_id || '4b9noidv0iu0rjn3l7cr3n27sb',
+                        // Define or overwrite the loginWith.oauth section
+                        loginWith: {
+                            oauth: {
+                                domain: "login.auth.ap-southeast-1.amazoncognito.com", // Use the correct domain
+                                scopes: [ // Standard scopes, ensure they match Cognito App Client config
+                                    'openid',
+                                    'profile',
+                                    'email',
+                                    'aws.cognito.signin.user.admin' // If needed for admin actions
+                                ],
+                                // Load redirect URLs from environment variables
+                                redirectSignIn: [import.meta.env.VITE_COGNITO_REDIRECT_SIGNIN],
+                                redirectSignOut: [import.meta.env.VITE_COGNITO_REDIRECT_SIGNOUT],
+                                responseType: 'code' // Standard for Hosted UI
+                            }
+                        }
+                    }
                 }
             };
-            // console.log("[Header.init] Using updated config with OAuth:", updatedConfig); 
+
+            // console.log("[Header.init] Using updated config with OAuth:", updatedConfig);
             Amplify.configure(updatedConfig);
             // console.log("[Header.init] Amplify configured successfully!");
         } catch (error) {
-            console.error("[Header.init] Error configuring Amplify:", error); 
+            console.error("[Header.init] Error configuring Amplify:", error);
              // Optionally notify the user or fallback
              const container = document.getElementById(containerId);
-             if (container) { 
-                 container.innerHTML = `<p style='color:red; text-align:center;'>Error initializing application configuration. Authentication might not work.</p>` + container.innerHTML; 
+             if (container) {
+                 container.innerHTML = `<p style='color:red; text-align:center;'>Error initializing application configuration. Authentication might not work.</p>` + container.innerHTML;
              }
              return; // Stop further initialization if config fails
         }
