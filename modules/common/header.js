@@ -676,15 +676,18 @@ const Header = {
             if (event.target.matches('#login-button')) {
                 event.preventDefault();
                 // console.log("Login button clicked, redirecting to hosted UI...");
-                this.showLoading('跳转到登录页面...');
+                this.showLoading('跳转到登录页面...'); // Translate this?
                 try {
                      // Use Amplify's function to redirect to the Hosted UI (v6)
                     await signInWithRedirect(); // Changed from federatedSignIn
                     // Note: Browser will navigate away, hideLoading might not execute here
                 } catch (error) {
                      this.hideLoading(); // Hide loading on error
-                     console.error("Error during signInWithRedirect redirect:", error);
-                     alert("无法跳转到登录页面，请稍后再试。");
+                     // Log the detailed error object to the console
+                     console.error("[Login Error] Failed to redirect to hosted UI:", error);
+                     // Provide a more informative alert if possible, fallback to generic
+                     const errorMessage = error instanceof Error ? error.message : String(error);
+                     alert(`无法跳转到登录页面，请稍后再试。\n错误详情: ${errorMessage}`);
                 }
             }
 
