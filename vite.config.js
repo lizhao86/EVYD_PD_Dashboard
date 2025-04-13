@@ -31,6 +31,17 @@ const entryHtmlFiles = [
 ];
 
 export default defineConfig({
+  // 添加解析选项，定义路径别名
+  resolve: {
+    alias: {
+      // 添加根路径别名，将/开头的路径映射到项目根目录
+      '/': resolve(__dirname, './'),
+      '/src': resolve(__dirname, './src'),
+      '/scripts': resolve(__dirname, './scripts'),
+      '/modules': resolve(__dirname, './modules'),
+    }
+  },
+  
   build: {
     rollupOptions: {
       input: getEntryPoints(entryHtmlFiles),

@@ -4,7 +4,7 @@
  */
 
 import { Amplify, Auth } from 'aws-amplify';
-import awsconfig from '../src/aws-exports.js';
+import awsconfig from '/src/aws-exports.js';
 
 /**
  * 初始化 Amplify 配置

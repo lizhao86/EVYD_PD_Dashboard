@@ -30,7 +30,7 @@ import {
 import { showFormMessage } from '/scripts/utils/helper.js';
 
 // Import config here as well
-import awsconfig from '../../src/aws-exports.js'; // Adjust path relative to header.js
+import awsconfig from '/src/aws-exports.js'; // 修改使用绝对路径导入
 
 // Import I18n module
 import I18n, { t } from '/scripts/i18n.js';
