@@ -3,9 +3,9 @@
 ## 1 文档信息
 
 - **文档名称**：EVYD 产品经理 AI 工作台产品需求手册
-- **当前版本**：1.6.3
+- **当前版本**：1.6.4
 - **创建日期**：2025-03-01
-- **最后更新**：2025-04-13
+- **最后更新**：2025-04-20
 - **文档状态**：更新中
 - **文档所有者**：EVYD产品团队
 
@@ -31,7 +31,8 @@
 | 1.6.0 | 2025-04-12 | EVYD产品团队 | **重大重构**: 将认证迁移至 AWS Cognito (含 Hosted UI)，存储迁移至 DynamoDB (通过 Amplify AppSync & GraphQL API)。集成 Vite 构建工具。实现基于 Cognito Group 的首次登录角色同步。改进密码修改 UI 校验。 |
 | 1.6.1 | 2025-04-12 | EVYD产品团队 | 实现用户语言偏好持久化存储到 DynamoDB UserSettings。 |
 | 1.6.2 | 2025-04-13 | EVYD产品团队 | 修复三大AI应用(User Story, User Manual, UX Design)的多项交互Bug(停止生成、按钮状态、验证提示、国际化、结果显示等)，确保使用云端配置，并统一相关代码实现。 |
-| 1.6.3 | 2025-04-13 | EVYD产品团队 | **技术稳定性优化**：从 AWS Amplify V6 迁移回 V5，解决了与 Vite 环境兼容性问题导致的 OAuth 登录失败。全面更新所有页面脚本，统一 Amplify 配置加载流程，确保认证服务在所有功能页面正常工作。优化环境变量配置应用于开发与生产环境。 |
+| 1.6.3 | 2025-04-19 | EVYD产品团队 | **技术稳定性优化**：从 AWS Amplify V6 迁移回 V5，解决了与 Vite 环境兼容性问题导致的 OAuth 登录失败。全面更新所有页面脚本，统一 Amplify 配置加载流程，确保认证服务在所有功能页面正常工作。 |
+| 1.6.4 | 2025-04-20 | EVYD产品团队 | **部署与环境优化**：简化CI/CD流程，移除Amplify后端同步步骤，直接构建并部署静态文件到S3。添加环境变量支持，根据环境自动配置认证回调URL。优化代码，减少冗余。 |
 
 ## 3 产品概述
 
@@ -62,6 +63,7 @@ EVYD 产品经理 AI 工作台是基于EVYD科技先进的人工智能技术，�
 - **登出:** 点击应用内"登出"按钮应触发 Cognito 全局登出流程，并重定向回应用指定的注销 URL。
 - **会话管理:** 用户会话由 AWS Amplify 库自动管理（基于 Cognito 返回的 Tokens）。
 - **认证库版本:** 项目使用 AWS Amplify V5 (aws-amplify@5.3.x)，因其在 Vite 环境下更加稳定，尤其是处理 OAuth 重定向流程。
+- **环境适配:** 通过环境变量配置不同环境的重定向URL，自动根据开发/生产环境使用正确的认证回调地址。
 - **首次登录处理:**
     - 新用户（或 DynamoDB 中无记录的用户）首次登录成功后，系统应检查其 Cognito 用户组。
     - 如果用户属于 `admin` 组，应在 DynamoDB 的 `UserSettings` 表中自动创建记录，并将 `role` 设置为 `admin`。
@@ -448,7 +450,7 @@ Follow strictly this Markdown structure:
 - **后端交互:** 通过 **AWS Amplify V5** 库与 AWS 服务交互。
     - **认证:** 使用 `aws-amplify` 中的 `Auth` 服务对接 Cognito 用户池和 Hosted UI。
     - **API:** 使用 `aws-amplify` 中的 API、graphqlOperation 对接 AppSync。
-    - **配置管理:** 基于 `scripts/amplify-config.js` 统一初始化 Amplify。
+    - **配置管理:** 基于 `scripts/amplify-config.js` 统一初始化 Amplify，并支持环境变量覆盖。
 - **环境变量:** 使用 `.env` 和 `.env.production` 文件配置环境特定参数（如登录回调URL）。
 - **(已移除)** 不再依赖本地存储进行核心数据持久化。
 
@@ -474,10 +476,13 @@ Follow strictly this Markdown structure:
 
 ### 7.4 部署架构
 
-- **前端构建:** 可能需要在部署前运行 `npm run build` (Vite) 生成优化后的静态文件。
+- **前端构建:** 使用 `npm run build` (Vite) 生成优化后的静态文件。
+- **构建模式:** 生产环境构建使用 `--mode production` 参数，启用生产环境变量。
 - **托管:** 静态文件托管在 AWS S3 (或其他静态托管服务)。
-- **CI/CD:** 使用 GitHub Actions 自动构建 (如果需要) 并同步到 S3。
-- **后端:** Amplify 会管理 Cognito, DynamoDB, AppSync 等资源的部署。
+- **CI/CD:** GitHub Actions 自动构建并同步到 S3，无需访问 Amplify 后端。
+    - `aws-exports.js` 已包含在项目源码中，避免依赖 Amplify CLI。
+    - 构建过程自动使用生产环境的回调URL。
+- **后端:** Amplify 管理的 Cognito, DynamoDB, AppSync 等资源保持不变。
 
 ## 8 发布计划
 
@@ -493,8 +498,9 @@ Follow strictly this Markdown structure:
 | 安全加固版本 | 2025-04-03 | 增强安全性和性能优化 |
 | 功能修复版本 | 2025-04-06 | 修复账号设置页面密码修改功能，确保用户可以正常更新密码 |
 | 管理面板优化版本 | 2025-04-09 | 修复管理员面板数据加载和API配置功能，统一通用头部组件实现 |
-| 多语言支持版本 | 2025-04-10 | 添加多语言支持，支持简体中文、繁体中文和英文界面切换 |
-| Amplify V5迁移 | 2025-04-13 | 从Amplify V6迁移到V5，解决登录兼容性问题，优化配置加载 |
+| 多语言支持版本 | 2025-04-11 | 添加多语言支持，支持简体中文、繁体中文和英文界面切换 |
+| Amplify V5迁移 | 2025-04-19 | 从Amplify V6迁移到V5，解决登录兼容性问题，优化配置加载 |
+| CI/CD优化版本 | 2025-04-20 | 简化部署流程，添加环境变量支持，确保跨环境一致性 |
 | 功能扩展计划 | TBD | 计划新增高级数据分析功能 |
 
 ## 9 风险与限制
