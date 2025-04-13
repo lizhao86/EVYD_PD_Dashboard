@@ -116,7 +116,9 @@ const UI = {
         const generateButton = document.getElementById('generate-manual'); // Correct button ID
         const stopButton = document.getElementById('stop-generation');
 
+        // 显示结果容器
         if (resultContainer) resultContainer.style.display = 'block';
+        
         if (resultStats) resultStats.style.display = 'none';
         if (resultContent) {
              resultContent.innerHTML = t('common.generatingSimple', { default: '正在生成...'}) + '<span class="cursor"></span>';
@@ -152,6 +154,18 @@ const UI = {
         }
         const stopButton = document.getElementById('stop-generation');
         if(stopButton) stopButton.style.display = 'none';
+    },
+    
+    /**
+     * 显示正在停止生成状态
+     */
+    setStoppingState() {
+        const generateButton = document.getElementById('generate-manual');
+        if (generateButton) {
+            const stoppingText = t('common.stopping', { default: '正在停止...' });
+            generateButton.innerHTML = stoppingText;
+            generateButton.disabled = true;
+        }
     },
     
     displayStats(taskData) {
@@ -260,6 +274,35 @@ const UI = {
             if (!data) console.warn("[UI UM] displaySystemInfo called without data.");
             // else console.warn("[UI UM] System info container/content elements not found.");
         }
+    }
+};
+
+/**
+ * 将当前结果文本渲染为Markdown HTML
+ */
+UI.renderMarkdown = function() {
+    const resultContentEl = document.getElementById('result-content');
+    const resultMarkdownEl = document.getElementById('result-content-markdown');
+    
+    if (!resultContentEl || !resultMarkdownEl) {
+        console.error("Result display elements not found for rendering markdown!");
+        return;
+    }
+    
+    try {
+        const text = resultContentEl.textContent || '';
+        if (!text.trim()) return;
+        
+        const html = marked(text);
+        resultMarkdownEl.innerHTML = html;
+        resultMarkdownEl.style.display = 'block';
+        resultContentEl.style.display = 'none';
+        resultMarkdownEl.scrollTop = resultMarkdownEl.scrollHeight;
+    } catch (error) {
+        console.error("Error rendering markdown:", error);
+        // 保持纯文本显示
+        resultContentEl.style.display = 'block';
+        resultMarkdownEl.style.display = 'none';
     }
 };
 

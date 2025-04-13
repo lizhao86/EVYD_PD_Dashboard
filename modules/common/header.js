@@ -49,7 +49,7 @@ const Header = {
         try {
             // 使用配置辅助函数初始化 Amplify
             configureAmplify();
-            console.log("[Header.init] Amplify configured using amplify-config helper (V5 target).");
+            // console.log("[Header.init] Amplify configured using amplify-config helper (V5 target).");
 
         } catch (error) {
              console.error("[Header.init] Error configuring Amplify:", error);
@@ -132,7 +132,7 @@ const Header = {
 <header class="header">
     <div class="container header-container">
         <div class="logo-container">
-            <img src="ROOT_PATH/assets/images/Variant=White, Lockup=Default.png" alt="EVYD Logo" class="logo">
+            <img src="/Variant=White, Lockup=Default.png" alt="EVYD Logo" class="logo">
             <span class="logo-divider"></span>
             <div class="logo-text">
                 <h1 data-translate="header.title">产品经理 AI 工作台</h1>
@@ -648,7 +648,7 @@ const Header = {
                 event.preventDefault();
                 this.showLoading('跳转到登录页面...');
                 try {
-                    console.log("[Login] 使用 Amplify V5 登录");
+                    // console.log("[Login] 使用 Amplify V5 登录");
                     
                     // V5 风格登录：不传递复杂参数，让配置文件处理细节
                     await Auth.federatedSignIn();

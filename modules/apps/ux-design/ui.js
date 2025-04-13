@@ -29,7 +29,7 @@ const UXDesignUI = {
     resultContainerEl: null,
 
     initUI() {
-        console.log("Initializing UX Design UI...");
+        // console.log("Initializing UX Design UI...");
         this.textareaElement = document.getElementById('requirement-description');
         this.charCountElement = document.getElementById('char-count');
         this.expandTextareaButton = document.getElementById('expand-textarea');
@@ -61,7 +61,7 @@ const UXDesignUI = {
     },
 
     updateCharCountDisplay(count) {
-        console.log(`[UI UX] updateCharCountDisplay called with count: ${count}`);
+        // console.log(`[UI UX] updateCharCountDisplay called with count: ${count}`);
         if (this.charCountElement) {
             this.charCountElement.textContent = count;
             const container = this.charCountElement.closest('.char-counter');
@@ -70,7 +70,7 @@ const UXDesignUI = {
         if (this.generateButton) {
              const isGenerateAction = this.generateButton.getAttribute('data-action') === 'generate';
              const isDisabled = count > 5000 && isGenerateAction;
-             console.log(`[UI UX] Setting generate button disabled state to: ${isDisabled} (count=${count}, isGenerateAction=${isGenerateAction})`);
+             // console.log(`[UI UX] Setting generate button disabled state to: ${isDisabled} (count=${count}, isGenerateAction=${isGenerateAction})`);
              this.generateButton.disabled = isDisabled;
         }
     },
@@ -99,7 +99,7 @@ const UXDesignUI = {
     },
 
     showLoading() {
-        console.log("[UX UI] Showing loading state...");
+        // console.log("[UX UI] Showing loading state...");
         if (this.appInfoLoadingEl) this.appInfoLoadingEl.style.display = 'flex';
         if (this.appInfoErrorEl) this.appInfoErrorEl.style.display = 'none';
         if (this.appInfoEl) this.appInfoEl.style.display = 'none';
@@ -134,7 +134,7 @@ const UXDesignUI = {
     },
 
     showRequestingState() {
-        console.log("[UX UI] Showing requesting state...");
+        // console.log("[UX UI] Showing requesting state...");
         if (this.generateButton) {
             const requestingText = t('common.requesting', { default: '请求中...' });
             this.generateButton.innerHTML = '<div class="loading-circle-container"><div class="loading-circle"></div></div> ' + requestingText;
@@ -147,6 +147,14 @@ const UXDesignUI = {
     },
 
     showGenerationStarted() {
+        // 确保结果容器显示
+        if (this.resultContainerEl) {
+            this.resultContainerEl.style.display = 'block';
+        } else {
+            const resultContainer = document.getElementById('result-container');
+            if (resultContainer) resultContainer.style.display = 'block';
+        }
+        
         if (this.generateButton) {
             this.generateButton.disabled = false;
             const generatingText = t('common.generating', { default: '生成中...点击停止' });
@@ -154,12 +162,15 @@ const UXDesignUI = {
             this.generateButton.setAttribute('data-action', 'stop');
         }
         if (this.stopButton) this.stopButton.style.display = 'none';
-        if(this.resultContainerEl) this.resultContainerEl.style.display = 'block';
+        
         if (this.resultContentEl) {
              this.resultContentEl.innerHTML = t('common.generatingSimple', { default: '正在生成...'}) + '<span class="cursor"></span>';
              this.resultContentEl.style.display = 'block'; // Show text initially
         }
-        if (this.resultMarkdownEl) this.resultMarkdownEl.style.display = 'none'; // Hide markdown initially
+        if (this.resultMarkdownEl) {
+            this.resultMarkdownEl.style.display = 'none'; // Hide markdown initially
+            this.resultMarkdownEl.innerHTML = '';
+        }
         if (this.statsContainerEl) this.statsContainerEl.style.display = 'none';
         if (this.systemInfoContainerEl) this.systemInfoContainerEl.style.display = 'none';
     },
@@ -177,10 +188,21 @@ const UXDesignUI = {
         if (this.stopButton) this.stopButton.style.display = 'none'; 
     },
     
+    /**
+     * 显示正在停止生成状态
+     */
+    setStoppingState() {
+        if (this.generateButton) {
+            const stoppingText = t('common.stopping', { default: '正在停止...' });
+            this.generateButton.innerHTML = stoppingText;
+            this.generateButton.disabled = true;
+        }
+    },
+    
     displayStats(stats) {
-         // --- ADD Simple Entry Log ---
-         console.log('[UI UX] displayStats received data:', stats);
-         // --- END Log ---
+        // console.log('[UI UX] displayStats received data:', stats);
+        const elapsedTime = stats.elapsed_time || 0;
+        const totalSteps = stats.total_steps || 1; // Default to 1 step for UX
          if (this.statsContainerEl) {
              this.statsContainerEl.style.display = 'flex';
              const elapsedEl = this.statsContainerEl.querySelector('#elapsed-time');
@@ -188,8 +210,8 @@ const UXDesignUI = {
              const tokensEl = this.statsContainerEl.querySelector('#total-tokens');
              const secondsSuffix = t('uxDesign.secondsSuffix', { default: '秒' });
 
-             if (elapsedEl && stats.elapsed_time !== undefined) elapsedEl.textContent = `${Number(stats.elapsed_time).toFixed(2)}${secondsSuffix}`;
-             if (stepsEl && stats.total_steps !== undefined) stepsEl.textContent = stats.total_steps;
+             if (elapsedEl && elapsedTime !== undefined) elapsedEl.textContent = `${Number(elapsedTime).toFixed(2)}${secondsSuffix}`;
+             if (stepsEl && totalSteps !== undefined) stepsEl.textContent = totalSteps;
              if (tokensEl && stats.total_tokens !== undefined) tokensEl.textContent = stats.total_tokens;
          } else {
               console.error("Stats container not found.");
@@ -247,6 +269,41 @@ const UXDesignUI = {
     // renderMarkdown(markdownContent) { ... }
     // appendRawText(textChunk) { ... }
     // updateResultContent(content, isMarkdown = false) { ... }
+    
+    /**
+     * 将当前结果文本渲染为Markdown HTML
+     */
+    renderMarkdown() {
+        const resultContentEl = this.resultContentEl || document.getElementById('result-content');
+        const resultMarkdownEl = this.resultMarkdownEl || document.getElementById('result-content-markdown');
+        const resultContainerEl = this.resultContainerEl || document.getElementById('result-container');
+        
+        if (!resultContentEl || !resultMarkdownEl) {
+            console.error("Result display elements not found for rendering markdown!");
+            return;
+        }
+        
+        // 确保结果容器显示
+        if (resultContainerEl) {
+            resultContainerEl.style.display = 'block';
+        }
+        
+        try {
+            const text = resultContentEl.textContent || '';
+            if (!text.trim()) return;
+            
+            const html = marked(text);
+            resultMarkdownEl.innerHTML = html;
+            resultMarkdownEl.style.display = 'block';
+            resultContentEl.style.display = 'none';
+            resultMarkdownEl.scrollTop = resultMarkdownEl.scrollHeight;
+        } catch (error) {
+            console.error("Error rendering markdown:", error);
+            // 保持纯文本显示
+            resultContentEl.style.display = 'block';
+            resultMarkdownEl.style.display = 'none';
+        }
+    },
 };
 
 // --- ADD NEW FUNCTIONS ---

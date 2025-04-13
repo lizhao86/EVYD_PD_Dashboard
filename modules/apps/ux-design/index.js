@@ -19,166 +19,171 @@ const UXDesignApp = {
     state: {
         apiKey: null,
         apiEndpoint: null,
-        currentConversationId: null, // For potential future chat-like interaction
-        currentMessageId: null
+        currentUser: null,
+        appInfo: null,
+        currentConversationId: null,
+        currentMessageId: null,
+        isGenerating: false
     },
 
     async init() {
-        console.log('Initializing UX Design App (async)...');
+        // 首先等待Header初始化
         await Header.init();
-        console.log("Header initialized. Current user:", Header.currentUser);
-
+        
+        // 检查用户登录状态
         if (!Header.currentUser) {
-            console.log('User not logged in.');
-            UI.showError(t('common.loginRequired', {default: '请先登录以使用此功能。'})); 
-            return; 
-        }
-
-        try {
-            const userSettings = Header.userSettings || await getCurrentUserSettings(); 
-            const globalConfig = await getGlobalConfig();
-
-            // Use optional chaining and nullish coalescing for safety
-            this.state.apiKey = userSettings?.apiKeys?.uxDesign ?? null;
-            this.state.apiEndpoint = globalConfig?.apiEndpoints?.uxDesign ?? null;
-
-            if (!this.state.apiKey) {
-                 UI.showError(t('uxDesign.apiKeyError', {default: '无法获取您的 UX Design API 密钥，请检查账号设置。'}), 'user-settings-modal');
-                 return;
-            }
-             if (!this.state.apiEndpoint) {
-                 UI.showError(t('uxDesign.apiEndpointError', {default: '无法获取 UX Design API 地址，请联系管理员检查全局配置。'}), 'admin-panel-modal');
-                 return;
-            }
-            
-            console.log("API Key and Endpoint loaded for UX Design.");
-
-            UI.initUI(); // Initialize UI elements specific to this page
-            await API.getAppInfo(this.state.apiKey, this.state.apiEndpoint); // Fetch Dify app info
-            this.bindEvents();
-
-        } catch (error) {
-             console.error("Error fetching settings for UX Design app:", error);
-             UI.showError(t('common.configLoadError', {default: '加载应用配置时出错，请稍后重试。'}));
-        }
-    },
-
-    bindEvents() {
-        console.log('Binding UX Design events...');
-        
-        // App specific events
-        const retryButton = document.getElementById('retry-connection');
-        if (retryButton) retryButton.addEventListener('click', () => {
-            if (this.state.apiKey && this.state.apiEndpoint) {
-                API.getAppInfo(this.state.apiKey, this.state.apiEndpoint);
-            } else {
-                console.error("Cannot retry connection, API config missing in state.");
-            }
-        });
-
-        const requirementDesc = document.getElementById('requirement-description');
-        if (requirementDesc) requirementDesc.addEventListener('input', this.updateCharCount.bind(this));
-
-        const expandTextarea = document.getElementById('expand-textarea');
-        if (expandTextarea) expandTextarea.addEventListener('click', this.toggleTextareaExpand.bind(this));
-
-        const clearForm = document.getElementById('clear-form');
-        if (clearForm) clearForm.addEventListener('click', this.handleClearForm.bind(this));
-        
-        const generateButton = document.getElementById('generate-prompt');
-        if (generateButton) {
-            console.log('[bindEvents UX] Found button #generate-prompt, attaching listener.');
-            generateButton.addEventListener('click', this.handleGenerate.bind(this));
-        } else {
-            console.error('[bindEvents UX] Could not find button #generate-prompt!');
-        }
-        
-        // Assuming stop button exists with this ID
-        const stopGeneration = document.getElementById('stop-generation'); 
-        if (stopGeneration) stopGeneration.addEventListener('click', this.handleStopGeneration.bind(this));
-        
-        const copyResult = document.getElementById('copy-result');
-        if (copyResult) copyResult.addEventListener('click', this.handleCopyResult.bind(this));
-
-        const toggleSystemInfoButton = document.getElementById('toggle-system-info');
-        if (toggleSystemInfoButton) {
-           toggleSystemInfoButton.addEventListener('click', () => {
-                const systemInfoContent = document.getElementById('system-info-content');
-                const isHidden = systemInfoContent.style.display === 'none';
-                systemInfoContent.style.display = isHidden ? 'block' : 'none';
-                toggleSystemInfoButton.classList.toggle('collapsed', !isHidden);
-           });
-        }
-    },
-
-    /**
-     * Generate UX Prompt
-     */
-    async handleGenerate() {
-        // --- ADD ENTRY LOG ---
-        console.log("[Index UX] handleGenerate function called!");
-        // --- END LOG ---
-        const generateButton = document.getElementById('generate-prompt'); // <-- Check ID
-        const action = generateButton?.getAttribute('data-action');
-
-        if (action === 'stop') {
-            // console.log('Stop button (via generate button) clicked, Message ID:', this.state.currentMessageId);
-            this.handleStopGeneration();
+            UI.showError(t('uxDesign.notLoggedIn', { default: '请先登录以使用此功能。'}));
             return;
         }
 
-        const requirementDesc = document.getElementById('requirement-description').value;
-        UI.clearInputError('requirement');
-        if (!requirementDesc) {
-             UI.showInputError('requirement', t('uxDesign.error.emptyRequirement', {default: '请填写需求描述'}));
-                return;
-            }
-            
-        if (!this.state.apiKey || !this.state.apiEndpoint || !Header.currentUser) {
-             if (typeof UI !== 'undefined' && UI.showError) UI.showError(t('common.configLoadError', {default: 'API 配置或用户信息丢失，无法生成。'}));
-             else alert(t('common.configLoadError', {default: 'API 配置或用户信息丢失，无法生成。'}));
-                return;
-            }
-        
-        // Reset IDs before starting
-        this.state.currentMessageId = null;
-        // Keep existing conversation ID if available
-        // this.state.currentConversationId = this.state.currentConversationId || null;
-        UI.showRequestingState();
-
         try {
-            // Call API.generateUXPrompt. API will set messageId state during stream.
-            // Await to know when complete and get final conversation ID.
-            const result = await API.generateUXPrompt(requirementDesc, this.state.apiKey, this.state.apiEndpoint, Header.currentUser, this.state.currentConversationId);
+            // 初始化UI
+            if (typeof UI.initUI === 'function') {
+                UI.initUI();
+            }
+
+            // 加载配置 - 使用与user-story相同的模式
+            const userSettings = Header.userSettings || await getCurrentUserSettings();
+            const globalConfig = await getGlobalConfig();
             
-            /* --- REMOVED OLD ID HANDLING ---
-            // Store IDs AFTER await
-            if (result) {
-                this.state.currentConversationId = result.conversationId;
-                this.state.currentMessageId = result.taskId; 
-                console.log(\"[Index UX] Stored Task/Message ID for stopping:\", this.state.currentMessageId);\n            } else {
-                 console.warn(\"[Index UX] API call did not return valid IDs.\");\n            }
-            */
-            // UI reset handled by API stream handler
+            if (!userSettings || !userSettings.apiKeys || 
+                (!userSettings.apiKeys.uxDesign && !userSettings.apiKeys.dify)) {
+                UI.showError(t('uxDesign.apiKeyMissing', { default: '无法获取您的 UX Design API 密钥，请检查账号设置。'}));
+                return;
+            }
+            
+            if (!globalConfig || !globalConfig.apiEndpoints || 
+                (!globalConfig.apiEndpoints.uxDesign && !globalConfig.apiEndpoints.dify)) {
+                UI.showError(t('uxDesign.apiEndpointMissing', { default: '无法获取 UX Design API 地址，请联系管理员检查全局配置。'}));
+                return;
+            }
+            
+            // 设置API配置，支持fallback到dify
+            this.state.apiKey = userSettings.apiKeys.uxDesign || userSettings.apiKeys.dify;
+            this.state.apiEndpoint = globalConfig.apiEndpoints.uxDesign || globalConfig.apiEndpoints.dify;
+            this.state.currentUser = Header.currentUser;
+            
+            // 获取应用信息
+            this.fetchAppInformation();
+            
+            // 绑定事件
+            this.bindEvents();
         } catch (error) {
-            console.error("Error caught in handleGenerate (UX Design):", error);
-            // UI completion should be handled in API/stream handler
-            // UI.showGenerationCompleted(); // Reset button on error - now redundant
+            console.error("Error initializing UX Design App:", error);
+            UI.showError(t('uxDesign.initError', { default: '初始化应用时出错，请刷新页面重试。'}));
         }
     },
 
-    /**
-     * Stop Generation (UX Design)
-     */
-    handleStopGeneration() {
-        console.log("Handling stop generation request (UX Design)...");
-        // Stop logic should now work correctly
-        if (this.state.currentMessageId && this.state.apiKey && this.state.apiEndpoint && Header.currentUser) {
-            API.stopGeneration(this.state.currentMessageId, this.state.apiKey, this.state.apiEndpoint, Header.currentUser);
-            this.state.currentMessageId = null; // Clear ID after requesting stop
-        } else {
-            console.warn("Cannot stop, missing messageId or config/user. State was:", this.state);
-            if (typeof UI !== 'undefined' && UI.showGenerationCompleted) UI.showGenerationCompleted(); 
+    async fetchAppInformation() {
+        if (!this.state.apiKey || !this.state.apiEndpoint) return;
+        try {
+            const info = await API.getAppInfo(this.state.apiKey, this.state.apiEndpoint);
+            if (info) this.state.appInfo = info;
+        } catch (error) { /* Handled in API/UI */ }
+    },
+
+    bindEvents() {
+        const generateButton = document.getElementById('generate-prompt');
+        const promptInput = document.getElementById('requirement-description');
+
+        if (promptInput) {
+            promptInput.addEventListener('input', () => {
+                UI.updateCharCountDisplay(promptInput.value.length);
+                const currentAction = generateButton.getAttribute('data-action');
+                const isGenerateAction = currentAction === 'generate';
+                
+                // 如果UI有这个方法就调用，否则直接设置禁用状态
+                if (typeof UI.updateGenerateButtonState === 'function') {
+                    UI.updateGenerateButtonState(promptInput.value.trim().length, isGenerateAction);
+                } else {
+                    generateButton.disabled = promptInput.value.trim().length === 0 || 
+                                               promptInput.value.length > 5000;
+                }
+            });
+        }
+
+        if (generateButton) {
+            generateButton.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const currentAction = generateButton.getAttribute('data-action');
+
+                if (currentAction === 'stop') {
+                    await this.stopGeneration();
+                } else {
+                    await this.handleGenerate(promptInput.value.trim());
+                }
+            });
+        }
+        
+        // 其他可能的事件绑定
+        const clearFormButton = document.getElementById('clear-form');
+        if (clearFormButton) {
+            clearFormButton.addEventListener('click', this.handleClearForm.bind(this));
+        }
+
+        const copyResultButton = document.getElementById('copy-result');
+        if (copyResultButton) {
+            copyResultButton.addEventListener('click', this.handleCopyResult.bind(this));
+        }
+
+        const expandTextareaButton = document.getElementById('expand-textarea');
+        if (expandTextareaButton) {
+            expandTextareaButton.addEventListener('click', this.toggleTextareaExpand.bind(this));
+        }
+    },
+
+    async handleGenerate(prompt) {
+        if (!prompt) {
+            UI.showInputError('requirement', t('uxDesign.promptRequired', { default: '请输入需求描述。'}));
+            return;
+        }
+        UI.clearInputError('requirement');
+        UI.showRequestingState();
+        this.state.isGenerating = true;
+
+        try {
+            const result = await API.generateUXPrompt(
+                prompt,
+                this.state.apiKey,
+                this.state.apiEndpoint,
+                this.state.currentUser,
+                this.state.currentConversationId
+            );
+            // API handles UI updates during stream
+            // Update conversation ID from result
+            if (result && result.conversationId) {
+                this.state.currentConversationId = result.conversationId;
+            } else {
+                console.warn("[Index UX] Did not receive conversationId from API result.");
+            }
+        } catch (error) {
+            // API logs error, UI shows error
+            this.state.isGenerating = false;
+             if(typeof UI !== 'undefined' && UI.showGenerationCompleted) {
+                 UI.showGenerationCompleted(); // Ensure button resets on error
+            }
+        } // isGenerating is set to false by API stream handler on completion/error/stop
+    },
+
+    async stopGeneration() {
+        if (!this.state.isGenerating || !this.state.currentMessageId) {
+            console.warn("Stop request ignored: Not generating or no message ID.");
+            return;
+        }
+        try {
+            UI.setStoppingState();
+            await API.stopGeneration(
+                this.state.currentMessageId,
+                this.state.apiKey,
+                this.state.apiEndpoint,
+                this.state.currentUser
+            );
+            // UI state updated in API/UI modules
+            UI.showGenerationCompleted(); 
+        } catch (error) {
+            UI.showGenerationCompleted(); // Reset button on stop error
+        } finally {
+            this.state.isGenerating = false;
         }
     },
 
@@ -275,7 +280,4 @@ document.addEventListener('DOMContentLoaded', () => {
     UXDesignApp.init();
 });
 
-// export default UXDesignApp; 
-
-// --- ADD EXPORT ---
 export default UXDesignApp; 

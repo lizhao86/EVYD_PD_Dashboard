@@ -4,6 +4,7 @@
  */
 
 import { t } from '/scripts/i18n.js'; // Import translation helper
+import { marked } from 'marked'; // 导入 marked 库用于 Markdown 转换
 // Remove Header import if not directly used for auth state here
 // import Header from '/modules/common/header.js'; 
 
@@ -13,7 +14,6 @@ const UI = {
      * 初始化用户界面
      */
     initUserInterface() {
-        console.log("Initializing User Story UI elements...");
         const resultContainer = document.getElementById('result-container');
         if(resultContainer) resultContainer.style.display = 'none';
         
@@ -207,10 +207,6 @@ const UI = {
      * 显示任务统计数据
      */
     displayStats(taskData) {
-        // --- ADD Simple Entry Log ---
-        console.log('[UI] displayStats received data:', taskData);
-
-        // console.log('Displaying stats for User Story:', taskData); // Keep original log
         const elapsedTime = taskData.elapsed_time || 0;
         const totalSteps = taskData.total_steps || 0;
         const totalTokens = taskData.total_tokens || 0;
@@ -230,11 +226,7 @@ const UI = {
         if (totalStepsElement && taskData.total_steps !== undefined) totalStepsElement.textContent = taskData.total_steps;
         if (totalTokensElement && taskData.total_tokens !== undefined) totalTokensElement.textContent = taskData.total_tokens;
 
-        // --- ADD LOGS ---
-        console.log(`[UI] Setting display for #result-stats to 'flex'. Current display was: ${statsContainer.style.display}`);
         statsContainer.style.display = 'flex';
-        console.log(`[UI] New display for #result-stats: ${statsContainer.style.display}`);
-        // --- END LOGS ---
     },
     
     /**
@@ -308,8 +300,37 @@ const UI = {
         } else {
             if (!taskId) console.warn("[UI US] displaySystemInfo called without taskId.");
         }
-    }
+    },
     // --- END System Info Update Function ---
+
+    /**
+     * 将当前结果文本渲染为Markdown HTML
+     */
+    renderMarkdown() {
+        const resultContentEl = document.getElementById('result-content');
+        const resultMarkdownEl = document.getElementById('result-content-markdown');
+        
+        if (!resultContentEl || !resultMarkdownEl) {
+            console.error("Result display elements not found for rendering markdown!");
+            return;
+        }
+        
+        try {
+            const text = resultContentEl.textContent || '';
+            if (!text.trim()) return;
+            
+            const html = marked(text);
+            resultMarkdownEl.innerHTML = html;
+            resultMarkdownEl.style.display = 'block';
+            resultContentEl.style.display = 'none';
+            resultMarkdownEl.scrollTop = resultMarkdownEl.scrollHeight;
+        } catch (error) {
+            console.error("Error rendering markdown:", error);
+            // 保持纯文本显示
+            resultContentEl.style.display = 'block';
+            resultMarkdownEl.style.display = 'none';
+        }
+    }
 };
 
 // Export UI object for index.js to use

@@ -7,76 +7,77 @@
 const API = {
     /**
      * 获取应用信息
+     * @param {string} apiKey 
+     * @param {string} apiEndpoint 
      */
-    async fetchAppInfo() {
-        const currentUser = Auth.checkAuth();
-        if (!currentUser) return;
-        
-        const apiKey = currentUser.apiKeys.requirementsAnalysis;
-        if (!apiKey) {
-            UI.showError('未配置API密钥，请联系管理员为您的账户配置需求分析工具的API密钥。');
-            return;
+    async getAppInfo(apiKey, apiEndpoint) {
+        if (!apiKey || !apiEndpoint) {
+            console.error("Missing API Key or Endpoint for getAppInfo");
+            // UI.showError('缺少必要配置，无法获取应用信息。'); // Assuming UI module handles this
+            return null;
         }
-        
-        const globalConfig = Config.getGlobalConfig();
-        const apiEndpoint = globalConfig.apiEndpoints.requirementsAnalysis;
-        if (!apiEndpoint) {
-            UI.showError('未配置API地址，请联系管理员配置全局API地址。');
-            return;
-        }
-        
-        // 显示加载状态
-        UI.showLoading();
-        
-        // 处理API基础URL
         const baseUrl = Utils.getApiBaseUrl(apiEndpoint);
-        const infoUrl = `${baseUrl}/info`;
-        
+        const infoUrl = `${baseUrl}/info`; // Adjust if Dify has a different info endpoint
+
         try {
             const response = await fetch(infoUrl, {
                 method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${apiKey}`,
-                    'Content-Type': 'application/json'
-                }
+                headers: { 'Authorization': `Bearer ${apiKey}` }
             });
-            
-            if (!response.ok) {
-                throw new Error(`API响应错误: ${response.status} ${response.statusText}`);
-            }
-            
+            if (!response.ok) throw new Error(`Request failed: ${response.status}`);
             const data = await response.json();
-            console.log('应用信息:', data);
-            
-            // 更新UI显示应用信息
-            UI.updateAppInfo(data);
-            
-            // 隐藏加载状态
-            UI.hideLoading();
-            
+            // console.log('应用信息:', data);
+            return data;
         } catch (error) {
             console.error('获取应用信息失败:', error);
-            UI.showError(`获取应用信息失败: ${error.message}`);
-            UI.hideLoading();
+            // UI.showError(`获取应用信息失败: ${error.message}`);
+            return null;
         }
     },
-    
+
     /**
-     * 分析需求
-     * @param {string} requirementText 需求文本
+     * 分析需求文本
+     * @param {string} requirementText 
+     * @param {string} apiKey 
+     * @param {string} apiEndpoint 
+     * @param {object} user 
      */
-    async analyzeRequirements(requirementText) {
-        // TODO: 实现需求分析API调用
-        console.log('分析需求:', requirementText);
-        
-        // 模拟API调用，实际项目中需要替换为真实API
-        UI.showLoading();
-        
-        setTimeout(() => {
-            UI.hideLoading();
-            UI.showMessage('需求分析功能正在开发中，敬请期待！', 'info');
-        }, 1500);
+    async analyzeRequirements(requirementText, apiKey, apiEndpoint, user) {
+        if (!apiKey || !apiEndpoint || !user || !requirementText) {
+            console.error("Missing parameters for analyzeRequirements");
+            // UI.showError('缺少必要参数，无法分析需求。');
+            return null;
+        }
+        const baseUrl = Utils.getApiBaseUrl(apiEndpoint);
+        // Determine the correct Dify endpoint (Workflow run? Chat?)
+        // Let's assume it's a workflow for now:
+        const runUrl = `${baseUrl}/workflows/run`; 
+
+        try {
+            // Prepare the request data based on the workflow's expected inputs
+            const requestData = {
+                inputs: {
+                    "requirement_text": requirementText // Adjust input name if needed
+                },
+                response_mode: "blocking", // Or "streaming" if needed
+                user: user.username
+            };
+            // console.log('分析需求:', requirementText);
+            const response = await fetch(runUrl, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestData)
+            });
+            if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+            const result = await response.json();
+            // Potentially process the result further if needed
+            return result;
+        } catch (error) {
+            console.error('需求分析 API 调用失败:', error);
+            // UI.showError(`需求分析失败: ${error.message}`);
+            return null;
+        }
     }
-    
-    // 其他API方法...
-}; 
+};
+
+export default API; 

@@ -80,15 +80,13 @@
 - **可扩展性:** 模块化设计。
 
 ## 最近更新 (重点)
-- **[2025-04-13]** **部署优化:** 简化CI/CD流程，移除Amplify后端同步步骤，直接构建并部署静态文件到S3。添加环境变量支持，根据环境自动使用正确的认证回调URL。
-- **[2025-04-13]** **重大修复:** 成功从 AWS Amplify V6 迁移回 V5，解决了与 Vite 环境下 OAuth 重定向登录的兼容性问题。统一配置加载，确保所有页面正确初始化 Amplify。
-- **[2025-04-12]** **重大重构:** 迁移认证至 AWS Cognito (Hosted UI)，存储至 DynamoDB (Amplify AppSync/GraphQL)，集成 Vite。
-- **[2025-04-12]** **功能:** 实现用户语言偏好持久化存储到 DynamoDB。
-- **[2025-04-13]** **修复与统一 (v1.6.2):** 
-    - 解决了 User Story, User Manual, UX Design 应用无法停止生成、按钮状态反馈不清晰、输入验证提示不友好、国际化文本显示错误、统计/系统信息无法显示、Markdown渲染失败等多个Bug。
-    - 确保应用正确使用从 DynamoDB 获取的云端配置与认证信息。
-    - 统一了三个应用中处理状态、显示统计/系统信息、按钮ID、API流处理等逻辑的命名约定和代码实现。
-- **[2025-04-13]** **代码优化:** 移除 `scripts/utils/helper.js` 中未使用的工具函数 (`generateUUID`, `formatDate`, `debounce`, `throttle`)，完成 `helper.js` 整合。
+- **[2025-04-14]** **UI改进与Bug修复:** 修复所有页面的favicon加载问题，确保统一的浏览器标签图标显示。统一三个AI应用(User Story, User Manual, UX Design)的Markdown渲染功能，修复生成结果显示问题。解决API流处理和UI交互中的命名不一致问题，如"UI.setGeneratingState is not a function"错误。
+- **[2025-04-13]** **代码清理 (续)**: 移除项目中所有JS文件中用于调试的 `console.log` 语句。
+- **[2025-04-13]** **代码清理**: 移除 `scripts/utils/helper.js` 中未被使用的工具函数 (`generateUUID`, `formatDate`, `debounce`, `throttle`)，完成 `helper.js` 整合。
+- **[2025-04-13]** **部署与环境优化**：简化CI/CD流程，移除Amplify后端同步步骤，直接构建并部署静态文件到S3。添加环境变量支持，根据环境自动配置认证回调URL。优化代码，减少冗余。
+- **[2025-04-13]** **技术稳定性优化**：从 AWS Amplify V6 迁移回 V5，解决了与 Vite 环境兼容性问题导致的 OAuth 登录失败。全面更新所有页面脚本，统一 Amplify 配置加载流程，确保认证服务在所有功能页面正常工作。
+- **[2025-04-13]** 修复三大AI应用(User Story, User Manual, UX Design)的多项交互Bug(停止生成、按钮状态、验证提示、国际化、结果显示等)，确保使用云端配置，并统一相关代码实现。
+- **[2025-04-12]** 实现用户语言偏好持久化存储到 DynamoDB UserSettings。
 
 ## 字体使用
 项目使用以下字体设置：

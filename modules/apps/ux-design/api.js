@@ -27,7 +27,7 @@ const API = {
         const infoUrl = `${baseUrl}/info`; // Verify Dify endpoint for app info
         
         try {
-            console.log(`[UX API] Trying to connect: ${infoUrl}`);
+            // console.log(`[UX API] Trying to connect: ${infoUrl}`);
             const response = await fetch(infoUrl, {
             method: 'GET',
                 headers: { 'Authorization': `Bearer ${apiKey}` }
@@ -38,7 +38,7 @@ const API = {
                  throw new Error(`Request failed: ${response.status} ${response.statusText}. Details: ${errorDetail}`);
             }
             const data = await response.json();
-            console.log('[UX API] App info received:', data);
+            // console.log('[UX API] App info received:', data);
             if (!data.name) data.name = 'UX 界面设计助手'; // Default name
             UI.displayAppInfo(data);
             return data; // Return data for index.js
@@ -83,7 +83,7 @@ const API = {
                 auto_generate_name: !conversationId
         };
         
-            console.log('[UX API] Sending chat request:', requestData);
+            // console.log('[UX API] Sending chat request:', requestData);
             const response = await fetch(chatUrl, {
             method: 'POST',
                 headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
@@ -159,10 +159,7 @@ const API = {
                           capturedTaskId = data.message_id;
                           if (UXDesignApp && UXDesignApp.state) {
                               UXDesignApp.state.currentMessageId = capturedTaskId;
-                              console.log('[UX API Stream] Updated UXDesignApp.state.currentMessageId:', UXDesignApp.state.currentMessageId);
-                              if (!capturedConversationId && typeof UI !== 'undefined' && UI.showGenerationStarted) {
-                                  UI.showGenerationStarted();
-                              }
+                              // console.log('[UX API Stream] Updated UXDesignApp.state.currentMessageId:', UXDesignApp.state.currentMessageId);
                           } else {
                               console.warn('[UX API Stream] UXDesignApp state not accessible to update messageId.');
                           }
@@ -171,7 +168,7 @@ const API = {
                           capturedConversationId = data.conversation_id;
                            if (UXDesignApp && UXDesignApp.state) {
                               UXDesignApp.state.currentConversationId = capturedConversationId;
-                              console.log('[UX API Stream] Updated UXDesignApp.state.currentConversationId:', UXDesignApp.state.currentConversationId);
+                              // console.log('[UX API Stream] Updated UXDesignApp.state.currentConversationId:', UXDesignApp.state.currentConversationId);
                           } else {
                               console.warn('[UX API Stream] UXDesignApp state not accessible to update conversationId.');
                           }
@@ -183,18 +180,18 @@ const API = {
                          usageInfo = data.metadata.usage;
                          const endTime = Date.now();
                          const elapsedTime = (endTime - startTime) / 1000;
-                         console.log(`[UX API Stream] Preparing to call UI.displayStats. Data:`, { elapsed_time: elapsedTime, total_tokens: usageInfo.total_tokens || 0, total_steps: 1 });
-                         if(typeof UI !== 'undefined' && UI.displayStats) { 
-                            console.log("[UX API Stream] UI.displayStats function found. Attempting call...");
+                         // console.log(`[UX API Stream] Preparing to call UI.displayStats. Data:`, { elapsed_time: elapsedTime, total_tokens: usageInfo.total_tokens || 0, total_steps: 1 });
+                         if (typeof UI.displayStats === 'function') { // Check function existence
+                            // console.log("[UX API Stream] UI.displayStats function found. Attempting call...");
                             try {
                                 UI.displayStats({ 
                                     elapsed_time: elapsedTime, 
                                     total_tokens: usageInfo.total_tokens || 0, 
                                     total_steps: 1 
                                 });
-                                console.log("[UX API Stream] Call to UI.displayStats completed.");
+                                // console.log("[UX API Stream] Call to UI.displayStats completed.");
                             } catch (uiError) {
-                                console.error("[UX API Stream] Error occurred *during* UI.displayStats execution:", uiError);
+                                console.error("[UX API Stream] Error calling UI.displayStats:", uiError); // Keep error logs
                             }
                          } else {
                              console.error("[UX API Stream] UI object or UI.displayStats function NOT found!");
@@ -216,13 +213,19 @@ const API = {
          }
          
          // Final Render after stream ends
-         console.log("[UX Stream] Rendering final Markdown content.");
+         // console.log("[UX Stream] Rendering final Markdown content.");
          try {
-             const html = marked(resultText);
-             resultMarkdownEl.innerHTML = html;
-             resultMarkdownEl.style.display = 'block';
-             resultContentEl.style.display = 'none';
-             resultMarkdownEl.scrollTop = resultMarkdownEl.scrollHeight;
+             // 使用UI模块的renderMarkdown方法进行统一处理
+             if (typeof UI.renderMarkdown === 'function') {
+                 UI.renderMarkdown();
+             } else {
+                 // 后备处理，如果方法不存在
+                 const html = marked(resultText);
+                 resultMarkdownEl.innerHTML = html;
+                 resultMarkdownEl.style.display = 'block';
+                 resultContentEl.style.display = 'none';
+                 resultMarkdownEl.scrollTop = resultMarkdownEl.scrollHeight;
+             }
          } catch (markdownError) {
              console.error("Error converting final markdown:", markdownError);
              resultContentEl.textContent = resultText; // Fallback to text
@@ -250,7 +253,7 @@ const API = {
         const baseUrl = getApiBaseUrl(apiEndpoint);
         const stopUrl = `${baseUrl}/chat-messages/${messageId}/stop`; 
         try {
-            console.log(`[UX API] Sending stop request: ${stopUrl}`);
+            // console.log(`[UX API] Sending stop request: ${stopUrl}`);
             const response = await fetch(stopUrl, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
@@ -258,7 +261,7 @@ const API = {
             });
             if (!response.ok) throw new Error(`Request failed: ${response.status}`);
             const data = await response.json();
-            console.log('[UX API] Stop generation response:', data);
+            // console.log('[UX API] Stop generation response:', data);
             if (data.result === 'success') {
                  if (typeof UI !== 'undefined' && UI.showStopMessage) UI.showStopMessage();
                  if (typeof UI !== 'undefined' && UI.showGenerationCompleted) UI.showGenerationCompleted();

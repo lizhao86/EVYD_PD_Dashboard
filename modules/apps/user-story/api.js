@@ -139,8 +139,8 @@ const API = {
         let capturedTaskId = null; // Local variable for tracking
         let systemInfo = {};
         let statsUpdated = false;
-        // --- ADD Flag ---
         let isGenerationStartedUIUpdated = false; 
+        let streamEnded = false;
         
         // Get elements directly inside this handler
         const resultContentEl = document.getElementById('result-content');
@@ -190,28 +190,28 @@ const API = {
                       // Handle stats update from message_end or workflow_finished
                       if (data.event === 'message_end' || data.event === 'workflow_finished') {
                           // --- ADD Log to check data structure ---
-                          console.log(`[API Stream] Received ${data.event} event:`, data);
+                          // console.log(`[API Stream] Received ${data.event} event:`, data);
                           const usageData = data.metadata?.usage || data.data?.usage || data.data; // Check multiple locations
-                          console.log(`[API Stream] Extracted usageData for stats:`, usageData);
+                          // console.log(`[API Stream] Extracted usageData for stats:`, usageData);
                           // Ensure we have the necessary fields from usageData according to API doc
                           if (!statsUpdated && usageData && usageData.total_tokens !== undefined && usageData.elapsed_time !== undefined && usageData.total_steps !== undefined) {
                                const endTime = Date.now(); // Might need startTime from index.js?
                                // Use elapsed_time directly from Dify if available
                                const elapsedTime = usageData.elapsed_time;
                                // --- MODIFY Logging and add Try/Catch ---
-                               console.log(`[API Stream] Preparing to call UI.displayStats. Data:`, { elapsed_time: elapsedTime, total_tokens: usageData.total_tokens, total_steps: usageData.total_steps });
+                               // console.log(`[API Stream] Preparing to call UI.displayStats. Data:`, { elapsed_time: elapsedTime, total_tokens: usageData.total_tokens, total_steps: usageData.total_steps });
                                // --- MODIFY Check and Call --- 
                                if (typeof UI !== 'undefined' && UI.displayStats) { // Check for displayStats
-                                    console.log("[API Stream] UI.displayStats function found. Attempting call..."); // Log correct name
+                                    // console.log("[API Stream] UI.displayStats function found. Attempting call..."); // Log correct name
                                     try {
                                         UI.displayStats({ // Call correct name
                                            elapsed_time: elapsedTime,
                                            total_tokens: usageData.total_tokens || 0,
                                            total_steps: usageData.total_steps || 1 
                                         });
-                                        console.log("[API Stream] Call to UI.displayStats completed."); // Log correct name
-                                    } catch (uiError) {
-                                        console.error("[API Stream] Error occurred *during* UI.displayStats execution:", uiError); // Log correct name
+                                        // console.log("[API Stream] Call to UI.displayStats completed."); // Log correct name
+                                    } catch (e) {
+                                        console.error("[API Stream] Error calling UI.displayStats:", e); // Keep error logs
                                     }
                                     statsUpdated = true;
                                } else {
@@ -230,10 +230,10 @@ const API = {
                       // --- ADD Task ID Capture and State Update ---
                       if (data.event === 'workflow_started' && data.task_id && !capturedTaskId) {
                            capturedTaskId = data.task_id;
-                           console.log('Captured Task ID:', capturedTaskId);
+                           // console.log('Captured Task ID:', capturedTaskId);
                            if (UserStoryApp && UserStoryApp.state) {
                                UserStoryApp.state.currentTaskId = capturedTaskId;
-                               console.log('[API Stream] Updated UserStoryApp.state.currentTaskId:', UserStoryApp.state.currentTaskId);
+                               // console.log('[API Stream] Updated UserStoryApp.state.currentTaskId:', UserStoryApp.state.currentTaskId);
                                 // --- ADD UI Call ---
                                 if (!isGenerationStartedUIUpdated && typeof UI !== 'undefined' && UI.showGenerationStarted) {
                                     UI.showGenerationStarted();
@@ -250,55 +250,48 @@ const API = {
                       // --- END Task ID Capture ---
                   } catch (e) { console.warn('Failed to parse stream line:', line, e); }
              }
+             
+             // Check if generation stopped flag set externally (for fast abort)
+             if (UserStoryApp?.state?.abortGeneration) {
+                  streamEnded = true;
+                  console.warn('[API Stream] Generation aborted by user.');
+                  break;
+             }
          }
          
-         // --- MOVE Log to after loop ---
-         console.log("[API Stream] Stream finished. Rendering final Markdown content.");
-         try {
-             // --- MODIFY: Use marked directly ---
-             const html = marked(resultText);
-             resultMarkdownEl.innerHTML = html;
-             resultMarkdownEl.style.display = 'block';
-             resultContentEl.style.display = 'none';
-         } catch (markdownError) {
-             console.error("Error converting final markdown:", markdownError);
-             resultContentEl.textContent = resultText; // Fallback to text
-             resultContentEl.style.display = 'block';
-             resultMarkdownEl.style.display = 'none';
+         // After stream ends
+         if (!streamEnded) {
+             streamEnded = true; 
+             UI.renderMarkdown();
+             if (typeof UI !== 'undefined' && UI.showGenerationCompleted) {
+                 UI.showGenerationCompleted();
+             }
          }
-         
-         // Call UI completion *after* rendering
-         if (typeof UI !== 'undefined' && UI.showGenerationCompleted) {
-              UI.showGenerationCompleted();
-         }
-
-         // ... (Fetch final stats if needed - maybe remove this if stats come in stream) ...
     },
 
     // Helper to extract final text from potentially varied output structures
     extractFinalOutput(outputs) {
-        if (!outputs) return '';
-        let actualOutput = '';
-        if (outputs.text) actualOutput = outputs.text;
-        else if (outputs.content) actualOutput = outputs.content;
-        else if (outputs.result) actualOutput = outputs.result;
-        else if (outputs.Reject) actualOutput = outputs.Reject;
-        else if (outputs.User_Story) actualOutput = outputs.User_Story;
-        else actualOutput = JSON.stringify(outputs, null, 2);
-
-        // Handle nested JSON string
-        if (typeof actualOutput === 'string' && actualOutput.trim().startsWith('{')) {
-            try {
-                const jsonObj = JSON.parse(actualOutput);
-                for (const key in jsonObj) {
-                    if (jsonObj[key] && typeof jsonObj[key] === 'string') {
-                        actualOutput = jsonObj[key].replace(/\\n/g, '\n');
-                        break;
-                    }
-                }
-            } catch (e) { /* ignore */ }
+        let finalText = '';
+        
+        // Try different possible output formats from Dify workflow
+        if (typeof outputs === 'string') {
+            // Direct string output
+            finalText = outputs;
+        } else if (outputs.text) {
+            // Object with text property
+            finalText = outputs.text;
+        } else if (outputs.content) {
+            // Object with content property
+            finalText = outputs.content;
+        } else if (outputs.result) {
+            // Object with result property (could be string or another object)
+            finalText = typeof outputs.result === 'string' ? outputs.result : JSON.stringify(outputs.result, null, 2);
+        } else {
+            // Fallback: stringify the entire outputs
+            finalText = JSON.stringify(outputs, null, 2);
         }
-        return actualOutput;
+        
+        return finalText;
     },
     
     /**
@@ -397,23 +390,7 @@ const API = {
      */
     convertMarkdownToHtml(markdown) {
         if (!markdown) return '';
-        
-        // Remove this basic implementation if marked is imported and used correctly
-        /*
-        let html = markdown
-            // ... basic replacements ...
-            .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
-        
-        html = '<p>' + html + '</p>';
-        html = html.replace(/<li>[\s\S]*?<\/li>(?=[\s\S]*?<li>|$)/g, function(match) {
-            return '<ul>' + match + '</ul>';
-        });
-        
-        return html;
-        */
-       // Return empty or throw error if marked isn't used
-       console.warn("convertMarkdownToHtml should be replaced by marked library");
-       return markdown; // Fallback: return raw markdown
+        return marked(markdown);
     }
 }; 
 

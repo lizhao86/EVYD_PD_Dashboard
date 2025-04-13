@@ -20,10 +20,13 @@ import { t } from '/scripts/i18n.js'; // Assuming t is needed, maybe in UI
 const UserManualApp = {
     // 全局状态
     state: {
-        currentMessageId: null,
-        currentConversationId: null,
         apiKey: null,
-        apiEndpoint: null
+        apiEndpoint: null,
+        currentUser: null,
+        appInfo: null,
+        currentConversationId: null, // Store conversation ID for continuous chat
+        currentMessageId: null, // Store message ID for stopping
+        isGenerating: false
     },
     
     // 功能模块
@@ -33,167 +36,178 @@ const UserManualApp = {
      * 初始化应用
      */
     async init() {
-        console.log('Initializing User Manual App (async)...');
+        // 首先等待Header初始化
+        await Header.init();
         
-        // 1. Init Header (Handles Amplify, Auth, I18n)
-        await Header.init(); 
-        console.log("Header initialized. Current user:", Header.currentUser);
-        
-        // 2. Check login
+        // 检查用户登录状态
         if (!Header.currentUser) {
-            console.log('User not logged in.');
-            UI.showError(t('common.loginRequired', {default: '请先登录以使用此功能。'})); 
-            return; 
+            UI.showError(t('userManual.notLoggedIn', { default: '请先登录以使用此功能。'}));
+            return;
         }
 
-        // 3. Fetch config
         try {
-            const userSettings = Header.userSettings || await getCurrentUserSettings(); 
+            // 初始化UI
+            if (typeof UI.initUserInterface === 'function') {
+                UI.initUserInterface();
+            }
+
+            // 加载配置 - 使用与user-story相同的模式
+            const userSettings = Header.userSettings || await getCurrentUserSettings();
             const globalConfig = await getGlobalConfig();
-
-            if (!userSettings?.apiKeys?.userManual) {
-                 UI.showError(t('userManual.apiKeyError', {default: '无法获取您的 User Manual API 密钥，请检查账号设置。'}), 'user-settings-modal');
-                 return;
-            }
-             if (!globalConfig?.apiEndpoints?.userManual) {
-                 UI.showError(t('userManual.apiEndpointError', {default: '无法获取 User Manual API 地址，请联系管理员检查全局配置。'}), 'admin-panel-modal');
-                 return;
-            }
-
-            this.state.apiKey = userSettings.apiKeys.userManual;
-            this.state.apiEndpoint = globalConfig.apiEndpoints.userManual;
-            console.log("API Key and Endpoint loaded for User Manual.");
             
-            // 4. Init UI and fetch Dify App Info
-            UI.initUserInterface();
-            // Pass config to fetchAppInfo
-            await API.fetchAppInfo(this.state.apiKey, this.state.apiEndpoint); 
-
-            // 5. Bind events
+            if (!userSettings || !userSettings.apiKeys || 
+                (!userSettings.apiKeys.userManual && !userSettings.apiKeys.dify)) {
+                UI.showError(t('userManual.apiKeyMissing', { default: '无法获取您的 User Manual API 密钥，请检查账号设置。'}));
+                return;
+            }
+            
+            if (!globalConfig || !globalConfig.apiEndpoints || 
+                (!globalConfig.apiEndpoints.userManual && !globalConfig.apiEndpoints.dify)) {
+                UI.showError(t('userManual.apiEndpointMissing', { default: '无法获取 User Manual API 地址，请联系管理员检查全局配置。'}));
+                return;
+            }
+            
+            // 设置API配置，支持fallback到dify
+            this.state.apiKey = userSettings.apiKeys.userManual || userSettings.apiKeys.dify;
+            this.state.apiEndpoint = globalConfig.apiEndpoints.userManual || globalConfig.apiEndpoints.dify;
+            this.state.currentUser = Header.currentUser;
+            
+            // 获取应用信息
+            this.fetchAppInformation();
+            
+            // 绑定事件
             this.bindEvents();
-
         } catch (error) {
-             console.error("Error fetching settings for User Manual app:", error);
-             UI.showError(t('common.configLoadError', {default: '加载应用配置时出错，请稍后重试。'}));
+            console.error("Error initializing User Manual App:", error);
+            UI.showError(t('userManual.initError', { default: '初始化应用时出错，请刷新页面重试。'}));
         }
+    },
+    
+    async fetchAppInformation() {
+        if (!this.state.apiKey || !this.state.apiEndpoint) return; // Guard clause
+        try {
+            const info = await API.fetchAppInfo(this.state.apiKey, this.state.apiEndpoint);
+            if (info) {
+                this.state.appInfo = info;
+                // UI.displayAppInfo(info); // API module already calls this
+            }
+        } catch (error) { /* Error handled in API/UI */ }
     },
     
     /**
      * 绑定所有事件
      */
     bindEvents() {
-        console.log('Binding User Manual events...');
-        
-        // Remove login/logout/password handlers (delegated to Header)
+        // console.log('Binding User Manual events...');
+        const generateButton = document.getElementById('generate-manual');
+        const stopButton = document.getElementById('stop-generation');
+        const promptInput = document.getElementById('requirement-description');
 
-        // Keep App specific events
-        const retryButton = document.getElementById('retry-connection');
-        if (retryButton) retryButton.addEventListener('click', () => {
-            // Re-fetch app info using stored state
-            if (this.state.apiKey && this.state.apiEndpoint) {
-                API.fetchAppInfo(this.state.apiKey, this.state.apiEndpoint);
-        } else {
-                console.error("Cannot retry connection, API config missing in state.");
+        if (promptInput) {
+            promptInput.addEventListener('input', () => {
+                // 更新字数统计和按钮状态
+                UI.updateCharCountDisplay(promptInput.value.length);
+                // 获取当前按钮状态（生成或停止）
+                const currentAction = generateButton.getAttribute('data-action');
+                const isGenerateAction = currentAction === 'generate';
+                
+                // 如果UI有这个方法就调用，否则直接设置禁用状态
+                if (typeof UI.updateGenerateButtonState === 'function') {
+                    UI.updateGenerateButtonState(promptInput.value.trim().length, isGenerateAction);
+                } else {
+                    generateButton.disabled = promptInput.value.trim().length === 0 || 
+                                               promptInput.value.length > 5000;
+                }
+            });
         }
-        });
 
-        const requirementDesc = document.getElementById('requirement-description');
-        if (requirementDesc) requirementDesc.addEventListener('input', this.updateCharCount.bind(this));
+        if (generateButton) {
+            generateButton.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const currentAction = generateButton.getAttribute('data-action');
 
-        const expandTextarea = document.getElementById('expand-textarea');
-        if (expandTextarea) expandTextarea.addEventListener('click', this.toggleTextareaExpand.bind(this));
-        
-        const clearForm = document.getElementById('clear-form');
-        if (clearForm) clearForm.addEventListener('click', this.handleClearForm.bind(this));
-        
-        const generateManualButton = document.getElementById('generate-manual'); 
-        if (generateManualButton) generateManualButton.addEventListener('click', this.handleGenerateManual.bind(this));
-        
-        const stopGenerationButton = document.getElementById('stop-generation');
-        if (stopGenerationButton) stopGenerationButton.addEventListener('click', this.handleStopGeneration.bind(this));
-        
-        const copyResult = document.getElementById('copy-result');
-        if (copyResult) copyResult.addEventListener('click', this.handleCopyResult.bind(this));
+                if (currentAction === 'stop') {
+                    await this.stopGeneration(); 
+                } else {
+                    await this.handleGenerate(promptInput.value.trim()); 
+                }
+            });
+        }
 
-        const toggleSystemInfoButton = document.getElementById('toggle-system-info');
-        if (toggleSystemInfoButton) {
-           toggleSystemInfoButton.addEventListener('click', () => {
-                const systemInfoContent = document.getElementById('system-info-content');
-                const isHidden = systemInfoContent.style.display === 'none';
-                systemInfoContent.style.display = isHidden ? 'block' : 'none';
-                toggleSystemInfoButton.classList.toggle('collapsed', !isHidden);
-           });
+        // 其他可能的事件绑定
+        const clearFormButton = document.getElementById('clear-form');
+        if (clearFormButton) {
+            clearFormButton.addEventListener('click', this.handleClearForm.bind(this));
+        }
+
+        const copyResultButton = document.getElementById('copy-result');
+        if (copyResultButton) {
+            copyResultButton.addEventListener('click', this.handleCopyResult.bind(this));
+        }
+
+        const expandTextareaButton = document.getElementById('expand-textarea');
+        if (expandTextareaButton) {
+            expandTextareaButton.addEventListener('click', this.toggleTextareaExpand.bind(this));
         }
     },
     
-    /**
-     * Generate User Manual
-     */
-    async handleGenerateManual() {
-        const generateButton = document.getElementById('generate-manual');
-        const action = generateButton?.getAttribute('data-action');
-        
-        if (action === 'stop') {
-            this.handleStopGeneration(); 
+    // --- ADD Central handleGenerate Function ---
+    async handleGenerate(prompt) {
+        if (!prompt) {
+            UI.showInputError('requirement', t('userManual.promptRequired', { default: '请输入需求描述。'}));
             return;
         }
-        
-        const requirementDesc = document.getElementById('requirement-description').value;
         UI.clearInputError('requirement');
-        if (!requirementDesc) {
-            UI.showInputError('requirement', t('userManual.error.emptyRequirement', {default: '请填写需求描述'}));
-            return;
-        }
-
-        if (!this.state.apiKey || !this.state.apiEndpoint || !Header.currentUser) {
-             if (typeof UI !== 'undefined' && UI.showError) UI.showError(t('common.configLoadError', {default: 'API 配置或用户信息丢失，无法生成。'}));
-            else alert(t('common.configLoadError', {default: 'API 配置或用户信息丢失，无法生成。'}));
-            return;
-        }
-        
-        // Reset IDs before starting generation
-        this.state.currentMessageId = null;
-        // Keep existing conversation ID if available, otherwise null. API will update if a new one is created.
-        // this.state.currentConversationId = this.state.currentConversationId || null;
-        // UI.showGenerationStarted() is called in API now, or keep here? Let's ensure it's called before API call.
         UI.showRequestingState();
+        this.state.isGenerating = true;
 
         try {
-            // Call API.generateUserManual. The API will handle setting state.currentMessageId during the stream.
-            // We await to know when the process is complete and potentially get the final conversation ID.
             const result = await API.generateUserManual(
-                requirementDesc,
+                prompt,
                 this.state.apiKey,
                 this.state.apiEndpoint,
-                Header.currentUser,
-                this.state.currentConversationId // Pass the current conversation ID
+                this.state.currentUser,
+                this.state.currentConversationId // Pass conversation ID
             );
-            
-            // API now sets state.currentConversationId directly during stream if new one created.
-            // Optionally, update from result if needed as fallback or confirmation.
-            // if (result && result.conversationId) {
-            //     this.state.currentConversationId = result.conversationId;
-            //     console.log("[Index] Updated Conversation ID from API result:", this.state.currentConversationId);
-            // }
+            // Stream handling updates UI, no need for completion call here immediately
+             // API.handleStreamResponse takes care of updating UI and state (incl. isGenerating=false)
+            // Update conversation ID if a new one was created or returned
+            if (result && result.conversationId) {
+                this.state.currentConversationId = result.conversationId;
+        //     console.log("[Index] Updated Conversation ID from API result:", this.state.currentConversationId);
+            }
         } catch (error) {
-             console.error("Error caught in handleGenerateManual:", error);
-             // UI completion is handled within API/Stream response handler now, including errors.
-             // UI.showGenerationCompleted();
+            // Error already logged in API, UI updated there
+            this.state.isGenerating = false;
+             if(typeof UI !== 'undefined' && UI.showGenerationCompleted) {
+                UI.showGenerationCompleted(); // Ensure button resets on error
+             }
         }
     },
     
-    /**
-     * Stop Generation
-     */
-    handleStopGeneration() {
-        console.log("Handling stop generation request...");
-        // This condition should now work correctly as state.currentMessageId is set earlier by the API stream handler
-        if (this.state.currentMessageId && this.state.apiKey && this.state.apiEndpoint && Header.currentUser) {
-            API.stopGeneration(this.state.currentMessageId, this.state.apiKey, this.state.apiEndpoint, Header.currentUser);
-            this.state.currentMessageId = null; // Clear the ID after requesting stop
-        } else {
-            console.warn("Cannot stop, missing messageId or config/user. State was:", this.state);
-            if (typeof UI !== 'undefined' && UI.showGenerationCompleted) UI.showGenerationCompleted();
+    // --- ADD Central stopGeneration Function ---
+    async stopGeneration() {
+         // console.log("Handling stop generation request...");
+         if (!this.state.isGenerating || !this.state.currentMessageId) {
+             console.warn("Stop request ignored: Not generating or no message ID.");
+             return;
+         }
+         try {
+            UI.setStoppingState(); // Indicate stop attempt
+            await API.stopGeneration(
+                 this.state.currentMessageId,
+                 this.state.apiKey,
+                 this.state.apiEndpoint,
+                 this.state.currentUser
+             );
+             // API/UI modules handle showing the stop message
+             // Ensure button is reset to generate state
+             UI.showGenerationCompleted(); 
+         } catch (error) {
+            // Error logged in API, potentially show error in UI?
+            UI.showGenerationCompleted(); // Reset button even on stop error
+        } finally {
+             this.state.isGenerating = false; 
         }
     },
     
@@ -354,7 +368,7 @@ const UserManualApp = {
 };
 
 // 在DOM加载完成后初始化应用
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
     UserManualApp.init();
 }); 
 

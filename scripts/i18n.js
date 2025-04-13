@@ -30,7 +30,6 @@ const I18n = {
      */
     async init() {
         if (this.isInitialized) return; // Prevent multiple initializations
-        console.log('初始化国际化模块 (async)...');
         
         // Try to get logged-in user info and settings first
         let preferredLang = null;
@@ -41,10 +40,6 @@ const I18n = {
                 this.userSettings = await getCurrentUserSettings();
                 if (this.userSettings && this.userSettings.language) {
                     preferredLang = this.userSettings.language;
-                    console.log(`从用户设置加载语言: ${preferredLang}`);
-                } else {
-                     console.log("用户设置中未找到语言偏好。");
-                     // Optional: Could try to save a default here if userSettings exists but language doesn't
                 }
             }
         } catch (error) {
@@ -72,7 +67,6 @@ const I18n = {
 
         // 设置HTML的lang属性
         document.documentElement.lang = this.currentLang;
-        console.log(`当前语言: ${this.currentLang}`);
         
         // 加载当前语言的翻译
         this.loadTranslations();
@@ -87,6 +81,7 @@ const I18n = {
             document.documentElement.dir = 'ltr'; // 其他语言从左到右
         }
         this.isInitialized = true;
+        return this.currentLang;
     },
     
     /**
@@ -110,7 +105,7 @@ const I18n = {
                 break;
         }
         
-        console.log('翻译内容已加载');
+        this.applyTranslations();
     },
     
     /**
@@ -171,16 +166,17 @@ const I18n = {
 
         // 2. Attempt to save to user settings if logged in
         if (this.currentUser) { // Check if we know the user is logged in
-            console.log(`尝试为用户 ${this.currentUser.userId} 保存语言偏好: ${lang}`);
-            await this.saveLanguagePreference(lang);
-        } else {
-             console.log("用户未登录，语言偏好仅保存到 Local Storage。");
+            try {
+                await this.saveLanguagePreference(lang);
+            } catch (error) {
+                console.error('保存语言偏好到云端失败:', error);
+                localStorage.setItem('preferredLang', lang);
+            }
         }
         
         // 3. Update UI (reload is simplest)
         document.documentElement.lang = lang;
-        console.log(`切换语言到: ${lang}`);
-        window.location.reload();
+        this.applyTranslations();
         
         return true;
     },
@@ -232,15 +228,7 @@ const I18n = {
      * @param {HTMLElement|null} container 可选的容器元素，仅翻译其中的元素。若为null则翻译整个文档
      */
     applyTranslations(container = null) {
-        console.log('应用页面翻译...');
-        if (!this.translations) {
-            console.warn('翻译尚未加载，无法应用。');
-            return;
-        }
-        
-        // 选择特定容器内或全文档中带有 data-translate 或 data-translate-placeholder 属性的元素
-        const context = container || document;
-        const elements = context.querySelectorAll('[data-translate], [data-translate-placeholder]');
+        const elements = container ? container.querySelectorAll('[data-translate], [data-translate-placeholder]') : document.querySelectorAll('[data-translate], [data-translate-placeholder]');
         
         elements.forEach(element => {
             // 处理 textContent
@@ -265,7 +253,14 @@ const I18n = {
                 }
             }
         });
-        console.log(`已处理 ${elements.length} 个待翻译元素。`);
+    },
+
+    async _saveLangToDynamoDB(lang) {
+        try {
+            // ... existing code ...
+        } catch (error) {
+            console.error('保存语言偏好到 DynamoDB 失败:', error);
+        }
     }
 };
 

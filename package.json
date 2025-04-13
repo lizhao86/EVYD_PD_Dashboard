@@ -4,6 +4,7 @@
     "marked": "^15.0.8"
   },
   "devDependencies": {
+    "less": "^4.3.0",
     "vite": "^6.2.6"
   },
   "name": "evyd_pd_dashboard",

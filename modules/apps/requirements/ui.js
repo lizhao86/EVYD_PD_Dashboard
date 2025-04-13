@@ -6,134 +6,126 @@
 // UI交互模块
 const UI = {
     /**
-     * 初始化用户界面
+     * 初始化界面元素
      */
-    initUserInterface() {
-        console.log('初始化需求分析工具界面...');
+    init() {
+        // 获取DOM元素引用等
+        this.requirementInput = document.getElementById('requirement-text');
+        this.resultArea = document.getElementById('result-area');
+        this.loadingIndicator = document.getElementById('loading-indicator');
+        this.messageArea = document.getElementById('message-area');
+        this.appInfoContainer = document.getElementById('app-info');
+        this.analyzeButton = document.getElementById('analyze-requirements');
         
-        // 初始化编辑器或其他UI组件
-        
-        // 初始化用户设置面板
-        this.initUserSettingsPanel();
+        // 初始化用户设置面板（如果需要）
+        this.initSettingsPanel();
+        // ... 其他初始化逻辑
     },
     
     /**
      * 初始化用户设置面板
      */
-    initUserSettingsPanel() {
-        console.log('初始化用户设置面板...');
-        
-        const currentUser = Auth.checkAuth();
-        if (!currentUser) return;
-        
-        // 设置API密钥
-        const userStoryKey = document.getElementById('userStory-api-key');
-        const userManualKey = document.getElementById('userManual-api-key');
-        const requirementsAnalysisKey = document.getElementById('requirementsAnalysis-api-key');
-        
-        if (userStoryKey) {
-            userStoryKey.value = currentUser.apiKeys.userStory || '';
-        }
-        
-        if (userManualKey) {
-            userManualKey.value = currentUser.apiKeys.userManual || '';
-        }
-        
-        if (requirementsAnalysisKey) {
-            requirementsAnalysisKey.value = currentUser.apiKeys.requirementsAnalysis || '';
-        }
+    initSettingsPanel() {
+        // 例如：绑定保存按钮事件等
+        // const saveSettingsButton = document.getElementById('save-settings');
+        // if (saveSettingsButton) {
+        //     saveSettingsButton.addEventListener('click', () => {
+        //         // 保存设置逻辑
+        //     });
+        // }
     },
     
     /**
      * 显示加载状态
      */
-    showLoading() {
-        console.log('显示加载状态...');
-        
-        const loadingOverlay = document.getElementById('loading-overlay');
-        if (loadingOverlay) {
-            loadingOverlay.style.display = 'flex';
+    showLoadingState() {
+        if (this.loadingIndicator) {
+            this.loadingIndicator.style.display = 'block';
+        }
+        if (this.analyzeButton) {
+            this.analyzeButton.disabled = true;
         }
     },
     
     /**
      * 隐藏加载状态
      */
-    hideLoading() {
-        console.log('隐藏加载状态...');
-        
-        const loadingOverlay = document.getElementById('loading-overlay');
-        if (loadingOverlay) {
-            loadingOverlay.style.display = 'none';
+    hideLoadingState() {
+        if (this.loadingIndicator) {
+            this.loadingIndicator.style.display = 'none';
         }
-    },
-    
-    /**
-     * 显示错误信息
-     * @param {string} message 错误信息
-     */
-    showError(message) {
-        console.error('错误:', message);
-        
-        this.showMessage(message, 'error');
+        if (this.analyzeButton) {
+            this.analyzeButton.disabled = false;
+        }
     },
     
     /**
      * 显示消息
+     * @param {string} type 消息类型 ('success', 'error', 'info')
      * @param {string} message 消息内容
-     * @param {string} type 消息类型 (success, error, info, warning)
      */
-    showMessage(message, type = 'info') {
-        console.log(`显示${type}消息:`, message);
-        
-        const messageContainer = document.getElementById('message-container');
-        if (!messageContainer) {
-            console.error('找不到消息容器');
-            alert(message); // 降级处理
-            return;
+    showMessage(type, message) {
+        if (this.messageArea) {
+            this.messageArea.textContent = message;
+            this.messageArea.className = `message message-${type}`; // Set class for styling
+            this.messageArea.style.display = 'block';
+            // Optionally hide after a delay
+            setTimeout(() => {
+                this.messageArea.style.display = 'none';
+            }, 5000); 
         }
-        
-        const messageElement = document.createElement('div');
-        messageElement.className = `message message-${type}`;
-        messageElement.textContent = message;
-        
-        // 添加关闭按钮
-        const closeButton = document.createElement('span');
-        closeButton.className = 'message-close';
-        closeButton.innerHTML = '&times;';
-        closeButton.onclick = function() {
-            messageContainer.removeChild(messageElement);
-        };
-        
-        messageElement.appendChild(closeButton);
-        messageContainer.appendChild(messageElement);
-        
-        // 5秒后自动关闭
-        setTimeout(() => {
-            if (messageElement.parentNode === messageContainer) {
-                messageContainer.removeChild(messageElement);
-            }
-        }, 5000);
     },
     
     /**
-     * 更新应用信息
-     * @param {Object} data 应用信息数据
+     * 显示分析结果
+     * @param {any} result API返回的分析结果
+     */
+    displayResult(result) {
+        if (this.resultArea) {
+            // Clear previous result
+            this.resultArea.innerHTML = '';
+            // Format and display the result (this depends on the API response structure)
+            const pre = document.createElement('pre');
+            pre.textContent = JSON.stringify(result, null, 2);
+            this.resultArea.appendChild(pre);
+            this.resultArea.style.display = 'block';
+        }
+    },
+    
+    /**
+     * 更新应用信息显示
+     * @param {object} data 应用信息对象
      */
     updateAppInfo(data) {
-        console.log('更新应用信息:', data);
-        
-        const appName = document.getElementById('app-name');
-        const appDescription = document.getElementById('app-description');
-        
-        if (appName && data.name) {
-            appName.textContent = data.name;
+        if (this.appInfoContainer) {
+            // Update name, description, tags etc.
+            const nameEl = this.appInfoContainer.querySelector('#app-name');
+            const descEl = this.appInfoContainer.querySelector('#app-description');
+            // ... update other elements ...
+            if(nameEl) nameEl.textContent = data.name || '需求分析工具';
+            if(descEl) descEl.textContent = data.description || '智能分析产品需求文本';
+            // Show the container
+            this.appInfoContainer.style.display = 'block';
         }
-        
-        if (appDescription && data.description) {
-            appDescription.textContent = data.description;
+    },
+    
+    /**
+    * 显示登录提示
+    */
+    showLoginPrompt() {
+        // Hide the main form/content
+        const appForm = document.getElementById('app-form');
+        if (appForm) appForm.style.display = 'none';
+        // Show a login message or redirect
+        const loginPrompt = document.getElementById('login-prompt'); // Assuming an element exists
+        if (loginPrompt) {
+            loginPrompt.style.display = 'block';
+            // You might want to add a link/button to the login page here
+        } else {
+            // Fallback if the prompt element doesn't exist
+            this.showMessage('info', '请先登录以使用此功能。');
         }
     }
-    
-    // 其他UI方法...
-}; 
+};
+
+export default UI; 
