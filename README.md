@@ -88,6 +88,7 @@
     - 解决了 User Story, User Manual, UX Design 应用无法停止生成、按钮状态反馈不清晰、输入验证提示不友好、国际化文本显示错误、统计/系统信息无法显示、Markdown渲染失败等多个Bug。
     - 确保应用正确使用从 DynamoDB 获取的云端配置与认证信息。
     - 统一了三个应用中处理状态、显示统计/系统信息、按钮ID、API流处理等逻辑的命名约定和代码实现。
+- **[2025-04-13]** **代码优化:** 移除 `scripts/utils/helper.js` 中未使用的工具函数 (`generateUUID`, `formatDate`, `debounce`, `throttle`)，完成 `helper.js` 整合。
 
 ## 字体使用
 项目使用以下字体设置：
