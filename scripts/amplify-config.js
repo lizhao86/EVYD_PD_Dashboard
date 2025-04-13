@@ -17,6 +17,16 @@ export function configureAmplify() {
         // 创建配置的副本，以便我们可以修改它
         const config = { ...awsconfig };
         
+        // 从环境变量获取重定向URL（如果存在）
+        const redirectSignIn = import.meta.env.VITE_COGNITO_REDIRECT_SIGNIN;
+        const redirectSignOut = import.meta.env.VITE_COGNITO_REDIRECT_SIGNOUT;
+        
+        // 打印环境变量（调试用）
+        console.log("[AmplifyConfig] 环境变量:", {
+            VITE_COGNITO_REDIRECT_SIGNIN: redirectSignIn,
+            VITE_COGNITO_REDIRECT_SIGNOUT: redirectSignOut,
+        });
+        
         // 确保 V5 格式的 oauth 配置正确设置
         if (!config.oauth || !config.oauth.domain) {
             console.log("[AmplifyConfig] 从 V6 格式导入 OAuth 配置");
@@ -42,6 +52,27 @@ export function configureAmplify() {
                 };
                 
                 console.log("[AmplifyConfig] V5 OAuth 配置已设置", config.oauth);
+            }
+        }
+        
+        // 使用环境变量覆盖重定向URL（如果环境变量存在）
+        if (redirectSignIn) {
+            console.log(`[AmplifyConfig] 使用环境变量覆盖 redirectSignIn: ${redirectSignIn}`);
+            config.oauth.redirectSignIn = redirectSignIn;
+            
+            // 同时更新V6格式配置（如果存在）
+            if (config.Auth?.Cognito?.loginWith?.oauth) {
+                config.Auth.Cognito.loginWith.oauth.redirectSignIn = [redirectSignIn];
+            }
+        }
+        
+        if (redirectSignOut) {
+            console.log(`[AmplifyConfig] 使用环境变量覆盖 redirectSignOut: ${redirectSignOut}`);
+            config.oauth.redirectSignOut = redirectSignOut;
+            
+            // 同时更新V6格式配置（如果存在）
+            if (config.Auth?.Cognito?.loginWith?.oauth) {
+                config.Auth.Cognito.loginWith.oauth.redirectSignOut = [redirectSignOut];
             }
         }
         
