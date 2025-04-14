@@ -44,44 +44,47 @@ const Header = {
      * 初始化头部组件
      * @param {string} containerId 头部容器ID
      */
-    async init(containerId = 'header-container') { // Made async
-        // --- BEGIN AMPLIFY CONFIGURATION (moved here) ---
+    async init(containerId = 'header-container') {
         try {
-            // 使用配置辅助函数初始化 Amplify
-            configureAmplify();
-            // console.log("[Header.init] Amplify configured using amplify-config helper (V5 target).");
-
+            configureAmplify(); // Initialize AWS Amplify
         } catch (error) {
-             console.error("[Header.init] Error configuring Amplify:", error);
-             // Optionally notify the user or fallback
-             const container = document.getElementById(containerId);
-             if (container) {
-                 container.innerHTML = `<p style='color:red; text-align:center;'>Error initializing application configuration. Authentication might not work.</p>` + container.innerHTML;
-             }
-             return; // Stop further initialization if config fails
-        }
-        // --- END AMPLIFY CONFIGURATION ---
-
-        // console.log('初始化头部组件...');
-        this.loadHeader(containerId); // Keep this synchronous for initial HTML load
-        // 设置全站favicon
-        this.setGlobalFavicon();
-        // Now check auth asynchronously
-        await this.checkUserAuth();
-        
-        // NOW initialize I18n (it might use Header.currentUser/userSettings loaded by checkUserAuth)
-        try {
-            // console.log("[Header.init] Initializing I18n...");
-            await I18n.init(); 
-            // console.log("[Header.init] I18n initialized.");
-            // Re-apply translations specifically to the header after init if needed
-            const headerElement = document.getElementById(containerId);
-            if(headerElement) {
-                I18n.applyTranslations(headerElement); 
+            console.error("[Header.init] Error configuring Amplify:", error);
+            const containerElement = document.getElementById(containerId);
+            if (containerElement) {
+                containerElement.innerHTML = "<p style='color:red; text-align:center;'>Error initializing application configuration. Authentication might not work.</p>" + containerElement.innerHTML;
             }
-        } catch (i18nError) {
-             console.error("[Header.init] Error initializing I18n:", i18nError);
+            return;
         }
+
+        // 先加载header结构
+        this.loadHeader(containerId);
+        this.setGlobalFavicon();
+        
+        // 初始化 I18n 并立即设置语言选择器
+        try {
+            // 确保I18n初始化
+            await I18n.init();
+            
+            // 获取已保存的语言，确保显示正确
+            const currentLang = I18n.getCurrentLanguage();
+            const langDisplay = document.getElementById('current-language-display');
+            if (langDisplay) {
+                langDisplay.textContent = I18n.supportedLanguages[currentLang] || currentLang;
+                console.log(`Header设置语言显示为: ${langDisplay.textContent} (${currentLang})`);
+            }
+            
+            // 应用翻译到整个header容器
+            const headerElement = document.getElementById(containerId);
+            if (headerElement) {
+                I18n.applyTranslations(headerElement);
+                console.log('已应用翻译到header元素');
+            }
+        } catch (error) {
+            console.error("[Header.init] Error initializing I18n:", error);
+        }
+        
+        // 最后检查用户认证状态
+        await this.checkUserAuth();
     },
 
     /**
@@ -1432,15 +1435,40 @@ const Header = {
      * 初始化语言选择器
      */
     initLanguageSelector() {
-        // Only set up structure, don't rely on I18n yet
+        // 获取语言显示元素
         const display = document.getElementById('current-language-display');
         if (display) {
-            // Set initial text based on default or leave blank until I18n loads?
-            // Let's set a default, I18n.init will update it.
-             const langCode = localStorage.getItem('language') || 'zh-CN'; // Use LS as initial guess
-             display.textContent = I18n.supportedLanguages[langCode] || 'Language';
+            // 获取当前已选择的语言（优先从I18n获取，因为它已经处理了来自不同源的语言偏好）
+            let langCode = 'zh-CN';
+            
+            // 如果I18n已初始化，则从它那里获取当前语言
+            if (typeof I18n !== 'undefined' && I18n.isInitialized) {
+                langCode = I18n.getCurrentLanguage();
+                console.log(`从I18n获取语言码: ${langCode}`);
+            } 
+            // 否则从localStorage读取
+            else if (localStorage.getItem('language')) {
+                langCode = localStorage.getItem('language');
+                console.log(`从localStorage获取语言码: ${langCode}`);
+            }
+            
+            // 设置显示文本
+            if (typeof I18n !== 'undefined' && I18n.supportedLanguages) {
+                display.textContent = I18n.supportedLanguages[langCode] || langCode;
+            } else {
+                // 后备处理
+                const langNames = {
+                    'zh-CN': '简体中文',
+                    'zh-TW': '繁體中文',
+                    'en': 'English'
+                };
+                display.textContent = langNames[langCode] || langCode;
+            }
+            
+            console.log(`语言选择器初始化完成，当前显示: ${display.textContent}`);
+        } else {
+            console.warn('未找到语言选择器显示元素');
         }
-        // Event listeners are set up in initLanguageSelectorListeners
     },
     
     initLanguageSelectorListeners(container) {
@@ -1460,8 +1488,35 @@ const Header = {
                      languageDropdown.style.display = 'none'; // Hide dropdown
                     const lang = option.getAttribute('data-lang');
                      if (lang && lang !== I18n.getCurrentLanguage()) {
-                         // Call the async switchLanguage method
-                         await I18n.switchLanguage(lang); 
+                         console.log(`头部监听到语言点击: ${lang}`);
+                         // 立即更新语言显示器
+                         const display = document.getElementById('current-language-display');
+                         if (display) {
+                             display.textContent = I18n.supportedLanguages[lang] || lang;
+                             console.log(`语言选择器已立即更新为: ${display.textContent}`);
+                         }
+                         
+                         // 调用语言切换
+                         try {
+                             const success = await I18n.switchLanguage(lang);
+                             if (success) {
+                                 console.log(`语言切换成功: ${lang}`);
+                                 // 强制重新翻译头部元素
+                                 if (container) {
+                                     console.log('立即重新翻译头部区域');
+                                     I18n.applyTranslations(container);
+                                 }
+                                 
+                                 // 立即应用翻译到整个页面
+                                 console.log('立即应用翻译到整个页面');
+                                 I18n.applyTranslations();
+                                 
+                             } else {
+                                 console.error(`语言切换失败: ${lang}`);
+                             }
+                         } catch (error) {
+                             console.error(`语言切换时出错:`, error);
+                         }
                     }
                 });
             });

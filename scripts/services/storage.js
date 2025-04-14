@@ -30,69 +30,249 @@ export async function getCurrentUserSettings() {
 }
 
 /**
- * 创建或更新当前登录用户的设置. (Handles partial updates)
- * @param {object} settings - 包含要更新的字段的对象 (e.g., { role: 'newRole' }, { language: 'en' }, { apiKeys: {...} }).
- * @returns {Promise<object|null>} 更新/创建后的用户设置对象或 null (如果出错)
+ * 保存当前用户设置到DynamoDB
+ * @param {Object} settings - 要保存的设置对象
+ * @param {number} retryCount - 当前重试次数（内部使用）
+ * @returns {Promise<Object>} - 保存的设置对象
  */
-export async function saveCurrentUserSetting(settings) {
+export async function saveCurrentUserSetting(settings, retryCount = 0) {
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = 1000; // 重试延迟1秒
+    
+    if (!settings) {
+        console.error('保存用户设置失败: 设置对象为空');
+        return null;
+    }
+    
     try {
-        const user = await Auth.currentAuthenticatedUser();
+        // 确保语言字段存在且有效
+        if (settings.language !== undefined && retryCount === 0) {
+            console.log(`尝试保存语言设置: ${settings.language}`);
+        }
+        
+        // 获取认证用户信息
+        let user;
+        try {
+            user = await Auth.currentAuthenticatedUser();
+            if (!user) {
+                throw new Error('无法获取当前认证用户');
+            }
+        } catch (authError) {
+            // 如果有强制标记并且提供了ID，尝试绕过认证检查
+            if (settings._force && settings.id) {
+                user = { username: settings.id };
+            } else {
+                throw new Error('用户未登录或认证失败');
+            }
+        }
+        
         const userId = user.username; // 或者使用 user.attributes.sub
         
+        // 获取现有设置
         let existingSettingsData = null;
         try {
             existingSettingsData = await getCurrentUserSettings(); 
+            
+            // 移除所有__typename字段，避免GraphQL错误
+            if (existingSettingsData) {
+                // 深度复制并清理metadata
+                existingSettingsData = JSON.parse(JSON.stringify(existingSettingsData));
+                cleanTypenameFields(existingSettingsData);
+            }
         } catch (fetchError) {
-            // 如果fetchError，可能是找不到现有设置
+            // 获取失败时不中断流程，因为我们可以创建新设置
         }
         
         let payload;
         let isCreating = false;
 
         if (existingSettingsData) {
+            // 特别关注language字段
+            const newLanguage = settings.language !== undefined ? settings.language : (existingSettingsData.language || 'zh-CN');
+            const oldLanguage = existingSettingsData.language || 'zh-CN';
+            
+            // 确保apiKeys对象不包含__typename
+            const apiKeys = settings.apiKeys !== undefined 
+                ? {
+                    userStory: settings.apiKeys?.userStory ?? (existingSettingsData.apiKeys?.userStory ?? ''),
+                    userManual: settings.apiKeys?.userManual ?? (existingSettingsData.apiKeys?.userManual ?? ''),
+                    requirementsAnalysis: settings.apiKeys?.requirementsAnalysis ?? (existingSettingsData.apiKeys?.requirementsAnalysis ?? ''),
+                    uxDesign: settings.apiKeys?.uxDesign ?? (existingSettingsData.apiKeys?.uxDesign ?? '')
+                } 
+                : (existingSettingsData.apiKeys ? {
+                    userStory: existingSettingsData.apiKeys.userStory || '',
+                    userManual: existingSettingsData.apiKeys.userManual || '',
+                    requirementsAnalysis: existingSettingsData.apiKeys.requirementsAnalysis || '',
+                    uxDesign: existingSettingsData.apiKeys.uxDesign || ''
+                } : {
+                    userStory: '',
+                    userManual: '',
+                    requirementsAnalysis: '',
+                    uxDesign: ''
+                });
+            
             payload = { 
                 id: userId,
                 role: settings.role !== undefined ? settings.role : existingSettingsData.role, 
-                language: settings.language !== undefined ? settings.language : existingSettingsData.language, 
-                apiKeys: settings.apiKeys !== undefined ? {
-                    userStory: settings.apiKeys?.userStory ?? existingSettingsData.apiKeys?.userStory ?? '',
-                    userManual: settings.apiKeys?.userManual ?? existingSettingsData.apiKeys?.userManual ?? '',
-                    requirementsAnalysis: settings.apiKeys?.requirementsAnalysis ?? existingSettingsData.apiKeys?.requirementsAnalysis ?? '',
-                    uxDesign: settings.apiKeys?.uxDesign ?? existingSettingsData.apiKeys?.uxDesign ?? ''
-                } : existingSettingsData.apiKeys 
+                language: newLanguage,
+                apiKeys: apiKeys
             };
         } else {
             isCreating = true;
-            payload = {
+            payload = { 
                 id: userId,
-                role: settings.role || 'user',
-                language: settings.language || navigator.language || 'zh-CN',
-                apiKeys: {
-                    userStory: settings.apiKeys?.userStory ?? '',
-                    userManual: settings.apiKeys?.userManual ?? '',
-                    requirementsAnalysis: settings.apiKeys?.requirementsAnalysis ?? '',
-                    uxDesign: settings.apiKeys?.uxDesign ?? ''
+                role: settings.role || 'viewer',
+                language: settings.language || 'zh-CN',
+                apiKeys: settings.apiKeys || {
+                    userStory: '',
+                    userManual: '',
+                    requirementsAnalysis: '',
+                    uxDesign: ''
                 }
             };
         }
+        
+        // 最后检查确保payload中没有__typename字段
+        cleanTypenameFields(payload);
 
         let result;
-        if (isCreating) {
-            result = await API.graphql(
-                graphqlOperation(mutations.createUserSettings, { input: payload })
-            );
-            return result.data.createUserSettings;
-        } else {
-            result = await API.graphql(
-                graphqlOperation(mutations.updateUserSettings, { input: payload })
-            );
-            return result.data.updateUserSettings;
+        try {
+            if (isCreating) {
+                result = await API.graphql(
+                    graphqlOperation(mutations.createUserSettings, { input: payload })
+                );
+                return result.data.createUserSettings;
+            } else {
+                // 确保传输所有必要字段
+                if(!payload.role) payload.role = existingSettingsData.role || 'viewer';
+                if(!payload.language) payload.language = existingSettingsData.language || 'zh-CN';
+                
+                result = await API.graphql(
+                    graphqlOperation(mutations.updateUserSettings, { input: payload })
+                );
+                
+                const updatedSettings = result.data.updateUserSettings;
+                
+                // 验证更新结果
+                if (settings.language && updatedSettings.language !== settings.language) {
+                    // 如果是强制更新且结果不匹配，记录错误但不重试
+                    if (settings._force) {
+                        console.error('强制更新失败，语言不匹配');
+                    } 
+                    // 否则尝试重试
+                    else if (retryCount < MAX_RETRIES) {
+                        return new Promise(resolve => {
+                            setTimeout(async () => {
+                                const retryResult = await saveCurrentUserSetting(settings, retryCount + 1);
+                                resolve(retryResult);
+                            }, RETRY_DELAY);
+                        });
+                    }
+                }
+                
+                return updatedSettings;
+            }
+        } catch (graphqlError) {
+            console.error('GraphQL操作失败');
+            
+            // 分析GraphQL错误
+            const errorMessage = JSON.stringify(graphqlError);
+            const isTypeNameError = errorMessage.includes('__typename') || 
+                                    errorMessage.includes('variables input contains a field that is not defined');
+            
+            if (isTypeNameError) {
+                // 再次清理payload确保没有__typename字段
+                cleanTypenameFields(payload);
+                
+                if (retryCount < MAX_RETRIES) {
+                    return new Promise(resolve => {
+                        setTimeout(async () => {
+                            try {
+                                // 直接重试请求，使用清理后的payload
+                                if (isCreating) {
+                                    result = await API.graphql(
+                                        graphqlOperation(mutations.createUserSettings, { input: payload })
+                                    );
+                                    resolve(result.data.createUserSettings);
+                                } else {
+                                    result = await API.graphql(
+                                        graphqlOperation(mutations.updateUserSettings, { input: payload })
+                                    );
+                                    resolve(result.data.updateUserSettings);
+                                }
+                            } catch (retryError) {
+                                // 如果仍然失败，尝试整个函数的重试
+                                const retryResult = await saveCurrentUserSetting(settings, retryCount + 1);
+                                resolve(retryResult);
+                            }
+                        }, RETRY_DELAY);
+                    });
+                }
+            }
+            
+            // 检查是否为网络错误或其他可重试的错误
+            const isNetworkError = errorMessage.includes('Network') || 
+                errorMessage.includes('network') ||
+                errorMessage.includes('timeout') ||
+                errorMessage.includes('断开') ||
+                errorMessage.includes('连接') ||
+                errorMessage.includes('ECONNREFUSED');
+            
+            // 如果是网络错误并且未超过最大重试次数，则重试
+            if (isNetworkError && retryCount < MAX_RETRIES) {
+                return new Promise(resolve => {
+                    setTimeout(async () => {
+                        const retryResult = await saveCurrentUserSetting(settings, retryCount + 1);
+                        resolve(retryResult);
+                    }, RETRY_DELAY);
+                });
+            }
+            
+            throw graphqlError; // 重新抛出以便上层捕获
         }
 
     } catch (error) {
-        console.error('Error saving user settings:', JSON.stringify(error, null, 2));
+        console.error('保存用户设置时出错');
+        
+        // 如果是已知可重试的错误类型且未超过最大重试次数
+        const isRetryableError = error.message && (
+            error.message.includes('ConditionalCheckFailedException') ||
+            error.message.includes('LimitExceededException') ||
+            error.message.includes('ProvisionedThroughputExceededException') ||
+            error.message.includes('ResourceNotFoundException')
+        );
+        
+        if (isRetryableError && retryCount < MAX_RETRIES) {
+            return new Promise(resolve => {
+                setTimeout(async () => {
+                    const retryResult = await saveCurrentUserSetting(settings, retryCount + 1);
+                    resolve(retryResult);
+                }, RETRY_DELAY);
+            });
+        }
+        
         return null;
     }
+}
+
+/**
+ * 递归清理对象中的__typename字段
+ * @param {Object} obj - 要清理的对象
+ */
+function cleanTypenameFields(obj) {
+    if (!obj || typeof obj !== 'object') return;
+    
+    // 删除当前对象中的__typename
+    if ('__typename' in obj) {
+        delete obj.__typename;
+    }
+    
+    // 递归处理所有子对象
+    Object.keys(obj).forEach(key => {
+        if (obj[key] && typeof obj[key] === 'object') {
+            cleanTypenameFields(obj[key]);
+        }
+    });
 }
 
 // --- Global Config ---

@@ -26,6 +26,32 @@
     --info: #3B82F6;
 }
 
+/* ===== I18N Loading Styles ===== */
+/* 在国际化资源加载完成前隐藏主要内容，防止闪烁 */
+html.i18n-loading body {
+    visibility: hidden; /* 比 display:none 更好，保留布局空间 */
+}
+
+/* 可选：添加一个简单的文本加载提示 */
+html.i18n-loading::after {
+    content: "Loading content..."; /* 可以根据需要本地化此文本，但作为临时状态通常英文即可 */
+    display: block;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.2em;
+    font-family: var(--font-family-base); /* 使用基础字体 */
+    color: var(--gray-600);
+    background-color: var(--white);
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: var(--shadow-md);
+    z-index: 10000; /* 确保在最上层 */
+    visibility: visible; /* 确保伪元素本身是可见的 */
+}
+/* =============================== */
+
 * {
     margin: 0;
     padding: 0;

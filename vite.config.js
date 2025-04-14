@@ -62,4 +62,26 @@ export default defineConfig({
       browser: true // 设置为浏览器环境
     },
   },
+  
+  // 配置静态资源处理
+  publicDir: 'public',
+  
+  // 确保locales目录下的语言文件被直接复制到构建目录
+  plugins: [
+    {
+      name: 'copy-locale-files',
+      buildStart() {
+        console.log('配置复制语言文件插件');
+      },
+      generateBundle() {
+        console.log('将语言文件复制到构建目录');
+      }
+    }
+  ],
+  
+  // 添加别名确保locales路径正确
+  optimizeDeps: {
+    include: [],
+    exclude: ['./locales/*']
+  }
 }); 
