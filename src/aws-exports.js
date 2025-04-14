@@ -7,18 +7,7 @@ const awsmobile = {
     "aws_cognito_region": "ap-southeast-1",
     "aws_user_pools_id": "ap-southeast-1_r5O88umzn",
     "aws_user_pools_web_client_id": "4b9noidv0iu0rjn3l7cr3n27sb",
-    "oauth": {
-        "domain": "login.auth.ap-southeast-1.amazoncognito.com",
-        "scope": [
-            "openid",
-            "profile",
-            "email",
-            "aws.cognito.signin.user.admin"
-        ],
-        "redirectSignIn": "http://localhost:5173/templates/pages/Homepage.html",
-        "redirectSignOut": "http://localhost:5173/index.html",
-        "responseType": "code"
-    },
+    "oauth": {},
     "aws_cognito_username_attributes": [],
     "aws_cognito_social_providers": [],
     "aws_cognito_signup_attributes": [
@@ -49,13 +38,18 @@ const awsmobile = {
                         "email",
                         "aws.cognito.signin.user.admin"
                     ],
-                    "redirectSignIn": ["http://localhost:5173/templates/pages/Homepage.html"],
-                    "redirectSignOut": ["http://localhost:5173/index.html"],
+                    "redirectSignIn": [
+                        "http://localhost:5173/templates/pages/Homepage.html"
+                    ],
+                    "redirectSignOut": [
+                        "http://localhost:5173/index.html"
+                    ],
                     "responseType": "code"
                 }
             }
         }
     }
 };
+
 
 export default awsmobile;
