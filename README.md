@@ -92,12 +92,7 @@
 
 ## 字体使用
 项目使用以下字体设置：
-- **英文界面**：Google Fonts提供的Lato字体，包含以下字重：
-  - Light (300)
-  - Regular (400)
-  - Medium (500)
-  - Semi-Bold (600)
-  - Bold (700)
+- **英文界面**：Verdana，系统自带无衬线字体
 - **中文界面**（简体和繁体）：微软雅黑（Microsoft YaHei）
 
 ## 开发指南

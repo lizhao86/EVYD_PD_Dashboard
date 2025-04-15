@@ -14,7 +14,7 @@
 | 版本号 | 更新日期 | 更新人 | 更新描述 |
 |-------|---------|-------|---------|
 | 1.0   | 2025-03-01 | EVYD产品团队 | 初始版本，创建基本的产品需求文档结构 |
-| 1.1   | 2025-03-08 | EVYD产品团队 | 更新UI需求，统一使用Lato字体 |
+| 1.1   | 2025-03-08 | EVYD产品团队 | 更新UI需求，统一使用Verdana字体 |
 | 1.2   | 2025-03-15 | EVYD产品团队 | 新增UX界面设计(POC)功能 |
 | 1.2.1 | 2025-03-18 | EVYD产品团队 | 修复UX界面设计功能的用户体验问题，包括文本区域展开和生成/停止功能 |
 | 1.3.0 | 2025-03-22 | EVYD产品团队 | 新增GitHub Actions自动部署到AWS S3功能，提高部署效率 |
@@ -327,7 +327,7 @@ Follow strictly this Markdown structure:
 #### 4.4.2 字体与排版
 - 为不同语言提供适合的字体设置
 - 简体中文和繁体中文使用微软雅黑字体
-- 英文使用Lato字体
+- 英文使用Verdana字体
 - 根据语言自动调整行高和文本间距
 
 #### 4.4.3 界面适配
@@ -381,18 +381,17 @@ Follow strictly this Markdown structure:
 - 采用现代简洁的界面风格
 - 使用清晰的导航结构
 - 保持界面一致性
-- 全站统一使用 Lato 字体，提供一致的视觉体验
+- 全站统一使用 Verdana 字体，提供一致的视觉体验
 - 全站统一使用EVYD黑色Logomark作为浏览器标签图标(favicon)，增强品牌一致性
 
 ### 6.2 字体规范
 
 - 多语言字体支持：
-  - 英文：Lato字体（从Google Fonts引入）
+  - 英文：Verdana（系统自带字体）
   - 中文（简体和繁体）：微软雅黑（Microsoft YaHei）
-- 字重使用：Light (300), Regular (400), Medium (500), Semi-Bold (600), Bold (700)
-- 标题使用 Semi-Bold 或 Bold 字重
-- 正文使用 Regular 字重
-- 强调文字使用 Medium 字重
+- 标题使用粗体字重
+- 正文使用常规字重
+- 强调文字使用粗体字重
 - 使用系统字体作为备选方案
 
 ### 6.3 主要界面
@@ -498,7 +497,7 @@ Follow strictly this Markdown structure:
 | 里程碑 | 计划日期 | 主要交付内容 |
 |-------|---------|------------|
 | Alpha版本 | / | / |
-| UI优化版本 | 2025-03-08 | 统一全站字体为Lato，提升用户体验一致性 |
+| UI优化版本 | 2025-03-08 | 统一全站字体为Verdana，提升用户体验一致性 |
 | UX界面设计(POC) | 2025-03-15 | 新增Figma界面设计提示词生成功能 |
 | Bug修复版本 | 2025-03-18 | 修复UX界面设计文本区域展开和生成/停止功能，统一用户体验 |
 | 自动部署版本 | 2025-03-22 | 新增GitHub Actions自动部署到AWS S3的功能，实现代码推送自动同步 |
@@ -542,7 +541,7 @@ Follow strictly this Markdown structure:
 | User Story | 从终端用户角度描述软件功能的简短描述 |
 | API | 应用程序编程接口，允许不同软件应用之间的交互 |
 | Dify | 一种AI应用开发平台 |
-| Lato | 由波兰设计师Łukasz Dziedzic设计的无衬线字体，项目中使用的主要字体 |
+| Verdana | 由微软公司设计的无衬线字体，项目中使用的主要字体 |
 | POC | Proof of Concept(概念验证)，用于验证某个想法或概念的可行性 |
 | Figma | 一款基于浏览器的协作式界面设计工具 |
 | GitHub Actions | GitHub提供的持续集成和持续部署(CI/CD)服务 |
@@ -565,7 +564,7 @@ Follow strictly this Markdown structure:
 - Dify API文档
 - 产品经理工作指南
 - AI内容生成最佳实践
-- Google Fonts Lato字体文档 
+- Google Fonts Verdana字体文档 
 - Figma API与设计系统文档 
 - GitHub Actions工作流文档
 - AWS S3静态网站托管文档 
