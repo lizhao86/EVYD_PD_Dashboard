@@ -25,6 +25,21 @@
     <!-- 引入国际化工具 (Load as module) -->
     <script type="module" src="/scripts/i18n.js"></script>
     <!-- Verdana 是系统字体，不需要额外加载 -->
+    <!-- 强制应用字体样式 -->
+    <style>
+        /* 强制应用字体设置，确保覆盖其他样式 */
+        html[lang="en"] body,
+        html[lang="en"] * {
+            font-family: Verdana, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+        }
+        
+        html[lang="zh-CN"] body,
+        html[lang="zh-TW"] body,
+        html[lang="zh-CN"] *,
+        html[lang="zh-TW"] * {
+            font-family: "Microsoft YaHei", "微软雅黑", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+        }
+    </style>
     <style>
         /* 根据BruHealth风格的样式 */
         :root {

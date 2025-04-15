@@ -29,6 +29,23 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- Verdana 是系统字体，不需要额外加载 -->
+    
+    <!-- 强制应用字体样式 -->
+    <style>
+        /* 强制应用字体设置，确保覆盖其他样式 */
+        html[lang="en"] body,
+        html[lang="en"] * {
+            font-family: Verdana, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+        }
+        
+        html[lang="zh-CN"] body,
+        html[lang="zh-TW"] body,
+        html[lang="zh-CN"] *,
+        html[lang="zh-TW"] * {
+            font-family: "Microsoft YaHei", "微软雅黑", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+        }
+    </style>
+    
     <!-- 应用入口脚本 (Load as module) -->
     <script type="module" src="/modules/apps/user-manual/index.js"></script>
 </head>
