@@ -1761,19 +1761,25 @@ a, a:visited, a:active, a:focus {
 }
 
 .loading-circle {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 2px solid #ff3333;
+    width: 14px; /* Adjust size */
+    height: 14px;
+    border: 2px solid currentColor; /* Default color */
     border-top-color: transparent;
     border-radius: 50%;
-    animation: spin 1s linear infinite;
+    display: inline-block;
+    animation: spin 0.8s linear infinite;
+}
+
+/* Specific style for generating state */
+.loading-circle.loading-red {
+    border-color: #ff3333; /* Red color */
+    border-top-color: transparent;
 }
 
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
-} 
+}
 
 /* 语言选择器样式 */
 .language-selector {

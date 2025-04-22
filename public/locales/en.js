@@ -392,5 +392,35 @@ window.en = {
         special: 'Must contain at least one special character',
         uppercase: 'Must contain at least one uppercase letter',
         lowercase: 'Must contain at least one lowercase letter'
+    },
+
+    // Requirement Analysis
+    requirementAnalysis: {
+        pageTitle: 'EVYD PM AI Workbench - Requirement Analysis Assistant',
+        title: 'AI Requirement Analysis Assistant',
+        loadingInfo: 'Fetching application information...',
+        connectionError: 'Connection Error',
+        connectionErrorDesc: 'Unable to connect to the Dify API. Please check your API address and key settings.',
+        apiKeyMissingError: 'API Key for requirementsAnalysis not found. Please configure it in the admin panel.',
+        apiEndpointMissing: 'API Endpoint for requirementsAnalysis not found. Please check global configuration.',
+        missingParams: 'Missing necessary parameters, cannot generate.',
+        generationFailed: 'Generation failed:',
+        retryConnection: 'Retry Connection',
+        appName: 'Requirement Analysis Assistant',
+        appDescription: 'Application description loading...',
+        requirementLabel: 'Requirement Description',
+        requirementPlaceholder: 'Enter the requirement content to be analyzed.',
+        clearButton: 'Clear',
+        resultTitle: 'Generated Result',
+        stopButton: 'Stop Generating',
+        systemInfoTitle: 'System Information',
+        elapsedTimeLabel: 'Time:',
+        totalStepsLabel: 'Steps:',
+        totalTokensLabel: 'Tokens:',
+        secondsSuffix: 's',
+        error: {
+            requirementRequired: 'Requirement description cannot be empty.',
+            requirementTooLong: 'Requirement description cannot exceed 5000 characters.'
+        }
     }
 }; 

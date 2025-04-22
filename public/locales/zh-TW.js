@@ -392,5 +392,35 @@ window.zhTW = {
         special: '必須包含至少一個特殊字符',
         uppercase: '必須包含至少一個大寫字母',
         lowercase: '必須包含至少一個小寫字母'
+    },
+
+    // 需求分析助手頁面
+    requirementAnalysis: {
+        pageTitle: "EVYD 產品經理AI工作台 - 需求分析助手",
+        title: "AI 需求分析助手",
+        loadingInfo: "正在獲取應用程式資訊...",
+        connectionError: "連線錯誤",
+        connectionErrorDesc: "無法連線到Dify API，請檢查API位址和金鑰設定。",
+        apiKeyMissingError: "未能找到 requirementsAnalysis 的 API 金鑰，請在管理員面板設定。",
+        apiEndpointMissing: '未能找到 requirementsAnalysis API 位址，請聯繫管理員檢查全域設定。',
+        missingParams: '缺少必要參數，無法生成。',
+        generationFailed: '生成失敗:',
+        retryConnection: "重試連線",
+        appName: "需求分析助手",
+        appDescription: "應用程式描述載入中...",
+        requirementLabel: "需求描述",
+        requirementPlaceholder: "請輸入需要分析的需求內容。",
+        clearButton: "清空",
+        resultTitle: "生成結果",
+        stopButton: "停止生成",
+        systemInfoTitle: "系統資訊",
+        elapsedTimeLabel: "耗時:",
+        totalStepsLabel: "總步驟:",
+        totalTokensLabel: "總Token:",
+        secondsSuffix: '秒',
+        error: {
+            requirementRequired: "需求描述不能為空。",
+            requirementTooLong: "需求描述不能超過5000字元。"
+        }
     }
 }; 
