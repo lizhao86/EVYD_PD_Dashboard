@@ -31,6 +31,7 @@ const RequirementAnalysisApp = {
      * 初始化应用
      */
     async init() {
+        // console.log('[RA Index] RequirementAnalysisApp.init() started.'); // REMOVE LOG
         try {
             // 首先等待Header初始化完成, header 会处理认证和用户设置加载
             await Header.init(); 
@@ -84,6 +85,7 @@ const RequirementAnalysisApp = {
             // 获取应用信息 (via local API module)
             this.fetchAppInformation();
             
+            // console.log('[RA Index] Calling bindEvents()...'); // REMOVE LOG
             // 绑定事件 (handlers will call UI and API methods)
             this.bindEvents();
 
@@ -125,8 +127,8 @@ const RequirementAnalysisApp = {
      * 绑定所有事件监听器
      */
     bindEvents() {
-        const generateButton = document.getElementById('generate-analysis');
-        const stopButton = document.getElementById('stop-generation'); // Assumed ID for stop button
+        // console.log('[RA Index] bindEvents() called.'); // REMOVE LOG
+        const generateButton = document.getElementById('generate-button'); // CORRECT ID
         const promptInput = document.getElementById('requirement-description');
         const clearFormButton = document.getElementById('clear-form');
         const copyResultButton = document.getElementById('copy-result');
@@ -141,7 +143,7 @@ const RequirementAnalysisApp = {
                      UI.handleInput(promptInput.value);
                 } else {
                     // Basic fallback if UI module doesn't handle it
-                    const generateBtn = document.getElementById('generate-analysis');
+                    const generateBtn = document.getElementById('generate-button');
                     if(generateBtn) generateBtn.disabled = promptInput.value.trim().length === 0;
                 }
             });
@@ -159,17 +161,6 @@ const RequirementAnalysisApp = {
             });
         }
         
-        // Stop button (might be the same as generateButton when in stopping state)
-        // Ensure we handle the stop action if a dedicated stop button exists
-        if (stopButton && stopButton !== generateButton) {
-            stopButton.addEventListener('click', async (e) => {
-                 e.preventDefault();
-                 if (this.state.isGenerating) {
-                     await this.stopGeneration();
-                 }
-            });
-        }        
-
         if (clearFormButton) {
             clearFormButton.addEventListener('click', this.handleClearForm.bind(this));
         }
@@ -183,9 +174,8 @@ const RequirementAnalysisApp = {
         }
 
         if (retryButton) {
-            // Retry loading app info if initial fetch failed
             retryButton.addEventListener('click', () => {
-                 UI.hideError(); // Hide the error message
+                 UI.hideError();
                  this.fetchAppInformation(); 
             }); 
         }

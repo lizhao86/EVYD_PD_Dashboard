@@ -40,6 +40,7 @@
 | 1.6.9 | 2025-04-15 | EVYD产品团队 | **国际化稳定性修复**: 修复语言切换后页面自动刷新功能，确保翻译完全应用。清理国际化及存储模块的冗余日志输出。 |
 | 1.6.10 | 2025-04-15 | EVYD产品团队 | **国际化体验优化**: 解决页面加载时语言内容闪烁问题，通过在HTML加载早期添加CSS类隐藏内容，待翻译应用后再显示，确保流畅视觉体验。 |
 | 1.6.11 | 2025-04-22 | EVYD产品团队 | **新功能与优化**: 上线"需求分析助手"功能。修复翻译文件加载路径问题，删除冗余的 `/locales` 目录，统一使用 `/public/locales`。删除未使用的旧版 `modules/apps/requirements/` 目录及其内容。 |
+| 1.6.12 | 2025-04-23 | EVYD产品团队 | **代码标准化**: 统一四个AI应用(需求分析,用户手册,用户故事,UX设计)的主要操作按钮ID(`generate-button`)、移除独立停止按钮逻辑、统一系统信息切换按钮功能、统一字符计数警告CSS类名(`.warning`)。修复需求分析助手按钮点击无响应问题。 |
 
 ## 3 产品概述
 
@@ -118,61 +119,6 @@ EVYD 产品经理 AI 工作台是基于EVYD科技先进的人工智能技术，�
       6.  **给出最终结果**: 如果检查发现信息不足，它会提示你需要补充更多细节；如果信息完善，就会直接输出最终的 User Story 文档。
       7.  **最终产出**: 你会得到一份结构化的 User Story 文档，或者得到一个友好的提示，告诉你需要补充哪些信息才能生成更好的用户故事。
 
-##### 4.2.1.2 核心提示词
-```markdown
-根据用户的需求输入，请按下方内容和格式写 User Story 文档
-
-System:
-1. You are a senior product manager in the healthcare internet industry with expertise in health management systems and user experience design.
-2. You can understand user requirements and generate high-quality User Story documents in a standard format, including title, description, Figma links, and acceptance criteria.
-3. Interaction if the requirement provided is not clear:
-   - Guide the user to describe their requirement (target user, goal, core functionality).
-   - Ask clarifying questions in Chinese to resolve ambiguity and ensure full understanding.
-4. If the requirement is detailed enough, generate content for User Story.
-5. When generating content, please consider and refine from the following dimensions:
-    - Healthcare management perspective: Consider health data analysis, adherence tracking, and health goal achievement
-    - IT implementation perspective: Consider system functionality, user interface, and technical implementation
-    - User experience perspective: Consider usability, notification effectiveness, and personalisation options
-    - User Interface: parameters, buttons, clicking and jumping logic
-    - The title should be written in an As [a user], I want to [do a thing] format.
-6. Requirements for Acceptance Criteria:
-    - Use the Given-When-Then-And format, ensuring each scenario is complete and detailed.
-    - Include at least 5 key scenarios covering main functionality, edge cases, and error handling.
-    - Each scenario should consider user operation flow, system response, and data changes.
-    - Appropriately add "And" clauses to make acceptance criteria more comprehensive.
-    - Define conditions that QA can verify.
-    - Leave no room for interpretation. These must cover the Main Success Path ("Happy Path"): The primary way the feature should work correctly. Alternative Paths: Other valid ways the feature might be used. Edge Cases: Uncommon but possible situations. And Error Handling: How the system should respond to invalid input or failures.
-6. Output everything in English with markdown format regardless of the language used by the user, ensuring accurate professional terminology.
-
-Assistant
-
-### Title:
-[{{#1743174409613.Platform#}}] {{#1743174409613.System#}} {{#1743174409613.Module#}} - As an Admin, I Can View Inherited Read-Only Permissions When Assigning Permissions to Accounts which already linked with certain Roles
-
-### **Description**
-When assigning permissions to accounts, I can see the permissions inherited from roles, but these are displayed in a read-only format to prevent unauthorized changes.
-
-### **Figma Section Link(s)**
-- User flow: N/A *(Remove if Appliable)*
-- LoFi wireframe: *N/A (Remove if Appliable)*
-- HiFi wireframe (final design): *N/A (Remove if Appliable)*
-
-### **Acceptance Criteria**
-**Scenario 1: Viewing Inherited Permissions During Assignment**
-- **Given** I am an Admin assigning permissions to accounts,
-- **When** I select an account that is linked with certain roles already,
-- **Then** I should be able to view the permissions inherited from these roles.
-
-**Scenario 2: Read-Only Format for Inherited Permissions**
-- **Given** I am viewing inherited permissions for an account,
-- **When** I examine these permissions,
-- **Then** they should be displayed in a read-only format to ensure that I cannot make unauthorized changes to them.
-
-**Scenario 3: Clarity and Distinction of Inherited Permissions**
-- **Given** I am in the process of assigning rights to an account,
-- **When** I view the permissions linked to that account,
-- **Then** the inherited permissions should be clearly distinguished from the directly assigned permissions, possibly through different visual cues or sections.
-```
 
 #### 4.2.2 用户手册生成器
 - 根据产品的需求描述自动生成用户手册文档
@@ -188,56 +134,6 @@ When assigning permissions to accounts, I can see the permissions inherited from
    - **核心模型**: 在撰写用户手册时，主要使用了 Gemini 模型 (langgenius/gemini/google:gemini-2.0-flash-thinking-exp-01-21)。Gemini 模型在这个 ChatBot 中扮演着资深技术文档撰写专家的角色。
    - **工作流程**: 这个工作流相对直接，你只需要提供  User Story (包含功能描述和验收标准)，ChatBot 就会根据预设的提示词，自动生成用户手册的相应章节。
 
-##### 4.2.2.2 核心提示词
-```markdown
-You are a **Senior Technical Writer** specialized in **healthcare technology** with deep experience in creating end-user guides based on user-centered design principles.
-
-## Input (Provided)
-A **User Story** with:
-- Feature description from user's viewpoint
-- Acceptance Criteria (AC)
-
-## Task
-Based on the **provided User Story and AC**, generate a clear, structured User Manual section following these rules:
-
-### Writing Requirements
-- **Simple sentences:** Use clear, short language. Follow the pattern **"The user can [action] to [outcome]."** for descriptive text.
-- **End-User Perspective:** Address directly to end-users (doctors, nurses, administrators, patients). Avoid unnecessary technical jargon.
-- **Action-Step clarity:** Numbered steps using imperative verbs ("Click", "Enter", "Select") for user instructions.
-- **UI Element references:** Clearly state UI elements (buttons, fields, tabs) by their exact name or indicate placeholders like `[Button Label]` if missing.
-- **Troubleshooting:** Briefly guide users through possible common issues or questions.
-
-### Output Structure (Use Markdown)
-Follow strictly this Markdown structure:
-
-```markdown
-# [Feature Name]
-
-*This feature allows the user to [brief overview of the functionality and purpose].*
-
-## [Task 1 Title, e.g., Access Patient History]
-*The user can [perform action to reach specific outcome].*
-1. Click ['Element Label'].
-2. Enter [information] into ['Field Label'] field.
-3. Click ['Element Label'] to [complete action].
-
-## [Optional Task 2 Title, e.g., Edit Patient Information]
-*The user can [perform action to edit/update].*
-1. Select ['Element Label'].
-2. Update [information].
-    * *Tip:* [Useful tip or reminder].
-3. Click ['Element Label'].
-
-## [If Applicable: Advanced Options]
-*The user can also [optional advanced action].*
-1. Click ['Advanced Settings'].
-2. Choose [option].
-3. [Further steps].
-
-## Troubleshooting / Common Questions
-- **Issue/Question:** Brief guidance.
-- [Other issues/questions as needed]
-```
 
 #### 4.2.3 UX界面设计(POC)
 - 根据需求描述和User Story生成Figma界面设计的AI提示词
@@ -257,60 +153,24 @@ Follow strictly this Markdown structure:
    - **核心模型**: 在生成 UX 设计提示词时，主要使用了 Gemini 模型 (langgenius/gemini/google:gemini-2.0-flash)。 Gemini 模型在这个 Chatbot 中扮演着有经验的产品设计师的角色，帮助你将产品需求转化为设计语言。
    - **注意**: 需要注意的是，这个功能目前还处于  POC（概念验证）阶段，生成的提示词是用来辅助 Figma First Draft AI 的，但由于 Figma 本身的 AI 功能还在发展中，所以   不能完全依赖   生成的结果。UI/UX 团队可能需要进行细致的调整和优化。
 
-##### 4.2.3.2 核心提示词
-```markdown
-【你的角色】
-你是一位经验丰富的产品设计师，擅长将产品需求(Acceptance Criteria)转换为清晰的线框图(Wireframe)设计描述。你有丰富的UI/UX经验，能够准确理解产品需求并提炼出页面的核心元素与功能流程。
-
-【工作流程】
-1. 我会提供一段Acceptance Criteria(AC)和相关描述
-2. 你需要分析理解这些需求，并将其转换为线框图(Wireframe)的设计描述
-
-【你的任务】
-基于我提供的AC，你需要提供以下内容：
-1. 页面概述：用一句话描述每个页面的核心目的（必填），例如：
-    - "一个销售烧烤设备的商店结账页面"
-    - "一个宠物食品配送应用"
-    - "一个内容策略咨询公司的营销网站"
-
-2. 核心功能
-    - 详细列出页面应包含的关键功能元素
-
-3. 给 UIUX 建议
-    - 描述页面主要区域的组织方式和各组件的合理排布
-    - 信息层次结构和视觉重量分布
-    - 主要交互方式和信息架构
-
-【输出要求】
-    - 使用Markdown格式输出所有内容
-    - 无论我使用什么语言提问，你都必须用英文回答
-    - 保持专业、简洁但详尽的描述风格
-
-【输出格式】
-当我提供AC后，请按以下格式组织你的回答:
-
-## 注意
-⚠️ 此 AI 还在测试中，如果完全依赖这个生成 UX，UIUX team 会生气。请仔细甄别⚠️
-
-## Page 1 - Page Name （copy paste 下面的内容去 Figma First Draft AI）
-[一句话描述页面概述]
-[一句话描述页面核心功能]
-
-## Page 2 - Page Name （copy paste 下面的内容去 Figma First Draft AI）
-[一句话描述页面概述]
-[一句话描述页面核心功能]
-
-## To UIUX Team (DONT FEED to FigmaAI)
-[详细描述给UIUX 建议]
-
-```
-
 #### 4.2.4 需求分析助手
 - 根据用户输入的产品信息（如目标用户、核心问题、预期目标等），AI 自动生成结构化的需求分析文档。
 - 输出包含用户画像、用户故事、功能列表、非功能需求等关键部分。
 - 提供输出内容的一键复制功能。
 - 支持应急暂停正在生成的任务，节省 Token。
 - 完成输出后展示每次生成的耗时，Token消耗，步骤次数。
+
+##### 4.2.4.1 Dify 工作流
+- **工作流作用**：该助手相当于资深产品需求分析师，可以将产品经理收集来的零散客户想法或需求，转化为结构化、可执行的需求收集文档，并对解决方案部分进行系统性分解，提出模块化功能建议。
+- **幕后功臣**：该功能基于 Dify 工作流实现，结合 AI（Gemini 模型）和知识库检索能力，对输入的非结构化内容进行深度理解和归纳。
+- **核心模型与知识库**：主要用 Gemini 模型（langgenius/gemini/google:gemini-2.0-pro-exp-02-05），支持调用公司知识库进行补充分析，实现多维度需求澄清和优化建议。
+- **工作流程**：
+    1. **收集输入信息**：产品经理输入客户需求、功能设想或痛点，格式不拘，内容可完整可零散。
+    2. **知识库支持分析**：助手会根据知识库资料背景，自动补全行业背景、业务场景等上下文，并识别出核心诉求。
+    3. **结构化梳理与分解**：采用 Y Model 分析模型自动把需求梳理为"WHAT-用户场景"、"WHY-业务目标"、"HOW-功能建议"，尤其针对"HOW"部分细分为功能远景和实施说明。
+    4. **挑出关键问题**：如有模糊与不明之处，AI 会智能生成澄清建议或具体问题帮助产品经理二次确认需求本质。
+    5. **输出最终文档**：产出结构化、分层次的需求分析文档，并附带 2-3 个后续需求澄清建议，便于后续沟通与决策。
+
 
 ### 4.3 API配置模块 (已迁移至 DynamoDB)
 
@@ -575,3 +435,22 @@ Follow strictly this Markdown structure:
 - AWS S3静态网站托管文档 
 - [AWS Amplify V5 文档](https://docs.amplify.aws/) - 官方参考文档
 - [Vite 环境变量指南](https://vitejs.dev/guide/env-and-mode.html) - 环境变量配置参考 
+
+## 11 技术重构待办事项 (JS模块统一)
+
+基于 2025-04-22 的代码分析，计划进行以下重构以统一 AI 应用模块的 JavaScript 代码：
+
+1.  **创建通用 UI 模块 (`/modules/common/dify-app-ui.js`):**
+    -   整合四个 `ui.js` 文件中的通用逻辑（DOM 元素缓存、状态显示、按钮状态管理、结果处理、表单交互等）。
+    -   依赖标准化的 HTML ID 和 CSS 类名。
+2.  **创建通用 API 客户端 (`/modules/common/dify-client.js`):**
+    -   整合四个 `api.js` 文件中的通用逻辑（获取应用信息、流式请求生成、停止生成、处理流式响应）。
+    -   通过配置或策略模式处理 Chat App 与 Workflow App 的差异 (端点、ID、事件)。
+    -   使用回调或事件将结果通知调用方，解耦依赖。
+3.  **创建应用基类 (`/modules/common/base-dify-app.js`):**
+    -   整合四个 `index.js` 文件中的通用逻辑（状态管理、`init` 流程、`bindEvents`、通用事件处理）。
+    -   实例化通用 UI 和 API 模块。
+    -   定义抽象方法（如 `getGenerationInputs`, `validateSpecificInputs`）供子类实现特定逻辑。
+4.  **重构各 AI 应用:**
+    -   修改 `requirement-analysis/index.js`, `user-manual/index.js`, `user-story/index.js`, `ux-design/index.js`，使其继承 `BaseDifyApp`。
+    -   移除或大幅简化各应用独立的 `api.js` 和 `ui.js` 文件。 

@@ -80,7 +80,7 @@ const UserStoryApp = {
         const clearForm = document.getElementById('clear-form');
         if (clearForm) clearForm.addEventListener('click', this.handleClearForm.bind(this));
         
-        const generateStory = document.getElementById('generate-story');
+        const generateStory = document.getElementById('generate-button');
         if (generateStory) generateStory.addEventListener('click', this.handleGenerateStory.bind(this));
         
         const stopGeneration = document.getElementById('stop-generation');
@@ -108,7 +108,7 @@ const UserStoryApp = {
      * 生成User Story
      */
     handleGenerateStory() {
-        const generateButton = document.getElementById('generate-story');
+        const generateButton = document.getElementById('generate-button');
         const action = generateButton.getAttribute('data-action');
         
         if (action === 'stop') {
@@ -317,7 +317,7 @@ const UserStoryApp = {
         if (charCountContainer) {
             charCountContainer.classList.remove('warning');
         }
-        const generateButton = document.getElementById('generate-story');
+        const generateButton = document.getElementById('generate-button');
         if (generateButton) {
             generateButton.disabled = false;
         }

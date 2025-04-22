@@ -83,7 +83,7 @@ const UXDesignApp = {
     },
 
     bindEvents() {
-        const generateButton = document.getElementById('generate-prompt');
+        const generateButton = document.getElementById('generate-button');
         const promptInput = document.getElementById('requirement-description');
 
         if (promptInput) {

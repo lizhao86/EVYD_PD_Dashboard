@@ -15,7 +15,7 @@ const UI = {
         // Cache frequently used elements
         this.elements.resultContainer = document.getElementById('result-container');
         this.elements.requirementDesc = document.getElementById('requirement-description');
-        this.elements.generateButton = document.getElementById('generate-analysis');
+        this.elements.generateButton = document.getElementById('generate-button');
         this.elements.stopButton = document.getElementById('stop-generation');
         this.elements.charCount = document.getElementById('char-count');
         this.elements.charCountContainer = document.querySelector('.char-counter');
@@ -286,7 +286,6 @@ const UI = {
         if (this.elements.charCount) this.elements.charCount.textContent = charCount;
         if (this.elements.charCountContainer) {
              this.elements.charCountContainer.classList.toggle('warning', charCount > 5000);
-             this.elements.charCountContainer.classList.toggle('limit-exceeded', charCount > 5000); // Use class from HTML
         }
     },
 

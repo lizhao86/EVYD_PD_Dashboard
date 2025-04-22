@@ -137,7 +137,7 @@ const UI = {
      * 显示请求发送中的状态
      */
     showRequestingState() {
-        const generateButton = document.getElementById('generate-story');
+        const generateButton = document.getElementById('generate-button');
         const stopButton = document.getElementById('stop-generation');
 
         if (generateButton) {
@@ -161,7 +161,7 @@ const UI = {
         const resultMarkdown = document.getElementById('result-content-markdown');
         const systemInfoContainer = document.getElementById('system-info-container');
         const systemInfoContent = document.getElementById('system-info-content');
-        const generateButton = document.getElementById('generate-story');
+        const generateButton = document.getElementById('generate-button');
         const stopButton = document.getElementById('stop-generation');
 
         if (resultContainer) resultContainer.style.display = 'block';
@@ -190,11 +190,11 @@ const UI = {
      * 显示生成完成状态
      */
     showGenerationCompleted() {
-        const generateButton = document.getElementById('generate-story');
+        const generateButton = document.getElementById('generate-button');
         if (generateButton) {
             // --- MODIFY: Ensure button is enabled --- 
             generateButton.disabled = false;
-            const buttonText = t('common.button.generate', { default: '发送给AI' });
+            const buttonText = t('common.button.generate', { default: '发送给Dify' });
             generateButton.innerHTML = buttonText;
             generateButton.setAttribute('data-action', 'generate');
         }
@@ -249,7 +249,7 @@ const UI = {
     updateCharCountDisplay(charCount) {
         const charCountElement = document.getElementById('char-count');
         const charCountContainer = document.querySelector('.char-counter');
-        const generateButton = document.getElementById('generate-story');
+        const generateButton = document.getElementById('generate-button');
 
         if (charCountElement) {
             charCountElement.textContent = charCount;
@@ -329,6 +329,14 @@ const UI = {
             // 保持纯文本显示
             resultContentEl.style.display = 'block';
             resultMarkdownEl.style.display = 'none';
+        }
+    },
+
+    setStoppingState() {
+        const generateButton = document.getElementById('generate-button');
+        if (generateButton) {
+            const stoppingText = t('common.stopping', { default: '正在停止...' });
+            generateButton.innerHTML = stoppingText;
         }
     }
 };

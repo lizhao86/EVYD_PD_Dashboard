@@ -10,7 +10,6 @@ const UXDesignUI = {
     charCountElement: null,
     expandTextareaButton: null,
     generateButton: null,
-    stopButton: null,
     copyButton: null,
     toggleSystemInfoButton: null,
     resultContentEl: null,
@@ -33,8 +32,7 @@ const UXDesignUI = {
         this.textareaElement = document.getElementById('requirement-description');
         this.charCountElement = document.getElementById('char-count');
         this.expandTextareaButton = document.getElementById('expand-textarea');
-        this.generateButton = document.getElementById('generate-prompt');
-        this.stopButton = document.getElementById('stop-generation');
+        this.generateButton = document.getElementById('generate-button');
         this.copyButton = document.getElementById('copy-result');
         this.toggleSystemInfoButton = document.getElementById('toggle-system-info');
         this.resultContentEl = document.getElementById('result-content');
@@ -141,9 +139,6 @@ const UXDesignUI = {
             this.generateButton.disabled = true; // Disable button
             this.generateButton.setAttribute('data-action', 'requesting');
         }
-        if (this.stopButton) {
-            this.stopButton.style.display = 'none'; // Hide separate stop button
-        }
     },
 
     showGenerationStarted() {
@@ -162,7 +157,6 @@ const UXDesignUI = {
             this.generateButton.innerHTML = '<div class="loading-circle-container"><div class="loading-circle" style="border-color: #ff3333; border-top-color: transparent;"></div></div> ' + generatingText;
             this.generateButton.setAttribute('data-action', 'stop');
         }
-        if (this.stopButton) this.stopButton.style.display = 'none';
         
         if (this.resultContentEl) {
             this.resultContentEl.innerHTML = t('common.generatingSimple', { default: '正在生成...'}) + '<span class="cursor"></span>';
@@ -174,20 +168,24 @@ const UXDesignUI = {
         }
         if (this.statsContainerEl) this.statsContainerEl.style.display = 'none';
         if (this.systemInfoContainerEl) this.systemInfoContainerEl.style.display = 'none';
+        if (this.generateButton) {
+            this.generateButton.classList.remove('btn-danger');
+            this.generateButton.classList.add('btn-primary');
+            this.updateCharCountDisplay(this.textareaElement?.value?.length ?? 0);
+        }
     },
 
     showGenerationCompleted() {
         // console.log("[UX UI] Showing generation completed...");
         if (this.generateButton) {
             this.generateButton.disabled = false;
-            const buttonText = t('common.button.generate', { default: '发送给AI' });
+            const buttonText = t('common.button.generate', { default: '发送给Dify' });
             this.generateButton.innerHTML = buttonText;
             this.generateButton.setAttribute('data-action', 'generate');
             this.generateButton.classList.remove('btn-danger');
             this.generateButton.classList.add('btn-primary');
             this.updateCharCountDisplay(this.textareaElement?.value?.length ?? 0);
         }
-        if (this.stopButton) this.stopButton.style.display = 'none';
     },
     
     /**

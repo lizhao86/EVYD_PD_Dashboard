@@ -99,8 +99,7 @@ const UserManualApp = {
      */
     bindEvents() {
         // console.log('Binding User Manual events...');
-        const generateButton = document.getElementById('generate-manual');
-        const stopButton = document.getElementById('stop-generation');
+        const generateButton = document.getElementById('generate-button');
         const promptInput = document.getElementById('requirement-description');
 
         if (promptInput) {
@@ -149,6 +148,13 @@ const UserManualApp = {
         if (expandTextareaButton) {
             expandTextareaButton.addEventListener('click', this.toggleTextareaExpand.bind(this));
         }
+        
+        // --- ADD binding for toggle system info --- 
+        const toggleSystemInfoButton = document.getElementById('toggle-system-info');
+        if (toggleSystemInfoButton) {
+            toggleSystemInfoButton.addEventListener('click', UI.toggleSystemInfo);
+        }
+        // --- END binding --- 
     },
     
     // --- ADD Central handleGenerate Function ---

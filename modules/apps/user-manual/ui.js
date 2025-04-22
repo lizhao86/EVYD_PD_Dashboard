@@ -92,7 +92,7 @@ const UI = {
     },
     
     showRequestingState() {
-        const generateButton = document.getElementById('generate-manual');
+        const generateButton = document.getElementById('generate-button');
         const stopButton = document.getElementById('stop-generation');
 
         if (generateButton) {
@@ -116,7 +116,7 @@ const UI = {
         const resultMarkdown = document.getElementById('result-content-markdown');
         const systemInfoContainer = document.getElementById('system-info-container');
         const systemInfoContent = document.getElementById('system-info-content');
-        const generateButton = document.getElementById('generate-manual'); // Correct button ID
+        const generateButton = document.getElementById('generate-button'); // Correct button ID
         const stopButton = document.getElementById('stop-generation');
 
         // 显示结果容器
@@ -146,24 +146,24 @@ const UI = {
     },
     
     showGenerationCompleted() {
-        const generateButton = document.getElementById('generate-manual'); // Correct button ID
+        const generateButton = document.getElementById('generate-button'); // Correct button ID
         if (generateButton) {
             generateButton.disabled = false; // --- MODIFY: Ensure button is enabled --- 
-            const buttonText = t('common.button.generate', { default: '发送给AI' });
+            const buttonText = t('common.button.generate', { default: '发送给Dify' });
             generateButton.innerHTML = buttonText;
             generateButton.setAttribute('data-action', 'generate');
             generateButton.classList.remove('btn-danger', 'btn-secondary'); 
             generateButton.classList.add('btn-primary');
         }
-        const stopButton = document.getElementById('stop-generation');
-        if(stopButton) stopButton.style.display = 'none';
+        // const stopButton = document.getElementById('stop-generation'); // REMOVE
+        // if(stopButton) stopButton.style.display = 'none'; // REMOVE
     },
     
     /**
      * 显示正在停止生成状态
      */
     setStoppingState() {
-        const generateButton = document.getElementById('generate-manual');
+        const generateButton = document.getElementById('generate-button');
         if (generateButton) {
             const stoppingText = t('common.stopping', { default: '正在停止...' });
             generateButton.innerHTML = stoppingText;
@@ -210,13 +210,13 @@ const UI = {
     updateCharCountDisplay(charCount) {
         const charCountElement = document.getElementById('char-count');
         const charCountContainer = document.querySelector('.char-counter');
-        const generateButton = document.getElementById('generate-manual'); // Correct button ID
+        const generateButton = document.getElementById('generate-button'); // Correct button ID
 
         if (charCountElement) charCountElement.textContent = charCount;
         if (charCountContainer) charCountContainer.classList.toggle('warning', charCount > 5000);
-        if (generateButton) {
-            generateButton.disabled = charCount > 5000 && generateButton.getAttribute('data-action') === 'generate';
-        }
+        // if (generateButton) { // REMOVE Check (already handled elsewhere?)
+        //     generateButton.disabled = charCount > 5000 && generateButton.getAttribute('data-action') === 'generate';
+        // }
     },
      showStopMessage() {
          const resultContent = document.getElementById('result-content');
@@ -277,7 +277,29 @@ const UI = {
             if (!data) console.warn("[UI UM] displaySystemInfo called without data.");
             // else console.warn("[UI UM] System info container/content elements not found.");
         }
+    },
+
+    // --- ADD Function to toggle system info visibility --- 
+    toggleSystemInfo() {
+        const content = document.getElementById('system-info-content');
+        const button = document.getElementById('toggle-system-info');
+        if (!content || !button) {
+            console.warn("[UI UM] Cannot toggle system info, content or button element not found.");
+            return;
+        }
+
+        const isHidden = content.style.display === 'none' || content.offsetHeight === 0;
+        if (isHidden) {
+            content.style.display = 'block';
+            button.classList.remove('collapsed');
+            button.title = t('common.collapseInfo', { default: '收起系统信息' });
+        } else {
+            content.style.display = 'none';
+            button.classList.add('collapsed');
+            button.title = t('common.expandInfo', { default: '展开系统信息' });
+        }
     }
+    // --- END Function --- 
 };
 
 /**
