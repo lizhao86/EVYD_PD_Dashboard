@@ -26,7 +26,8 @@ const entryHtmlFiles = [
   'templates/pages/Homepage.html',
   'templates/pages/user-manual.html',
   'templates/pages/user-story.html',
-  'templates/pages/ux-design.html'
+  'templates/pages/ux-design.html',
+  'templates/pages/requirement-analysis.html'
   // Add other necessary HTML files here
 ];
 
