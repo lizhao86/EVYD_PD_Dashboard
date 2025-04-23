@@ -70,14 +70,14 @@ const Header = {
             const langDisplay = document.getElementById('current-language-display');
             if (langDisplay) {
                 langDisplay.textContent = I18n.supportedLanguages[currentLang] || currentLang;
-                console.log(`Header设置语言显示为: ${langDisplay.textContent} (${currentLang})`);
+                // console.log(`Header设置语言显示为: ${langDisplay.textContent} (${currentLang})`);
             }
             
             // 应用翻译到整个header容器
             const headerElement = document.getElementById(containerId);
             if (headerElement) {
                 I18n.applyTranslations(headerElement);
-                console.log('已应用翻译到header元素');
+                // console.log('已应用翻译到header元素');
             }
         } catch (error) {
             console.error("[Header.init] Error initializing I18n:", error);
@@ -1444,12 +1444,12 @@ const Header = {
             // 如果I18n已初始化，则从它那里获取当前语言
             if (typeof I18n !== 'undefined' && I18n.isInitialized) {
                 langCode = I18n.getCurrentLanguage();
-                console.log(`从I18n获取语言码: ${langCode}`);
+                // console.log(`从I18n获取语言码: ${langCode}`);
             } 
             // 否则从localStorage读取
             else if (localStorage.getItem('language')) {
                 langCode = localStorage.getItem('language');
-                console.log(`从localStorage获取语言码: ${langCode}`);
+                // console.log(`从localStorage获取语言码: ${langCode}`);
             }
             
             // 设置显示文本
@@ -1465,7 +1465,7 @@ const Header = {
                 display.textContent = langNames[langCode] || langCode;
             }
             
-            console.log(`语言选择器初始化完成，当前显示: ${display.textContent}`);
+            // console.log(`语言选择器初始化完成，当前显示: ${display.textContent}`);
         } else {
             console.warn('未找到语言选择器显示元素');
         }
@@ -1488,27 +1488,27 @@ const Header = {
                      languageDropdown.style.display = 'none'; // Hide dropdown
                     const lang = option.getAttribute('data-lang');
                      if (lang && lang !== I18n.getCurrentLanguage()) {
-                         console.log(`头部监听到语言点击: ${lang}`);
+                         // console.log(`头部监听到语言点击: ${lang}`);
                          // 立即更新语言显示器
                          const display = document.getElementById('current-language-display');
                          if (display) {
                              display.textContent = I18n.supportedLanguages[lang] || lang;
-                             console.log(`语言选择器已立即更新为: ${display.textContent}`);
+                             // console.log(`语言选择器已立即更新为: ${display.textContent}`);
                          }
                          
                          // 调用语言切换
                          try {
                              const success = await I18n.switchLanguage(lang);
                              if (success) {
-                                 console.log(`语言切换成功: ${lang}`);
+                                 // console.log(`语言切换成功: ${lang}`);
                                  // 强制重新翻译头部元素
                                  if (container) {
-                                     console.log('立即重新翻译头部区域');
+                                     // console.log('立即重新翻译头部区域');
                                      I18n.applyTranslations(container);
                                  }
                                  
                                  // 立即应用翻译到整个页面
-                                 console.log('立即应用翻译到整个页面');
+                                 // console.log('立即应用翻译到整个页面');
                                  I18n.applyTranslations();
                                  
                              } else {

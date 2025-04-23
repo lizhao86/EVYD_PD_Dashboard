@@ -31,10 +31,10 @@ const I18n = {
      * 初始化国际化模块 (async)
      */
     async init() {
-        console.log('I18n.init() 开始初始化...');
+        // console.log('I18n.init() 开始初始化...');
         
         if (this.isInitialized) {
-            console.log('I18n 已经初始化，跳过');
+            // console.log('I18n 已经初始化，跳过');
             return this.currentLang;
         }
         
@@ -55,7 +55,7 @@ const I18n = {
         // 4. 立即设置初始语言，但不加载翻译或应用
         this.currentLang = initialLang;
         document.documentElement.lang = this.currentLang;
-        console.log(`初始语言确定为 (来自本地存储或默认): ${this.currentLang}`);
+        // console.log(`初始语言确定为 (来自本地存储或默认): ${this.currentLang}`);
 
         // 5. 异步检查用户设置和认证
         let preferredLang = null;
@@ -67,7 +67,7 @@ const I18n = {
                     this.userSettings = await getCurrentUserSettings();
                     if (this.userSettings && this.userSettings.language) {
                         preferredLang = this.userSettings.language;
-                        console.log(`从用户设置中获取到首选语言: ${preferredLang}`);
+                        // console.log(`从用户设置中获取到首选语言: ${preferredLang}`);
                         
                         // 验证云端语言是否支持
                         if (!this.supportedLanguages[preferredLang]) {
@@ -75,7 +75,7 @@ const I18n = {
                             preferredLang = null; // 忽略无效的云端设置
                         }
                     } else {
-                         console.log('用户已登录但无云端语言设置');
+                        // console.log('用户已登录但无云端语言设置');
                     }
                 } catch (settingsError) {
                      console.error("获取用户设置时出错:", settingsError);
@@ -88,20 +88,20 @@ const I18n = {
         
         // 6. 确定最终语言 (用户设置优先)
         const finalLang = preferredLang || this.currentLang;
-        console.log(`最终语言确定为: ${finalLang}`);
+        // console.log(`最终语言确定为: ${finalLang}`);
         
         // 7. 如果最终语言与初始语言不同，更新状态
         if (finalLang !== this.currentLang) {
-            console.log(`语言从 ${this.currentLang} 更新为 ${finalLang} (基于用户设置)`);
+            // console.log(`语言从 ${this.currentLang} 更新为 ${finalLang} (基于用户设置)`);
             this.currentLang = finalLang;
             document.documentElement.lang = this.currentLang;
             // 同时更新localStorage，保持一致性
             localStorage.setItem('language', this.currentLang);
-            console.log(`更新本地存储的语言为: ${this.currentLang}`);
+            // console.log(`更新本地存储的语言为: ${this.currentLang}`);
         }
 
         // 8. 加载最终确定的语言的翻译
-        console.log(`开始加载最终语言 ${this.currentLang} 的翻译...`);
+        // console.log(`开始加载最终语言 ${this.currentLang} 的翻译...`);
         await this.loadTranslations(); // loadTranslations 内部会调用 applyTranslations 并移除加载类
         
         // 根据当前语言设置文档方向 (如果需要RTL支持)
@@ -113,7 +113,7 @@ const I18n = {
         
         this.isInitialized = true;
         this.isAutoRefreshBlocked = false; // 初始化完成后允许自动刷新
-        console.log('I18n 初始化完成');
+        // console.log('I18n 初始化完成');
         
         // 更新语言选择器显示
         this.updateLanguageDisplay();
@@ -128,9 +128,9 @@ const I18n = {
         const display = document.getElementById('current-language-display');
         if (display) {
             display.textContent = this.supportedLanguages[this.currentLang] || this.currentLang;
-            console.log(`更新语言选择器显示为: ${display.textContent}`);
+            // console.log(`更新语言选择器显示为: ${display.textContent}`);
         } else {
-            console.log('未找到语言选择器显示元素');
+            // console.log('未找到语言选择器显示元素');
         }
     },
     
@@ -143,14 +143,14 @@ const I18n = {
         // 檢查window對象上是否已有該語言對象
         const langCode = lang.replace('-', ''); // 轉換 zh-CN 為 zhCN 格式
         if (window[langCode]) {
-            console.log(`語言文件 ${lang}.js 已存在于window对象中`);
+            // console.log(`語言文件 ${lang}.js 已存在于window对象中`);
             return Promise.resolve();
         }
         
         // 检查当前页面是否已经加载了语言文件脚本
         const existingScript = document.querySelector(`script[src="/locales/${lang}.js"]`);
         if (existingScript) {
-            console.log(`語言文件 ${lang}.js 脚本标签已存在，但window对象中没有相应变量，尝试重新加载`);
+            // console.log(`語言文件 ${lang}.js 脚本标签已存在，但window对象中没有相应变量，尝试重新加载`);
             return new Promise((resolve, reject) => {
                 // 移除旧脚本并重新加载
                 existingScript.remove();
@@ -158,7 +158,7 @@ const I18n = {
                 script.src = `/locales/${lang}.js`;
                 script.onload = () => {
                     if (window[langCode]) {
-                        console.log(`語言文件 ${lang}.js 重新加载成功`);
+                        // console.log(`語言文件 ${lang}.js 重新加载成功`);
                         resolve();
                     } else {
                         console.error(`重新加载语言文件后，window.${langCode}仍不存在`);
@@ -174,13 +174,13 @@ const I18n = {
         }
 
         // 加载新的语言文件
-        console.log(`尝试加载新的语言文件: ${lang}.js`);
+        // console.log(`尝试加载新的语言文件: ${lang}.js`);
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
             script.src = `/locales/${lang}.js`;
             script.onload = () => {
                 if (window[langCode]) {
-                    console.log(`語言文件 ${lang}.js 加載成功`);
+                    // console.log(`語言文件 ${lang}.js 加載成功`);
                     resolve();
                 } else {
                     console.error(`加载语言文件后，window.${langCode}不存在`);
@@ -201,15 +201,15 @@ const I18n = {
     async loadTranslations() {
         try {
             // 根據當前語言加載對應的語言文件
-            console.log(`加载语言 ${this.currentLang} 的翻译内容`);
+            // console.log(`加载语言 ${this.currentLang} 的翻译内容`);
             const langCode = this.currentLang.replace('-', ''); // zh-CN -> zhCN
             
             // 检查window对象上是否已有翻译，如果没有则加载文件
             if (!window[langCode]) {
-                console.log(`未找到 window.${langCode}，尝试加载 ${this.currentLang}.js`);
+                // console.log(`未找到 window.${langCode}，尝试加载 ${this.currentLang}.js`);
                 await this.loadLanguageFile(this.currentLang);
             } else {
-                console.log(`已存在 window.${langCode}，直接使用`);
+                // console.log(`已存在 window.${langCode}，直接使用`);
             }
             
             // 从window对象获取翻译
@@ -218,7 +218,7 @@ const I18n = {
             if (!this.translations || Object.keys(this.translations).length === 0) {
                 console.warn(`警告: 語言包 ${this.currentLang} 加載失敗或為空`);
             } else {
-                console.log(`成功设置语言 ${this.currentLang} 的翻译内容，包含 ${Object.keys(this.translations).length} 个顶级键`);
+                // console.log(`成功设置语言 ${this.currentLang} 的翻译内容，包含 ${Object.keys(this.translations).length} 个顶级键`);
             }
             
             // 应用翻译
@@ -226,7 +226,7 @@ const I18n = {
             
             // 关键：在翻译应用完成后从 <html> 移除加载状态类
             document.documentElement.classList.remove('i18n-loading');
-            console.log('已移除 <html> 上的 i18n-loading 类，内容已显示');
+            // console.log('已移除 <html> 上的 i18n-loading 类，内容已显示');
             
         } catch (error) {
             console.error(`加載翻譯內容時出錯:`, error);
@@ -521,10 +521,10 @@ const I18n = {
      * @param {HTMLElement|null} container 可选的容器元素，仅翻译其中的元素。若为null则翻译整个文档
      */
     applyTranslations(container = null) {
-        console.log(`应用翻译${container ? '到指定容器' : '到整个文档'}`);
+        // console.log(`应用翻译${container ? '到指定容器' : '到整个文档'}`);
         const elements = container ? container.querySelectorAll('[data-translate], [data-translate-placeholder]') : document.querySelectorAll('[data-translate], [data-translate-placeholder]');
         
-        console.log(`找到 ${elements.length} 个需要翻译的元素`);
+        // console.log(`找到 ${elements.length} 个需要翻译的元素`);
         let successCount = 0;
         let failCount = 0;
         
@@ -556,7 +556,7 @@ const I18n = {
             }
         });
         
-        console.log(`翻译应用完成：成功 ${successCount} 个，失败 ${failCount} 个`);
+        // console.log(`翻译应用完成：成功 ${successCount} 个，失败 ${failCount} 个`);
     },
 
     async _saveLangToDynamoDB(lang) {
@@ -596,7 +596,7 @@ window._debugI18n = {
 
 // 确保加载完成后自动初始化
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log('DOMContentLoaded事件触发，开始初始化I18n...');
+    // console.log('DOMContentLoaded事件触发，开始初始化I18n...');
     
     try {
         // 检查是否刚刚在另一个页面切换了语言
@@ -611,12 +611,12 @@ document.addEventListener('DOMContentLoaded', async function() {
             
             // 只应用10秒内的变更，以防止过期的语言切换
             if (now - changeTime < 10000) {
-                console.log(`检测到最近的语言切换: ${lastChangedLang}`);
+                // console.log(`检测到最近的语言切换: ${lastChangedLang}`);
                 // 强制设置到localStorage确保一致
                 localStorage.setItem('language', lastChangedLang);
             } else {
                 // 清除过期的标志
-                console.log('语言切换标志已过期，清除');
+                // console.log('语言切换标志已过期，清除');
                 sessionStorage.removeItem('languageJustChanged');
                 sessionStorage.removeItem('lastChangedLang');
                 sessionStorage.removeItem('langChangeTimestamp');
@@ -625,18 +625,18 @@ document.addEventListener('DOMContentLoaded', async function() {
     
         // 初始化I18n
         const currentLang = await I18n.init();
-        console.log(`页面加载完成，当前语言为: ${currentLang}`);
+        // console.log(`页面加载完成，当前语言为: ${currentLang}`);
         
         // 查找并设置页面标题
         const pageTitle = document.querySelector('title');
         if (pageTitle && pageTitle.getAttribute('data-translate')) {
             const titleKey = pageTitle.getAttribute('data-translate');
             pageTitle.textContent = I18n.t(titleKey, { default: pageTitle.textContent });
-            console.log(`已设置页面标题: ${pageTitle.textContent}`);
+            // console.log(`已设置页面标题: ${pageTitle.textContent}`);
         }
         
         // 记录语言初始化完成
-        console.log('I18n初始化完成');
+        // console.log('I18n初始化完成');
         
     } catch (error) {
         console.error('I18n初始化失败:', error);
