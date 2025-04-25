@@ -154,110 +154,220 @@ const API = {
     async handleStreamResponse(response, callbacks) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
-        let capturedTaskId = null; 
-        let metadata = {}; 
+        let capturedTaskId = null;
+        let metadata = {};
         let startTime = Date.now();
         let isGenerationStartedUIUpdated = false;
-        let accumulatedText = ''; // Accumulate text for final output if needed
+        let accumulatedText = '';
+        let buffer = '';
+        let accumulatedJsonData = ''; // Accumulate data across potential 'data:' lines
+
+        // ADDED: Variables for line-based block processing
+        let currentMessageLines = [];
 
         callbacks?.onClearResult();
         callbacks?.onShowResultContainer();
 
-         while (true) {
+        while (true) {
             let value, done;
             try {
-                 ({ value, done } = await reader.read());
+                ({ value, done } = await reader.read());
+                if (done) break; // Exit loop if stream is finished
+
+                buffer += decoder.decode(value, { stream: true });
+
+                // Process buffer line by line, handling message blocks correctly
+                let lineEndIndex;
+                const lineSeparatorRegex = /\r?\n/;
+                while ((lineEndIndex = buffer.search(lineSeparatorRegex)) >= 0) {
+                    const line = buffer.substring(0, lineEndIndex); // Extract line (without separator)
+                    const separatorLength = buffer.match(lineSeparatorRegex)[0].length;
+                    buffer = buffer.substring(lineEndIndex + separatorLength); // Remove line and separator
+
+                    // Check if the line is empty, indicating end of a message block
+                    if (line.trim() === '') {
+                        if (currentMessageLines.length > 0) {
+                            let jsonDataFromBlock = '';
+                            let eventTypeFromBlock = null;
+
+                            for (const msgLine of currentMessageLines) {
+                                if (msgLine.startsWith('data:')) {
+                                    jsonDataFromBlock += msgLine.substring(msgLine.indexOf(':') + 1).trim();
+                                } else if (msgLine.startsWith('event:')) {
+                                    eventTypeFromBlock = msgLine.substring(msgLine.indexOf(':') + 1).trim();
+                                }
+                                // Ignore other lines like id:, retry:
+                            }
+
+                            if (jsonDataFromBlock) {
+                                try {
+                                    // console.log(`[US Workflow Stream] Parsing JSON from block end. Event: ${eventTypeFromBlock || 'N/A'}. Data: ${jsonDataFromBlock.substring(0,100)}...`);
+                                    const data = JSON.parse(jsonDataFromBlock);
+                                    metadata = { ...metadata, ...data }; // Merge metadata
+
+                                    // --- Event Handling Logic --- 
+                                    const currentEvent = eventTypeFromBlock || data.event;
+                                    
+                                     if (currentEvent === 'ping') {
+                                        // console.log('[US Workflow Stream] Received ping.');
+                                     } else if (currentEvent === 'workflow_started' && data.task_id && !capturedTaskId) {
+                                        capturedTaskId = data.task_id;
+                                        callbacks?.onMessageIdReceived(capturedTaskId);
+                                        if (!isGenerationStartedUIUpdated) {
+                                             callbacks?.onGenerating();
+                                             isGenerationStartedUIUpdated = true;
+                                        }
+                                        callbacks?.onSystemInfo({ task_id: capturedTaskId, ...metadata });
+                                    } else if (currentEvent === 'node_started') {
+                                        callbacks?.onSystemInfo({ current_node: data.data?.title, task_id: capturedTaskId, ...metadata });
+                                    } else if (currentEvent === 'node_finished') {
+                                        let textChunk = '';
+                                        const outputs = data.data?.outputs;
+                                        if (outputs) {
+                                            if (typeof outputs.text === 'string') { textChunk = outputs.text; }
+                                            else if (typeof outputs.result === 'string') { textChunk = outputs.result; }
+                                            else if (typeof outputs.content === 'string') { textChunk = outputs.content; }
+                                            // Add check for the specific output variable if needed
+                                            else if (outputs['User Story'] && typeof outputs['User Story'] === 'string') { textChunk = outputs['User Story']; }
+                                        }
+                                        if (textChunk) {
+                                            // Keep accumulating internally, but don't pass it to callback yet
+                                             accumulatedText += textChunk; 
+                                            // Reinstating DIAGNOSTIC CHANGE logic based on user feedback:
+                                            // Pass ONLY the current chunk to avoid potential side-effects
+                                            // console.log(`[US Workflow Stream] Event: node_finished, Node: ${data.data?.node_id} ('${data.data?.title}'), passing CURRENT CHUNK ONLY.`); // REMOVED
+                                            callbacks?.onStreamChunk(textChunk); // Pass ONLY textChunk
+                                        }
+                                        callbacks?.onSystemInfo({ finished_node: data.data?.title, task_id: capturedTaskId, ...metadata });
+                                    } else if (currentEvent === 'workflow_finished') {
+                                        const finalData = data.data || {};
+                                        metadata = { ...metadata, ...finalData }; // Ensure metadata includes final data
+                                        const usage = finalData.usage || metadata.usage || {}; // Get usage from finalData or metadata
+                                        const endTime = Date.now();
+                                        const elapsedTime = finalData.elapsed_time ?? (metadata.elapsed_time ?? (endTime - startTime) / 1000);
+                                        const stats = {
+                                           elapsed_time: elapsedTime,
+                                           total_tokens: usage.total_tokens || 0,
+                                           total_price: usage.total_price || 0,
+                                           currency: usage.currency || 'USD',
+                                           total_steps: finalData.total_steps || (metadata?.total_steps ?? 0)
+                                        };
+                                        callbacks?.onStats(stats);
+                                        // Pass the potentially updated metadata
+                                        callbacks?.onSystemInfo({ task_id: capturedTaskId, status: 'Finished', ...metadata });
+
+                                        // Handle final output text if not accumulated during node events
+                                        // Check finalData first, then potentially metadata if finalData is incomplete
+                                        const finalOutputs = finalData.outputs || metadata?.outputs;
+                                        // Reinstating DIAGNOSTIC CHANGE logic: Process finalOutputs if they exist
+                                        if (finalOutputs) { 
+                                            let finalOutputText = '';
+                                            if(typeof finalOutputs.text === 'string') { finalOutputText = finalOutputs.text; }
+                                            else if (typeof finalOutputs.result === 'string') { finalOutputText = finalOutputs.result; }
+                                            else if (typeof finalOutputs.content === 'string') { finalOutputText = finalOutputs.content; }
+                                            else if (finalOutputs['User Story'] && typeof finalOutputs['User Story'] === 'string') { finalOutputText = finalOutputs['User Story']; }
+                                            // Add more checks if the output variable name is different
+
+                                            if(finalOutputText) {
+                                                // Reinstating DIAGNOSTIC CHANGE logic: Pass final chunk directly
+                                                // console.log(`[US Workflow Stream] Event: workflow_finished, Processing final outputs and passing DIRECTLY.`); // REMOVED
+                                                callbacks?.onStreamChunk(finalOutputText);
+                                            } else {
+                                                // console.warn('[US Workflow Stream] Workflow finished, but no recognizable text output found in final outputs:', finalOutputs); // Keep this warning
+                                            }
+                                        }
+                                        // Workflow finished, exit
+                                        this.currentAbortController = null;
+                                        // Ensure complete is called *before* returning
+                                        if (callbacks?.onComplete) callbacks.onComplete();
+                                        return { conversationId: null };
+                                    } else if (currentEvent === 'error') {
+                                        console.error('[US Workflow Stream] Error event:', data);
+                                        const errorMsg = data.code ? `[${data.code}] ${data.message}` : (data.error || 'Unknown stream error');
+                                        callbacks?.onErrorInResult(errorMsg);
+                                        // Pass the potentially updated metadata
+                                        callbacks?.onSystemInfo({ task_id: capturedTaskId || data.task_id, status: 'Error', error: errorMsg, ...metadata }); // Use data.task_id if captured is null
+                                        // Error occurred, exit
+                                        this.currentAbortController = null;
+                                        // Ensure complete is called *before* returning
+                                        if (callbacks?.onComplete) callbacks.onComplete();
+                                        return { conversationId: null };
+                                    }
+                                    // --- End of Event Handling Logic ---
+
+                                } catch (e) {
+                                    console.error('Failed to parse JSON from completed message block:', e);
+                                    // Log the data that failed parsing
+                                    // console.error('Problematic JSON string from block:', jsonDataFromBlock); // Commented out, useful for future errors
+                                    callbacks?.onErrorInResult(`解析流数据块时出错: ${e.message}`);
+                                    // Stop processing on parse error
+                                    this.currentAbortController = null;
+                                    // Ensure complete is called *before* returning
+                                    if (callbacks?.onComplete) callbacks.onComplete();
+                                    return { conversationId: null };
+                                }
+                            } // end if(jsonDataFromBlock)
+
+                            // Reset for the next message block
+                            currentMessageLines = []; 
+                        } // end if (currentMessageLines.length > 0)
+                        // else: Ignore consecutive empty lines
+                    } else {
+                        // Not an empty line, add it to the current message block lines
+                        currentMessageLines.push(line);
+                    }
+                } // End of while loop (processing lines in buffer)
+
             } catch (streamError) {
                  console.error("[US Workflow Stream] Error reading stream:", streamError);
                  callbacks?.onErrorInResult('读取响应流时出错。');
-                 break; 
+                 // Ensure complete is called *before* breaking
+                 if (callbacks?.onComplete) callbacks.onComplete();
+                 this.currentAbortController = null;
+                 break; // Exit outer loop on stream read error
             }
+        } // End of outer while loop (reading stream)
 
-            if (done) break;
-            
-            const chunk = decoder.decode(value, { stream: true });
-            let lines = chunk.split('\n\n'); 
-            
-            for (let line of lines) {
-                if (!line.trim() || !line.startsWith('data: ')) continue;
-                line = line.substring(6);
-                
-                try {
-                    const data = JSON.parse(line);
-                    metadata = { ...metadata, ...data }; 
-
-                    if (data.event === 'workflow_started' && data.task_id && !capturedTaskId) {
-                        capturedTaskId = data.task_id;
-                        callbacks?.onMessageIdReceived(capturedTaskId); 
-                        if (!isGenerationStartedUIUpdated) {
-                             callbacks?.onGenerating();
-                             isGenerationStartedUIUpdated = true;
-                        }
-                        callbacks?.onSystemInfo({ task_id: capturedTaskId, ...metadata }); 
-                    } else if (data.event === 'node_started') {
-                        callbacks?.onSystemInfo({ current_node: data.data?.title, task_id: capturedTaskId, ...metadata }); 
-                    } else if (data.event === 'node_finished') {
-                        let textChunk = '';
-                        if (data.data?.outputs?.text) {
-                            textChunk = data.data.outputs.text;
-                        } else if (data.data?.outputs?.result) {
-                             textChunk = typeof data.data.outputs.result === 'string' ? data.data.outputs.result : ''
-                        } else if (data.data?.outputs?.content) {
-                             textChunk = typeof data.data.outputs.content === 'string' ? data.data.outputs.content : '';
-                        } 
-                        
-                        if (textChunk) {
-                             accumulatedText += textChunk;
-                             callbacks?.onStreamChunk(textChunk);
-                        }
-                        callbacks?.onSystemInfo({ finished_node: data.data?.title, task_id: capturedTaskId, ...metadata }); 
-                    } else if (data.event === 'workflow_finished') {
-                        const finalData = data.data || {};
-                        metadata = { ...metadata, ...finalData };
-                        const usage = finalData.usage || {};
-                        const endTime = Date.now();
-                        const elapsedTime = finalData.elapsed_time ?? (endTime - startTime) / 1000;
-                        const stats = {
-                           elapsed_time: elapsedTime,
-                           total_tokens: usage.total_tokens || 0,
-                           total_price: usage.total_price || 0,
-                           currency: usage.currency || 'USD',
-                           total_steps: finalData.total_steps || 1
-                        }; 
-                        callbacks?.onStats(stats);
-                        callbacks?.onSystemInfo({ task_id: capturedTaskId, status: 'Finished', ...metadata }); 
-                        
-                        if (accumulatedText.length === 0 && finalData.outputs) {
-                            let finalOutputText = '';
-                            if(typeof finalData.outputs.text === 'string') {
-                                finalOutputText = finalData.outputs.text;
-                            } else if (typeof finalData.outputs.result === 'string') {
-                                 finalOutputText = finalData.outputs.result;
-                            } else if (typeof finalData.outputs.content === 'string') {
-                                 finalOutputText = finalData.outputs.content;
-                            }
-                            
-                            if(finalOutputText) {
-                                callbacks?.onStreamChunk(finalOutputText);
-                            }
-                        }
-                        break;
-                    } else if (data.event === 'error') {
-                        console.error('[US Workflow Stream] Error event:', data);
-                        const errorMsg = data.code ? `[${data.code}] ${data.message}` : (data.error || 'Unknown stream error');
-                        callbacks?.onErrorInResult(errorMsg);
-                        callbacks?.onSystemInfo({ task_id: capturedTaskId, status: 'Error', error: errorMsg, ...metadata }); 
-                         break;
-                    }
-                    
-                } catch (e) { 
-                    console.warn('Failed to parse workflow stream data line:', line, e); 
-                }
-            }
+        // Handle any remaining data in the buffer after the stream ends
+        // This might happen if the stream ends without a final empty line
+        if (accumulatedJsonData) {
+             console.warn("[US Workflow Stream] Stream ended with unprocessed data in accumulator. Attempting parse:", accumulatedJsonData);
+             try {
+                // Attempt to parse the final chunk
+                const data = JSON.parse(accumulatedJsonData);
+                metadata = { ...metadata, ...data };
+                // You might want to handle this final data piece if relevant, e.g., check for workflow_finished
+                console.log("[US Workflow Stream] Successfully parsed final data chunk.");
+                // Potentially call callbacks based on this final data
+                 if (data.event === 'workflow_finished') {
+                      // ... (repeat workflow_finished logic if necessary, though unlikely needed here) ...
+                     callbacks?.onSystemInfo({ task_id: capturedTaskId, status: 'Finished', ...metadata });
+                 } else if (data.event === 'error') {
+                      // ... (repeat error logic if necessary) ...
+                     callbacks?.onSystemInfo({ task_id: capturedTaskId, status: 'Error', ...metadata });
+                 }
+             } catch (e) {
+                  console.error('[US Workflow Stream] Failed to parse final accumulated JSON data:', e);
+                  console.error('Final problematic accumulated JSON string:', accumulatedJsonData);
+                  // Don't call onErrorInResult here again if already called
+             } finally {
+                 accumulatedJsonData = ''; // Clear it
+             }
         }
-        
-        this.currentAbortController = null; 
-        return { conversationId: null }; 
+
+
+        console.log("[US Workflow Stream] Stream processing finished.");
+        this.currentAbortController = null;
+        // Ensure onComplete is called if the loop finishes normally without returning early
+        // Add a check to prevent calling it twice if already called in error/finish handlers
+        if (callbacks?.onComplete && !this.currentAbortController) {
+            // We might need a flag to track if onComplete was called inside the loop
+            // For simplicity, let's assume it should always be called if we reach here naturally.
+            // However, the return statements inside the loop should handle completion.
+            // Let's remove this potential duplicate call.
+             // callbacks.onComplete();
+        }
+        return { conversationId: null }; // Workflow mode doesn't use conversation ID
     },
 
     /**

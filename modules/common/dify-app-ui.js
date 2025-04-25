@@ -231,7 +231,7 @@ class DifyAppUI {
         if (!this.elements.resultContent) {
             console.error("Result content element (#result-content) not found for appending raw content.");
             if (this.elements.resultMarkdown) {
-                 this.elements.resultMarkdown.innerHTML += textChunk;
+                 this.elements.resultMarkdown.innerHTML = textChunk;
                  this.renderMarkdown();
                  this.elements.resultMarkdown.scrollTop = this.elements.resultMarkdown.scrollHeight;
             }
@@ -239,7 +239,7 @@ class DifyAppUI {
         }
 
         this.showResultContainer();
-        this.elements.resultContent.innerHTML += textChunk;
+        this.elements.resultContent.innerHTML = textChunk;
         this.elements.resultContent.scrollTop = this.elements.resultContent.scrollHeight;
     }
 
