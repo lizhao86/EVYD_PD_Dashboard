@@ -1,279 +1,259 @@
 /**
  * EVYD产品经理AI工作台 - User Manual生成器
- * API交互模块
+ * API交互模块 (Refactored to remove direct UI dependency)
  */
 
-import UI from './ui.js';
 import { getApiBaseUrl } from '/scripts/utils/helper.js';
-import { t } from '/scripts/i18n.js'; // For error messages
-import { marked } from 'marked';
-import UserManualApp from './index.js'; 
+import { t } from '/scripts/i18n.js';
 
 const API = {
+    currentAbortController: null,
+    
     /**
-     * 获取应用信息
+     * 获取 User Manual App 的信息
+     * @param {string} apiKey 
+     * @param {string} apiEndpoint 
+     * @param {object} callbacks - Callbacks: onLoading, onError, onAppInfo
      */
-    async fetchAppInfo(apiKey, apiEndpoint) {
+    async fetchAppInfo(apiKey, apiEndpoint, callbacks) {
         if (!apiKey) {
-            UI.showError(t('userManual.apiKeyMissing', {default: '未配置 User Manual API 密钥。'}));
+            callbacks?.onError(t('userManual.apiKeyMissingError', { default: '未配置 User Manual API 密钥。'}));
             return;
         }
         if (!apiEndpoint) {
-            UI.showError(t('userManual.apiEndpointMissing', {default: '未配置 User Manual API 地址。'}));
+            callbacks?.onError(t('userManual.apiEndpointMissing', { default: '未配置 User Manual API 地址。'}));
             return;
         }
         
-        UI.showLoading();
-        const baseUrl = getApiBaseUrl(apiEndpoint);
-        const infoUrl = `${baseUrl}/info`; 
-        
+        callbacks?.onLoading();
+        const infoUrl = `${apiEndpoint}/info`;
+
         try {
             const response = await fetch(infoUrl, {
                 method: 'GET',
                 headers: { 'Authorization': `Bearer ${apiKey}` }
             });
-            
+
             if (!response.ok) {
                 let errorDetail = '';
-                 try { errorDetail = JSON.stringify(await response.json()); } catch { errorDetail = await response.text(); }
-                 throw new Error(`Request failed: ${response.status} ${response.statusText}. Details: ${errorDetail}`);
+                try { errorDetail = JSON.stringify(await response.json()); } catch { errorDetail = await response.text(); }
+                throw new Error(`Request failed: ${response.status} ${response.statusText}. Details: ${errorDetail}`);
             }
             
             const data = await response.json();
-            if (!data.name) data.name = '用户手册生成器'; // Default name
-            UI.displayAppInfo(data); 
+            callbacks?.onAppInfo(data);
 
         } catch (error) {
-            console.error('[UserManual API] Connection Error:', error);
-            UI.showError(`无法连接到Dify API: ${error.message}`);
-            // Attempt to show form even on error
-                UI.displayAppInfo({
-                name: 'User Manual 生成器',
-                description: '无法连接 Dify API, 但可尝试生成。',
-                tags: ['可能离线']
-                });
+            console.error('Error fetching Dify app info (User Manual):', error);
+            const errorMsg = t('userManual.connectionError', { default: '无法连接到 Dify API'});
+            callbacks?.onError(`${errorMsg}: ${error.message}`);
+            callbacks?.onAppInfo({
+                name: t('userManual.defaultAppName', {default: 'User Manual 生成器'}),
+                description: t('userManual.connectionError', {default: '无法连接Dify API，请检查设置...'}),
+            });
         }
     },
     
     /**
-     * 生成User Manual (Chat Endpoint)
+     * 生成 User Manual 内容
+     * @param {string} userStory - The User Story input.
+     * @param {string} apiKey - Dify API Key.
+     * @param {string} apiEndpoint - Dify API Endpoint base URL.
+     * @param {object} user - User information (e.g., { username }).
+     * @param {string | null} conversationId - Existing conversation ID or null.
+     * @param {object} callbacks - Callbacks for UI updates (same set as generateAnalysis).
+     * @returns {Promise<{ conversationId: string | null }>} The final conversation ID.
      */
-    async generateUserManual(requirement, apiKey, apiEndpoint, user, conversationId = null) {
-        if (!apiKey || !apiEndpoint || !user || !requirement) {
+    async generateUserManual(userStory, apiKey, apiEndpoint, user, conversationId = null, callbacks) {
+         if (!apiKey || !apiEndpoint || !user || !userStory) {
             console.error("Missing parameters for generateUserManual");
-            UI.showError('缺少必要参数，无法生成。');
+            callbacks?.onErrorInResult(t('userManual.missingParams', { default: '缺少必要参数，无法生成。' }));
             return { conversationId: conversationId }; 
         }
+        
+        const chatUrl = `${apiEndpoint}/chat-messages`;
+        let initialConversationId = conversationId;
 
-        const baseUrl = getApiBaseUrl(apiEndpoint);
-        const chatUrl = `${baseUrl}/chat-messages`; 
-        let initialConversationId = conversationId; 
+        this.currentAbortController = new AbortController();
+        const signal = this.currentAbortController.signal;
+
+        callbacks?.onRequesting();
 
         try {
             const requestData = {
-                query: requirement,
+                query: userStory,
                 inputs: {},
                 response_mode: "streaming",
-                conversation_id: conversationId || "", 
-                user: user.username,
-                files: [], 
-                auto_generate_name: !conversationId 
+                conversation_id: conversationId || "",
+                user: user.username || 'default-user',
+                files: [],
+                auto_generate_name: !conversationId
             };
-            
+
             const response = await fetch(chatUrl, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestData)
+                body: JSON.stringify(requestData),
+                signal: signal
             });
-            
+
             if (!response.ok) {
                 let errorDetail = '';
-                 try { errorDetail = JSON.stringify(await response.json()); } catch { errorDetail = await response.text(); }
-                 throw new Error(`Request failed: ${response.status} ${response.statusText}. Details: ${errorDetail}`);
+                try { errorDetail = JSON.stringify(await response.json()); } catch { errorDetail = await response.text(); }
+                throw new Error(`Request failed: ${response.status} ${response.statusText}. Details: ${errorDetail}`);
             }
-            
-            const streamResult = await this.handleStreamResponse(response); 
+
+            const streamResult = await this.handleStreamResponse(response, callbacks); 
+            callbacks?.onComplete();
             return { conversationId: streamResult.conversationId || initialConversationId };
 
         } catch (error) {
-            console.error('[UserManual API] Generation failed:', error);
-            if(typeof UI !== 'undefined' && UI.showErrorInResult) {
-                 UI.showErrorInResult(t('userManual.generationFailed', { default: '生成失败:'}) + ` ${error.message}`);
+             if (error.name === 'AbortError') {
+                console.log('[UM API] Generation aborted by user.');
+                callbacks?.onStopMessage();
             } else {
-                 document.getElementById('result-content').innerHTML = `<span style="color: red;">生成失败: ${error.message}</span>`;
+                console.error('[UM API] Generation failed:', error);
+                callbacks?.onErrorInResult(t('userManual.generationFailed', { default: '生成失败:'}) + ` ${error.message}`);
             }
-            if (typeof UI !== 'undefined' && UI.showGenerationCompleted) {
-                UI.showGenerationCompleted();
-            }
-            return { conversationId: initialConversationId }; 
+            callbacks?.onComplete();
+            this.currentAbortController = null;
+            return { conversationId: initialConversationId };
         }
     },
     
     /**
-     * 处理流式响应 (returns captured IDs)
+     * 处理流式响应 (Common logic, same as Requirement Analysis)
+     * @param {Response} response - The fetch Response object.
+     * @param {object} callbacks - Callbacks from generateUserManual.
+     * @returns {Promise<{ conversationId: string | null }>} The captured conversation ID.
      */
-    async handleStreamResponse(response) {
+    async handleStreamResponse(response, callbacks) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
-        let resultText = '';
-        let capturedTaskId = null; 
+        let capturedMessageId = null; 
         let capturedConversationId = null; 
-        let usageInfo = {};
+        let metadata = {}; 
         let startTime = Date.now();
         let isGenerationStartedUIUpdated = false;
-        let readerDone = false;
 
-        const resultContentEl = document.getElementById('result-content');
-        const resultMarkdownEl = document.getElementById('result-content-markdown');
-        const systemInfoContainerEl = document.getElementById('system-info-container');
-        const systemInfoContentEl = document.getElementById('system-info-content');
-
-        if(!resultContentEl || !resultMarkdownEl) {
-            console.error("Result display elements not found for User Manual!");
-            return { conversationId: null };
-        }
-        // Reset UI
-        UI.initUserInterface(); 
-        resultContentEl.innerHTML = ''; 
-        resultMarkdownEl.innerHTML = '';
-        resultMarkdownEl.style.display = 'none';
-        resultContentEl.style.display = 'block'; 
+        callbacks?.onClearResult();
+        callbacks?.onShowResultContainer();
 
          while (true) {
-            const { value, done } = await reader.read();
-            if (done) {
-                 readerDone = true; 
-                 break;
+            let value, done;
+            try {
+                 ({ value, done } = await reader.read());
+            } catch (streamError) {
+                 console.error("[UM Stream] Error reading stream:", streamError);
+                 callbacks?.onErrorInResult('读取响应流时出错。');
+                 break; 
             }
-            const chunk = decoder.decode(value, { stream: true });
+
+            if (done) break;
             
+            const chunk = decoder.decode(value, { stream: true });
             let lines = chunk.split('\n\n'); 
+            
             for (let line of lines) {
                 if (!line.trim() || !line.startsWith('data: ')) continue;
                 line = line.substring(6);
                 
                 try {
                     const data = JSON.parse(line);
-                    
-                    if (data.message_id && !capturedTaskId) {
-                        capturedTaskId = data.message_id;
-                        if (UserManualApp && UserManualApp.state) {
-                           UserManualApp.state.currentMessageId = capturedTaskId;
-                           if (typeof UI !== 'undefined' && UI.displaySystemInfo) {
-                               UI.displaySystemInfo({ message_id: capturedTaskId, conversation_id: capturedConversationId, usage: usageInfo });
-                           }
-                           if (!isGenerationStartedUIUpdated && typeof UI !== 'undefined' && UI.showGenerationStarted) {
-                               UI.showGenerationStarted();
-                               isGenerationStartedUIUpdated = true;
-                           }
-                        } else {
-                            console.warn('[API Stream] UserManualApp state not accessible to update messageId.');
+                    metadata = { ...metadata, ...data }; 
+
+                    if (data.message_id && !capturedMessageId) {
+                        capturedMessageId = data.message_id;
+                        callbacks?.onMessageIdReceived(capturedMessageId);
+                        if (!isGenerationStartedUIUpdated) {
+                             callbacks?.onGenerating();
+                             isGenerationStartedUIUpdated = true;
                         }
+                        callbacks?.onSystemInfo({ message_id: capturedMessageId, conversation_id: capturedConversationId, ...metadata });
                     }
                     if (data.conversation_id && !capturedConversationId) {
                         capturedConversationId = data.conversation_id;
-                        if (UserManualApp && UserManualApp.state) {
-                           UserManualApp.state.currentConversationId = capturedConversationId;
-                        } else {
-                            console.warn('[API Stream] UserManualApp state not accessible to update conversationId.');
-                        }
+                        callbacks?.onConversationIdReceived(capturedConversationId);
+                        callbacks?.onSystemInfo({ message_id: capturedMessageId, conversation_id: capturedConversationId, ...metadata });
                     }
                     
                     let textChunk = '';
-                    if (data.event === 'message' && data.answer) {
-                        textChunk = data.answer;
-                    } else if (data.event === 'message_end' && data.metadata?.usage) {
-                         usageInfo = data.metadata.usage;
+                    if (data.event === 'agent_message' || data.event === 'message') {
+                        textChunk = data.answer || '';
+                        if (textChunk) {
+                             callbacks?.onStreamChunk(textChunk);
+                        }
+                    } else if (data.event === 'message_end' && data.metadata) {
                          const endTime = Date.now();
                          const elapsedTime = (endTime - startTime) / 1000;
-                         UI.displayStats({
-                             elapsed_time: elapsedTime,
-                             total_tokens: usageInfo.total_tokens || 0,
-                             total_steps: 1 
-                         });
+                         metadata = { ...metadata, ...data.metadata, elapsed_time: elapsedTime };
+                         callbacks?.onStats(metadata);
+                         callbacks?.onSystemInfo(metadata);
                     } else if (data.event === 'error') {
                         console.error('Stream error event:', data);
-                        textChunk = `\n*Error: ${data.error || 'Unknown error'}*`;
-                    }
-
-                    if(textChunk) {
-                         resultText += textChunk;
-                         resultContentEl.textContent = resultText;
-                         resultContentEl.scrollTop = resultContentEl.scrollHeight;
+                        const errorMsg = data.code ? `[${data.code}] ${data.message}` : (data.error || 'Unknown stream error');
+                        callbacks?.onErrorInResult(errorMsg);
                     }
                     
-                    if (typeof UI !== 'undefined' && UI.displaySystemInfo) {
-                        UI.displaySystemInfo({ message_id: capturedTaskId, conversation_id: capturedConversationId, usage: usageInfo });
-                    }
-                    
-                } catch (e) { console.warn('Failed to parse stream data line:', line, e); }
+                } catch (e) { 
+                    console.warn('Failed to parse stream data line:', line, e); 
+                }
             }
         }
         
-        // Final Render after stream ends
-        UI.renderMarkdown();
-
-        // Call UI completion *after* rendering
-        if (typeof UI !== 'undefined' && UI.showGenerationCompleted) {
-            UI.showGenerationCompleted();
-        }
-        
-        // Set state isGenerating to false if accessible
-        if (UserManualApp && UserManualApp.state) {
-            UserManualApp.state.isGenerating = false;
-        }
-        
+        this.currentAbortController = null; 
         return { conversationId: capturedConversationId }; 
     },
     
     /**
-     * 停止生成 (Chat Message Stop API)
+     * 停止生成 (Common logic, same as Requirement Analysis)
+     * @param {string} messageId - The message ID to stop.
+     * @param {string} apiKey - Dify API Key.
+     * @param {string} apiEndpoint - Dify API Endpoint base URL.
+     * @param {object} user - User information.
+     * @param {object} callbacks - Callbacks: onStopping, onComplete, onStopMessage, onError
      */
-    async stopGeneration(messageId, apiKey, apiEndpoint, user) {
+    async stopGeneration(messageId, apiKey, apiEndpoint, user, callbacks) {
         if (!messageId || !apiKey || !apiEndpoint || !user) {
-            console.error("Missing parameters for stopGeneration (User Manual)");
+            console.error("Missing parameters for stopGeneration (UM)");
+            callbacks?.onError('缺少停止参数。');
             return;
         }
         
-        const baseUrl = getApiBaseUrl(apiEndpoint);
-        const stopUrl = `${baseUrl}/chat-messages/${messageId}/stop`;
-        
+        const stopUrl = `${apiEndpoint}/chat-messages/${messageId}/stop`;
+        callbacks?.onStopping();
+
+        if (this.currentAbortController) {
+            this.currentAbortController.abort();
+            this.currentAbortController = null;
+            console.log("[UM API] Aborted fetch request.");
+            return; 
+        }
+
+        console.log("[UM API] No active fetch, attempting direct stop call to Dify...");
         try {
             const response = await fetch(stopUrl, {
                 method: 'POST',
                 headers: { 
                     'Authorization': `Bearer ${apiKey}`, 
-                    'Content-Type': 'application/json'
+                    'User-Agent': 'EVYD-PM-Dashboard/1.0'
                 }
             });
             
-            if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+            if (!response.ok) throw new Error(`Stop request failed: ${response.status} ${response.statusText}`);
             
             const data = await response.json();
             if (data.result === 'success') {
-                UI.showStopMessage();
-                if (typeof UI !== 'undefined' && UI.showGenerationCompleted) {
-                    UI.showGenerationCompleted(); 
-                }
+                console.log("[UM API] Dify stop endpoint call successful.");
+                callbacks?.onStopMessage();
             } else {
-                throw new Error(`Stop request failed: ${data.message || 'Unknown error'}`);
+                console.warn(`[UM API] Dify stop endpoint call returned non-success: ${data.message || 'Unknown'}`);
             }
-            
-            // Set state.isGenerating to false
-            if (UserManualApp && UserManualApp.state) {
-                UserManualApp.state.isGenerating = false;
-            }
-            
-            return data;
-            
         } catch (error) {
-            console.error('[UserManual API] Stop generation error:', error);
-            if (typeof UI !== 'undefined' && UI.showErrorInResult) {
-                UI.showErrorInResult(`停止生成失败: ${error.message}`);
-            }
-            if (typeof UI !== 'undefined' && UI.showGenerationCompleted) {
-                UI.showGenerationCompleted(); // Reset button state on error
-            }
+            console.error('[UM API] Direct stop endpoint call error:', error);
+            callbacks?.onError('调用停止接口失败。');
+        } finally {
+            callbacks?.onComplete();
         }
     }
 };

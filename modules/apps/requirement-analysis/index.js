@@ -5,11 +5,11 @@ configureAmplify();
 
 // Import necessary modules using absolute paths and local references
 import Header from '/modules/common/header.js';
-import UI from './ui.js'; // Local UI module
-import API from './api.js'; // Local API module
+import DifyAppUI from '../../common/dify-app-ui.js'; // Import the common UI class
+import API from './api.js'; // Local API module (now decoupled from UI)
 import { getCurrentUserSettings, getGlobalConfig } from '/scripts/services/storage.js';
 import { t } from '/scripts/i18n.js';
-import { marked } from 'marked'; // Keep if needed by UI
+import { marked } from 'marked'; // Keep marked dependency for DifyAppUI
 
 // Specific key for Requirement Analysis API in settings
 const DIFY_APP_API_KEY_NAME = 'requirementsAnalysis'; // Use this key to retrieve settings
@@ -26,6 +26,9 @@ const RequirementAnalysisApp = {
         currentMessageId: null, // Needed for stop functionality via API module
         isGenerating: false
     },
+
+    // ADDED: Store the UI instance
+    ui: null,
 
     /**
      * 初始化应用
@@ -49,8 +52,19 @@ const RequirementAnalysisApp = {
             }
 
             // 初始化UI (DOM element references, initial states)
-            if (typeof UI.initUserInterface === 'function') {
-                UI.initUserInterface();
+            // MODIFIED: Instantiate DifyAppUI and initialize
+            if (typeof DifyAppUI === 'function') {
+                this.ui = new DifyAppUI({ t, marked });
+                this.ui.initUserInterface({
+                    // Provide specific IDs for this app's HTML
+                    inputElementId: 'requirement-description', 
+                    inputErrorElementId: 'requirement-error' 
+                });
+            } else {
+                console.error("DifyAppUI class not loaded correctly.");
+                // Show a generic error on the page if UI cannot be initialized
+                document.body.innerHTML = '<p style="color:red; padding: 20px;">Error loading UI components. Please refresh.</p>'; 
+                return;
             }
 
             // 加载和设置API配置
@@ -64,16 +78,16 @@ const RequirementAnalysisApp = {
                      default: `未能找到 ${DIFY_APP_API_KEY_NAME} 的 API 密钥，请在管理员面板配置。`,
                      key: DIFY_APP_API_KEY_NAME
                  });
-                UI.showError(errorMsg);
-                return;
-            }
+                 this.ui.showError(errorMsg); // Use this.ui
+                 return;
+             }
             // Endpoint validation (using the specific key)
             if (!globalConfig || !globalConfig.apiEndpoints || !globalConfig.apiEndpoints[DIFY_APP_API_KEY_NAME]) {
                 const errorMsg = t('requirementAnalysis.apiEndpointMissing', { 
                     default: `无法获取 ${DIFY_APP_API_KEY_NAME} API 地址，请联系管理员检查全局配置。`,
                     key: DIFY_APP_API_KEY_NAME
                 });
-                UI.showError(errorMsg);
+                this.ui.showError(errorMsg); // Use this.ui
                 return;
             }
 
@@ -92,9 +106,9 @@ const RequirementAnalysisApp = {
         } catch (error) {
             console.error("Error initializing Requirement Analysis App:", error);
             const initErrorMsg = t('requirementAnalysis.initError', { default: '初始化应用时出错，请刷新页面重试。' });
-            // Try using UI.showError if available, otherwise fallback
-            if (typeof UI !== 'undefined' && UI.showError) {
-                UI.showError(initErrorMsg);
+            // Try using this.ui.showError if available, otherwise fallback
+            if (this.ui && typeof this.ui.showError === 'function') {
+                this.ui.showError(initErrorMsg);
             } else {
                 alert(initErrorMsg); 
             }
@@ -110,16 +124,31 @@ const RequirementAnalysisApp = {
      */
     async fetchAppInformation() {
         if (!this.state.apiKey || !this.state.apiEndpoint) return; // Guard clause
-        try {
-            // Call the local API module to fetch info
-            const info = await API.fetchAppInfo(this.state.apiKey, this.state.apiEndpoint);
-            if (info) {
-                this.state.appInfo = info;
-                // UI responsibility to display info, possibly called from API.fetchAppInfo success
+        
+        // Define callbacks for API.fetchAppInfo
+        const callbacks = {
+            onLoading: () => this.ui.showLoading(),
+            onError: (msg) => this.ui.showError(msg),
+            onAppInfo: (info) => {
+                if (info) {
+                    this.state.appInfo = info;
+                    this.ui.displayAppInfo(info);
+                } else {
+                    // Handle case where info might be null/undefined after error
+                    this.ui.displayAppInfo({}); // Show default placeholders
+                }
             }
+        };
+
+        try {
+            // Call the local API module to fetch info, passing callbacks
+            await API.fetchAppInfo(this.state.apiKey, this.state.apiEndpoint, callbacks);
+            // No need to handle info directly here, callback does it
         } catch (error) {
-            // Error should be handled within API.fetchAppInfo or its UI calls
+            // Error should be handled within API.fetchAppInfo via callbacks
             console.error("[Index] Failed to fetch app info wrapper:", error);
+            // Ensure UI is in a reasonable state if error escapes
+             if (this.ui && this.ui.hideLoading) this.ui.hideLoading(); 
         }
     },
     
@@ -139,13 +168,13 @@ const RequirementAnalysisApp = {
         // --- Event Listeners --- 
         if (promptInput) {
             promptInput.addEventListener('input', () => {
-                if (typeof UI.handleInput === 'function') {
-                     UI.handleInput(promptInput.value);
-                } else {
-                    // Basic fallback if UI module doesn't handle it
-                    const generateBtn = document.getElementById('generate-button');
-                    if(generateBtn) generateBtn.disabled = promptInput.value.trim().length === 0;
-                }
+                 // Use this.ui
+                 if (this.ui && typeof this.ui.handleInput === 'function') {
+                     this.ui.handleInput(promptInput.value);
+                 } else {
+                     const generateBtn = document.getElementById('generate-button');
+                     if(generateBtn) generateBtn.disabled = promptInput.value.trim().length === 0;
+                 }
             });
         }
 
@@ -175,14 +204,15 @@ const RequirementAnalysisApp = {
 
         if (retryButton) {
             retryButton.addEventListener('click', () => {
-                 UI.hideError();
+                 this.ui.hideError(); // Use this.ui
                  this.fetchAppInformation(); 
             }); 
         }
 
         if (toggleSystemInfoButton) {
-            toggleSystemInfoButton.addEventListener('click', UI.toggleSystemInfo);
-        }
+             // Use this.ui
+             toggleSystemInfoButton.addEventListener('click', () => { if (this.ui) this.ui.toggleSystemInfo(); });
+         }
     },
     
     /**
@@ -191,46 +221,73 @@ const RequirementAnalysisApp = {
     async handleGenerate(prompt) {
         // Validation
         if (!prompt) {
-            UI.showInputError('requirement', t('requirementAnalysis.error.requirementRequired', { default: '需求描述不能为空。' }));
-            return;
-        }
+             // Use this.ui
+             this.ui.showInputError('requirement', t('requirementAnalysis.error.requirementRequired', { default: '需求描述不能为空。' }));
+             return;
+         }
         if (prompt.length > 5000) { // Example length check
-             UI.showInputError('requirement', t('requirementAnalysis.error.requirementTooLong', { default: '需求描述不能超过5000字符。' }));
-            return;
-        }
+             // Use this.ui
+              this.ui.showInputError('requirement', t('requirementAnalysis.error.requirementTooLong', { default: '需求描述不能超过5000字符。' }));
+             return;
+         }
         
-        UI.clearInputError('requirement');
-        UI.setRequestingState(); // Update UI to show loading/generating
+        // Use this.ui
+        this.ui.clearInputError('requirement');
+        // UI state updates will be handled by callbacks now
+        // REMOVED: UI.setRequestingState(); 
         this.state.isGenerating = true;
         this.state.currentConversationId = null; // Reset conversation for new generation
+        this.state.currentMessageId = null; // Reset message ID
+
+        // --- Define Callbacks for API.generateAnalysis --- 
+        const callbacks = {
+            onRequesting: () => this.ui.setRequestingState(),
+            onGenerating: () => this.ui.setGeneratingState(),
+            onStopping: () => this.ui.setStoppingState(), // Define even if stop handled separately
+            onComplete: () => { // Called on success, error, or abort
+                this.state.isGenerating = false;
+                this.state.currentMessageId = null;
+                this.ui.showGenerationCompleted();
+                // ADDED: Render final markdown content
+                this.ui.renderMarkdown(); 
+            },
+            onStats: (metadata) => this.ui.displayStats(metadata),
+            onStreamChunk: (chunk) => this.ui.appendStreamContent(chunk),
+            onSystemInfo: (data) => this.ui.displaySystemInfo(data),
+            onStopMessage: () => this.ui.showStopMessage(),
+            onErrorInResult: (msg) => this.ui.showErrorInResult(msg),
+            onMessageIdReceived: (id) => { this.state.currentMessageId = id; },
+            onConversationIdReceived: (id) => { this.state.currentConversationId = id; },
+            // Added callbacks needed by the decoupled API
+            onClearResult: () => this.ui.clearResultArea(),
+            onShowResultContainer: () => this.ui.showResultContainer(),
+        };
+        // --- End Callbacks --- 
 
         try {
-            // Call the local API module method
+            // Call the local API module method, passing callbacks
             const result = await API.generateAnalysis(
                 prompt,
                 this.state.apiKey,
                 this.state.apiEndpoint,
                 this.state.currentUser,
                 this.state.currentConversationId, // Pass null to start new
-                // Callback for API module to update message ID
-                (messageId) => { this.state.currentMessageId = messageId; }
+                callbacks // Pass the callbacks object
             );
             
-            // API.generateAnalysis is expected to handle the streaming response and UI updates.
-            // It should set this.state.isGenerating = false upon completion or error.
-             if (result && result.conversationId) {
-                this.state.currentConversationId = result.conversationId;
-             }
-             // Completion state is set within API stream handler via UI call
+            // Conversation ID is now updated via callback
+            // if (result && result.conversationId) {
+            //    this.state.currentConversationId = result.conversationId;
+            // }
 
         } catch (error) {
-            // Error should be handled by API module and reflected in UI.
-            console.error("[Index] Error during handleGenerate call:", error);
-            this.state.isGenerating = false;
-             // Ensure UI resets if error bubbles up unexpectedly
-             if(typeof UI !== 'undefined' && UI.showGenerationCompleted) {
-                UI.showGenerationCompleted(); 
-             }
+            // Errors should be primarily handled via the onErrorInResult callback now.
+            // This catch block is a fallback.
+            console.error("[Index] Error during handleGenerate call (should have been handled by callback):", error);
+            if (this.state.isGenerating) {
+                 // Ensure state is reset if error wasn't handled by onComplete callback
+                 callbacks.onComplete(); 
+            }
         }
     },
     
@@ -243,27 +300,45 @@ const RequirementAnalysisApp = {
              return;
          }
          try {
-             UI.setStoppingState(); // Update UI to show stop attempt
-             // Call the local API module method
+             // UI state updates handled by callbacks now
+             // REMOVED: UI.setStoppingState(); 
+             
+             // --- Define Callbacks for API.stopGeneration --- 
+             const callbacks = {
+                 onStopping: () => this.ui.setStoppingState(),
+                 onComplete: () => {
+                     this.state.isGenerating = false;
+                     this.state.currentMessageId = null;
+                     this.ui.showGenerationCompleted();
+                     // ADDED: Render markdown in case stream was aborted mid-render
+                     this.ui.renderMarkdown(); 
+                 },
+                 onStopMessage: () => this.ui.showStopMessage(),
+                 onError: (msg) => { 
+                     // Decide how to show stop errors, maybe a toast?
+                     console.error("Stop Generation Error:", msg);
+                     this.ui.showToast(msg, 'error'); 
+                 }
+             };
+             // --- End Callbacks --- 
+
+             // Call the local API module method, passing callbacks
              await API.stopGeneration(
                  this.state.currentMessageId,
                  this.state.apiKey,
                  this.state.apiEndpoint,
-                 this.state.currentUser
+                 this.state.currentUser,
+                 callbacks // Pass callbacks
              );
-             // API/UI module handles showing the stop message/state.
+             // API module's finally block or abort handler calls callbacks.onComplete
          } catch (error) {
-            // Error logged in API, UI should be updated there.
-            console.error("[Index] Error during stopGeneration call:", error);
-         } finally {
-             // API module's stream handler or stopGeneration method should set isGenerating = false
-             // and call UI.showGenerationCompleted()
-             this.state.isGenerating = false; 
-             this.state.currentMessageId = null;
-             if(typeof UI !== 'undefined' && UI.showGenerationCompleted) {
-                UI.showGenerationCompleted(); // Ensure button resets just in case
+             // Errors should be handled by onError callback now
+             console.error("[Index] Error during stopGeneration call (should have been handled by callback):", error);
+             // Ensure state reset as fallback
+             if (this.state.isGenerating) {
+                 callbacks.onComplete();
              }
-         }
+         } 
     },
     
     /**
@@ -271,8 +346,8 @@ const RequirementAnalysisApp = {
      */
     handleClearForm() {
         // Delegate to UI module
-        if (typeof UI.clearForm === 'function') {
-            UI.clearForm();
+        if (this.ui && typeof this.ui.clearForm === 'function') {
+            this.ui.clearForm();
         }
     },
     
@@ -281,8 +356,8 @@ const RequirementAnalysisApp = {
      */
     handleCopyResult() {
         // Delegate to UI module
-        if (typeof UI.copyResult === 'function') {
-            UI.copyResult();
+        if (this.ui && typeof this.ui.copyResult === 'function') {
+            this.ui.copyResult();
         }
     },
     
@@ -291,8 +366,8 @@ const RequirementAnalysisApp = {
      */
     toggleTextareaExpand() {
         // Delegate to UI module
-        if (typeof UI.toggleTextareaExpand === 'function') {
-            UI.toggleTextareaExpand();
+        if (this.ui && typeof this.ui.toggleTextareaExpand === 'function') {
+            this.ui.toggleTextareaExpand();
         }
     }
 };
