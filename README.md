@@ -73,7 +73,7 @@
    - User Story 生成器 (基于 Dify Workflow)。
    - 用户手册生成器 (基于 Dify Agent)。
    - UX 界面设计 (POC, 基于 Dify API)。
-   - *待办:* 需求分析助手。
+   - 需求分析助手 (基于 Dify ChatBot)。
 
 ## 非功能特性
 - **构建:** 使用 Vite。
@@ -82,6 +82,8 @@
 - **可扩展性:** 模块化设计。
 
 ## 最近更新 (重点)
+- **[2025-04-28]** **JS模块化重构 (完成)**: 将通用 Dify API 客户端 (`dify-client.js`) 集成到所有四个 AI 应用 (User Manual, UX Design, Requirement Analysis, User Story) 中，删除了它们独立的 `api.js` 文件。统一了 Dify API 交互逻辑，包括流式处理和中止请求。恢复了动态加载应用信息的功能。
+- **[2025-04-26]** **JS模块化重构 (进行中)**: 创建通用 Dify API 客户端 (`modules/common/dify-client.js`) 用于统一处理与 Dify 的流式 (SSE) 交互和中止请求。成功将此客户端集成到用户手册生成器 (`user-manual`)，并删除其独立的 `api.js`。
 - **[2025-04-25]** **流处理修复**: 修复 User Story 生成器与 Dify Workflow API 交互中的流处理错误，解决了 JSON 解析失败 (`Unterminated string`) 和内容重复显示的问题，优化了 SSE 事件解析逻辑。
 - **[2025-04-24]** **UI层标准化重构**: 重构四个AI应用(需求分析, 用户手册, 用户故事, UX设计)以使用通用的UI模块 (`DifyAppUI`)，移除冗余代码，统一UI交互逻辑并适配Workflow。删除废弃的 `ui.js` 文件。
 - **[2025-04-23]** **代码标准化**: 统一四个AI应用(需求分析,用户手册,用户故事,UX设计)的JS代码，包括统一主要按钮ID、移除独立停止按钮、统一系统信息切换和CSS类名使用，提升代码一致性和可维护性。

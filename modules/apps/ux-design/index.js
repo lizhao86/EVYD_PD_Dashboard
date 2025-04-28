@@ -13,7 +13,8 @@ configureAmplify();
 import Header from '/modules/common/header.js';
 // REMOVED: import UI from './ui.js';
 import DifyAppUI from '../../common/dify-app-ui.js'; // Import common UI
-import API from './api.js'; // API module specific to UX Design
+// REMOVED: import API from './api.js'; // API module specific to UX Design
+import DifyClient from '../../common/dify-client.js'; // ADDED: Import the common client
 import { getCurrentUserSettings, getGlobalConfig } from '/scripts/services/storage.js';
 import { t } from '/scripts/i18n.js';
 import { marked } from 'marked'; // Keep for DifyAppUI
@@ -28,15 +29,17 @@ const UXDesignApp = {
         apiKey: null,
         apiEndpoint: null,
         currentUser: null,
-        appInfo: null,
+        // REMOVED: appInfo: null,
         currentConversationId: null, // Store conversation ID for continuous chat
-        currentMessageId: null, // Store message ID for stopping
-        isGenerating: false,
+        // REMOVED: currentMessageId: null,
+        isGenerating: false, // This state might be redundant if ui handles button state
         startTime: null
     },
     
     // ADDED: Store UI instance
     ui: null,
+    // ADDED: Store DifyClient instance
+    difyClient: null,
     
     /**
      * 初始化应用
@@ -48,17 +51,15 @@ const UXDesignApp = {
         // 检查用户登录状态
         if (!Header.currentUser) {
              // MODIFIED: Use this.ui if available, otherwise fallback
+             if (!this.ui && typeof DifyAppUI === 'function') {
+                 this.ui = new DifyAppUI({ t, marked });
+                 this.ui.initUserInterface({ inputElementId: 'requirement-description', inputErrorElementId: 'requirement-error' });
+             }
              if (this.ui) {
                  this.ui.showError(t('uxDesign.notLoggedIn', { default: '请先登录以使用此功能。' }));
              } else {
                  // Fallback if UI hasn't initialized yet
-                 const errorContainer = document.getElementById('app-info-error');
-                 const errorMessageEl = document.getElementById('error-message');
-                 if (errorContainer && errorMessageEl) {
-                     errorMessageEl.textContent = t('uxDesign.notLoggedIn', { default: '请先登录以使用此功能。' });
-                     errorContainer.style.display = 'block';
-                     document.getElementById('app-info-loading').style.display = 'none';
-                 }
+                 document.body.innerHTML = `<p style="color:red; padding: 20px;">${t('uxDesign.notLoggedIn', { default: '请先登录以使用此功能。'})}</p>`;
              }
             return;
         }
@@ -106,8 +107,13 @@ const UXDesignApp = {
             this.state.apiEndpoint = globalConfig.apiEndpoints[DIFY_APP_API_KEY_NAME];
             this.state.currentUser = Header.currentUser;
             
-            // 获取应用信息
-            this.fetchAppInformation();
+            // REMOVED: Set static app info
+            // this.ui.displayAppInfo({
+            //     name: t('uxDesign.title', { default: 'UX Design Concept Generator' }),
+            //     description: t('uxDesign.description', { default: 'Generate UX design concepts based on input requirements.' })
+            // });
+            // ADDED: Call the restored method to fetch dynamic info
+            await this._fetchAppInformation();
             
             // 绑定事件
             this.bindEvents();
@@ -128,37 +134,36 @@ const UXDesignApp = {
         }
     },
     
-    async fetchAppInformation() {
+    // ADDED: Restored fetchAppInformation logic as a private method
+    async _fetchAppInformation() {
         if (!this.state.apiKey || !this.state.apiEndpoint) return;
 
-        // --- Define Callbacks for API.fetchAppInfo --- 
-        const callbacks = {
-            onLoading: () => {
-                // console.log("[Index UX] Callback: onLoading");
-                if (this.ui) this.ui.showLoading();
-            },
-            onError: (msg) => {
-                // console.log("[Index UX] Callback: onError");
-                if (this.ui) this.ui.showError(msg);
-            },
-            onAppInfo: (info) => {
-                // console.log("[Index UX] Callback: onAppInfo", info);
-                if (info) {
-                    this.state.appInfo = info;
-                    if (this.ui) this.ui.displayAppInfo(info); 
-                } else {
-                    if (this.ui) this.ui.displayAppInfo({}); // Show empty/default info
-                }
-            }
-        };
-        // --- End Callbacks --- 
+        this.ui.showLoading(); // Show loading state
+        const infoUrl = `${this.state.apiEndpoint}/info`;
 
         try {
-            await API.fetchAppInfo(this.state.apiKey, this.state.apiEndpoint, callbacks); // Pass callbacks
+            const response = await fetch(infoUrl, {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${this.state.apiKey}` }
+            });
+
+            this.ui.hideLoading(); // Hide loading state regardless of outcome
+
+            if (!response.ok) {
+                let errorDetail = '';
+                try { errorDetail = JSON.stringify(await response.json()); } catch { errorDetail = await response.text(); }
+                throw new Error(`Request failed: ${response.status} ${response.statusText}. Details: ${errorDetail}`);
+            }
+
+            const data = await response.json();
+            this.ui.displayAppInfo(data); // Display fetched info
+
         } catch (error) {
-            // Errors should be handled by the onError callback
-            console.error("[Index UX] Failed to fetch app info wrapper (should have been handled by callback):", error);
-             if (this.ui && this.ui.hideLoading) this.ui.hideLoading(); // Ensure loading is hidden on unexpected errors
+            console.error("[UXDesignApp] Error fetching Dify app info:", error);
+            const errorMsg = t('uxDesign.connectionError', { default: '无法连接到 Dify API'});
+            this.ui.showError(`${errorMsg}: ${error.message}`); // Show error in UI
+            // Optionally display default info even on error
+            // this.ui.displayAppInfo({ name: t('uxDesign.title', { default: 'UX Design Concept Generator' }) });
         }
     },
     
@@ -169,37 +174,27 @@ const UXDesignApp = {
         // console.log('Binding UX Design events...');
         const generateButton = document.getElementById('generate-button');
         const promptInput = document.getElementById('requirement-description');
-        const retryButton = document.getElementById('retry-connection'); // Add retry button binding
+        // REMOVED: retryButton logic, as fetchAppInfo is removed.
 
-        if (promptInput) {
+        if (promptInput && this.ui) { // Ensure ui exists
             promptInput.addEventListener('input', () => {
-                 // MODIFIED: Use this.ui.handleInput
-                 if (this.ui && typeof this.ui.handleInput === 'function') {
                      this.ui.handleInput(promptInput.value);
-                 } else {
-                     // Fallback if UI not ready (should not happen in normal flow)
-                     console.warn("UI.handleInput not available during input event.")
-                 }
             });
+        } else if (!this.ui) {
+            console.warn("UI not initialized, cannot bind input event.");
         }
 
         if (generateButton) {
             generateButton.addEventListener('click', async (e) => {
                 e.preventDefault();
-                const currentAction = generateButton.getAttribute('data-action');
+                // CORRECTED: Read state directly from button attribute
+                const currentAction = generateButton.getAttribute('data-action') || 'generate';
                 
                 if (currentAction === 'stop') {
                     await this.stopGeneration(); 
                 } else {
                     await this.handleGenerate(); 
                 }
-            });
-        }
-        
-        // ADDED: Retry button event
-        if (retryButton) {
-            retryButton.addEventListener('click', () => {
-                this.fetchAppInformation(); // Re-fetch app info on click
             });
         }
 
@@ -211,7 +206,8 @@ const UXDesignApp = {
 
         const copyResultButton = document.getElementById('copy-result');
         if (copyResultButton) {
-            copyResultButton.addEventListener('click', this.handleCopyResult.bind(this));
+            // CORRECTED: Call ui.copyResult()
+            copyResultButton.addEventListener('click', () => { if(this.ui) this.ui.copyResult(); });
         }
 
         const expandTextareaButton = document.getElementById('expand-textarea');
@@ -220,154 +216,148 @@ const UXDesignApp = {
         }
         
         const toggleSystemInfoButton = document.getElementById('toggle-system-info');
-        if (toggleSystemInfoButton) {
-            // MODIFIED: Use this.ui
-            toggleSystemInfoButton.addEventListener('click', () => { if (this.ui) this.ui.toggleSystemInfo(); });
+        if (toggleSystemInfoButton && this.ui) {
+            toggleSystemInfoButton.addEventListener('click', () => this.ui.toggleSystemInfo());
         }
     },
     
-    // --- ADD Central handleGenerate Function --- 
+    /**
+     * 处理生成请求
+     */
     async handleGenerate() {
+        console.log("[UXDesignApp] handleGenerate called."); // Keep one log for entry
+        if (!this.ui || !this.state.apiKey || !this.state.apiEndpoint || !this.state.currentUser) {
+            console.error("Cannot generate: App not fully initialized.");
+            this.ui?.showError(t('uxDesign.initError', { default: '应用未完全初始化，无法生成。' }));
+            return;
+        }
+
+        // --- Input Validation ---
         const requirementInput = document.getElementById('requirement-description');
-        const requirement = requirementInput.value.trim();
+        const requirement = requirementInput ? requirementInput.value : '';
+        const inputId = 'requirement-description';
+        const maxLength = 5000;
 
-        if (!requirement) {
-             // MODIFIED: Use this.ui for error
-             this.ui.showInputError('requirement', t('uxDesign.error.requirementRequired', { default: '需求描述不能为空。' }));
-             return;
+        this.ui.clearInputError(inputId); // Clear previous error first
+
+        if (!requirement || requirement.trim().length === 0) {
+            this.ui.showInputError(inputId, t('uxDesign.error.requirementRequired', { default: '需求描述不能为空。' }));
+            return; // Stop generation
          }
-        if (requirement.length > 5000) {
-              // MODIFIED: Use this.ui for error
-              this.ui.showInputError('requirement', t('uxDesign.error.requirementTooLong', { default: '需求描述不能超过5000字符。' }));
-             return;
-         }
+        if (requirement.length > maxLength) {
+            this.ui.showInputError(inputId, t('uxDesign.error.requirementTooLong', {
+                default: `需求描述不能超过 ${maxLength} 字符。`,
+                maxLength: maxLength
+            }));
+            return; // Stop generation
+        }
+        // --- End Validation ---
 
-        // MODIFIED: Use this.ui
-        this.ui.clearInputError('requirement');
-        // REMOVED: Direct UI state updates, handled by callbacks
-        this.state.isGenerating = true;
-        this.state.startTime = Date.now();
-        // Keep conversation ID if exists for potential continuous chat
-        // this.state.currentConversationId = null; 
-        this.state.currentMessageId = null;
+        // Set UI state
+        this.ui.setGeneratingState(); // Use the new method
+        this.ui.clearResultArea();
+        this.ui.showResultContainer();
 
-        // --- Define Callbacks for API.generatePrompt --- 
-        const callbacks = {
-            onRequesting: () => this.ui.setRequestingState(),
-            onGenerating: () => this.ui.setGeneratingState(),
-            onStopping: () => this.ui.setStoppingState(),
-            onComplete: () => {
-                this.state.isGenerating = false;
-                this.state.currentMessageId = null;
-                this.state.startTime = null;
-                this.ui.showGenerationCompleted();
-                // ADDED: Render final markdown content
-                this.ui.renderMarkdown(); 
-            },
-            onStats: (metadata) => this.ui.displayStats(metadata),
-            onStreamChunk: (chunk) => this.ui.appendStreamContent(chunk),
-            onSystemInfo: (data) => this.ui.displaySystemInfo(data),
-            onStopMessage: () => this.ui.showStopMessage(),
-            onErrorInResult: (msg) => this.ui.showErrorInResult(msg),
-            onMessageIdReceived: (id) => { this.state.currentMessageId = id; },
-            onConversationIdReceived: (id) => { this.state.currentConversationId = id; },
-            onClearResult: () => this.ui.clearResultArea(),
-            onShowResultContainer: () => this.ui.showResultContainer(),
-        };
-        // --- End Callbacks --- 
+        // Prepare DifyClient call
+        const apiKey = this.state.apiKey;
+        const apiEndpoint = this.state.apiEndpoint;
+        const user = this.state.currentUser.username || 'unknown-user';
+        const conversationId = this.state.currentConversationId;
 
         try {
-            const result = await API.generatePrompt( // Use correct API method name
-                requirement,
-                this.state.apiKey,
-                this.state.apiEndpoint,
-                this.state.currentUser,
-                this.state.currentConversationId,
-                callbacks // Pass callbacks
-            );
-             // Conversation ID updated via callback
+            this.difyClient = new DifyClient({
+                baseUrl: apiEndpoint,
+                apiKey: apiKey,
+                mode: 'chat' // UX Design is a Chatbot
+            });
 
-        } catch (error) {
-            // Errors handled by callbacks
-             console.error("[Index UX] Error during handleGenerate call (should have been handled by callback):", error);
-             if (this.state.isGenerating) {
-                 // Ensure UI is reset if an unexpected error occurs outside the API
-                 callbacks.onComplete(); 
-             }
+            const payload = {
+                query: requirement,
+                user: user,
+                conversation_id: conversationId || undefined,
+                inputs: {} // Chat mode
+            };
+
+            const callbacks = {
+                onMessage: (content, isFirstChunk) => {
+                    this.ui.appendStreamContent(content);
+                },
+                onComplete: (metadata) => {
+                    console.log("[UXDesignApp] Generation complete. Metadata:", metadata);
+                    this.state.currentConversationId = metadata.conversation_id;
+                this.ui.showGenerationCompleted();
+                    this.ui.displaySystemInfo(metadata);
+                    this.ui.displayStats(metadata);
+                    this.ui.renderMarkdown();
+                    this.difyClient = null;
+                },
+                onError: (error) => {
+                    if (error.name === 'AbortError') {
+                        console.log("[UXDesignApp] Generation aborted by user.");
+                        this.ui.showToast(t('uxDesign.generationStoppedByUser', { default: '生成已由用户停止。' }), 'info');
+                    } else {
+                        console.error("[UXDesignApp] Generation error:", error);
+                        this.ui.showError(t('uxDesign.generationFailed', { default: '生成失败:'}) + ` ${error.message}`);
+                    }
+                    this.ui.showGenerationCompleted(); // Ensure button reset on error
+                    this.difyClient = null;
+                },
+                // Optional detailed logs
+                onThought: (thought) => console.log("[UXDesignApp] Agent thought:", thought),
+                onWorkflowStarted: (data) => console.warn("[UXDesignApp] Received workflow_started in chat mode:", data),
+                // ... other optional workflow callbacks
+            };
+
+            await this.difyClient.generateStream(payload, callbacks);
+
+        } catch (initError) {
+            console.error("[UXDesignApp] Error setting up generation:", initError);
+            this.ui.showGenerationCompleted(); // Ensure button reset if init fails
+            this.ui.showError(t('uxDesign.generationSetupError', { default: '启动生成时出错:'}) + ` ${initError.message}`);
+            this.difyClient = null;
         }
     },
     
-    // --- ADD Central stopGeneration Function --- 
+    /**
+     * 处理停止生成请求
+     */
     async stopGeneration() {
-         // console.log("Handling stop generation request (UX)...");
-         if (!this.state.isGenerating || !this.state.currentMessageId) {
-             console.warn("Stop request ignored (UX): Not generating or no message ID.");
-             return;
-         }
-         try {
-            // REMOVED: Direct UI state update
-            
-             // --- Define Callbacks for API.stopGeneration --- 
-             const callbacks = {
-                 onStopping: () => this.ui.setStoppingState(),
-                 onComplete: () => {
-                     this.state.isGenerating = false;
-                     this.state.currentMessageId = null;
-                     this.state.startTime = null;
-                     this.ui.showGenerationCompleted();
-                      // ADDED: Render markdown on stop
-                     this.ui.renderMarkdown();
-                 },
-                 onStopMessage: () => this.ui.showStopMessage(),
-                 onError: (msg) => { 
-                     console.error("Stop Generation Error (UX):", msg);
-                     this.ui.showToast(msg, 'error'); 
-                 }
-             };
-             // --- End Callbacks --- 
-
-            await API.stopGeneration(
-                this.state.currentMessageId,
-                this.state.apiKey,
-                this.state.apiEndpoint,
-                this.state.currentUser,
-                callbacks // Pass callbacks
-            );
-        } catch (error) {
-            // Errors handled by callbacks
-             console.error("[Index UX] Error during stopGeneration call (should have been handled by callback):", error);
-             if (this.state.isGenerating) {
-                  // Ensure UI is reset if an unexpected error occurs outside the API
-                 callbacks.onComplete();
-             }
+        console.log("[UXDesignApp] Attempting to stop generation...");
+        if (this.difyClient) {
+            this.difyClient.stopGeneration();
+            // UI state reset is handled by the onError callback catching AbortError
+        } else {
+            console.warn("[UXDesignApp] No active DifyClient instance to stop.");
+            if (this.ui) this.ui.showGenerationCompleted(); // Reset UI if stop is clicked erroneously
         }
     },
     
     /**
      * 复制结果
+     * CORRECTED: Call ui.copyResult()
      */
     handleCopyResult() {
-        // MODIFIED: Delegate to this.ui
         if (this.ui && typeof this.ui.copyResult === 'function') {
             this.ui.copyResult();
         }
     },
     
     /**
-     * 清空表单
+     * 清空表单和结果
      */
     handleClearForm() {
-         // MODIFIED: Delegate to this.ui
-         if (this.ui && typeof this.ui.clearForm === 'function') {
+         if (this.ui && typeof this.ui.clearForm === 'function' && typeof this.ui.clearResultArea === 'function') {
              this.ui.clearForm();
+             this.ui.clearResultArea(); // Use correct method name
+             this.state.currentConversationId = null;
+             console.log("[UXDesignApp] Form and results cleared.");
          }
     },
     
     /**
-     * 切换文本框放大状态
+     * 切换文本区域展开/收起
      */
     toggleTextareaExpand() {
-        // MODIFIED: Delegate to this.ui
         if (this.ui && typeof this.ui.toggleTextareaExpand === 'function') {
             this.ui.toggleTextareaExpand();
         }

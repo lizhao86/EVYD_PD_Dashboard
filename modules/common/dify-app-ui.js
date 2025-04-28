@@ -239,7 +239,7 @@ class DifyAppUI {
         }
 
         this.showResultContainer();
-        this.elements.resultContent.innerHTML = textChunk;
+        this.elements.resultContent.innerHTML += textChunk;
         this.elements.resultContent.scrollTop = this.elements.resultContent.scrollHeight;
     }
 
@@ -299,25 +299,35 @@ class DifyAppUI {
      * @param {object} metadata - Object containing stats. Expected keys: elapsed_time, usage.total_tokens, total_steps.
      */
     displayStats(metadata) {
+        // console.log("[UI] Displaying stats with metadata:", metadata);
+        const failedText = this.t('common.fetchFailed', { default: 'N/A' }); // Use N/A for missing data
+
         if (!this.elements.resultStats || !metadata) {
+            // console.warn("[UI] Cannot display stats: elements or metadata missing.");
             this.showTaskStatsFailed(); // Show failure if no elements or data
             return;
         }
-        const elapsedTime = metadata.elapsed_time || 0;
-        const totalTokens = metadata.usage?.total_tokens || 0;
-        const totalSteps = metadata.total_steps || 1; // Default to 1 step if not provided
 
-        const secondsSuffix = this.t('common.secondsSuffix', { default: '秒' });
-        if (this.elements.elapsedTime) this.elements.elapsedTime.textContent = `${Number(elapsedTime).toFixed(2)}${secondsSuffix}`;
-        if (this.elements.totalSteps) this.elements.totalSteps.textContent = totalSteps;
-        if (this.elements.totalTokens) this.elements.totalTokens.textContent = totalTokens;
+        // CORRECTED: Read latency from usage object, handle missing fields gracefully
+        const latency = metadata.usage?.latency;
+        const totalTokens = metadata.usage?.total_tokens;
+        const totalSteps = metadata.total_steps; // This might be undefined, especially in chat mode
+
+        const elapsedTimeText = typeof latency === 'number' ? `${Number(latency).toFixed(2)}${this.t('common.secondsSuffix', { default: '秒' })}` : failedText;
+        const totalTokensText = typeof totalTokens === 'number' ? totalTokens : failedText;
+        const totalStepsText = typeof totalSteps === 'number' ? totalSteps : failedText; // Show N/A if steps are undefined
+
+        if (this.elements.elapsedTime) this.elements.elapsedTime.textContent = elapsedTimeText;
+        if (this.elements.totalSteps) this.elements.totalSteps.textContent = totalStepsText;
+        if (this.elements.totalTokens) this.elements.totalTokens.textContent = totalTokensText;
+        
         this.elements.resultStats.style.display = 'flex';
     }
 
     showTaskStatsFailed() {
         if (this.elements.resultStats) {
             this.elements.resultStats.style.display = 'flex';
-            const failedText = this.t('common.fetchFailed', { default: '获取失败' });
+            const failedText = this.t('common.fetchFailed', { default: 'N/A' }); // Use N/A
             if (this.elements.elapsedTime) this.elements.elapsedTime.textContent = failedText;
             if (this.elements.totalSteps) this.elements.totalSteps.textContent = failedText;
             if (this.elements.totalTokens) this.elements.totalTokens.textContent = failedText;

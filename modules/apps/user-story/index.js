@@ -13,7 +13,7 @@ configureAmplify();
 import Header from '/modules/common/header.js';
 // REMOVED: import UI from './ui.js';
 import DifyAppUI from '../../common/dify-app-ui.js'; // Import common UI
-import API from './api.js'; // API module specific to User Story
+import DifyClient from '../../common/dify-client.js'; // ADDED: Import the common client
 import { getCurrentUserSettings, getGlobalConfig } from '/scripts/services/storage.js';
 import { t } from '/scripts/i18n.js';
 import { marked } from 'marked'; // Keep for DifyAppUI
@@ -28,16 +28,17 @@ const UserStoryApp = {
         apiKey: null,
         apiEndpoint: null,
         currentUser: null,
-        appInfo: null,
-        currentConversationId: null, // Store conversation ID for continuous chat
-        currentMessageId: null, // Store message ID for stopping
-        isGenerating: false,
-        startTime: null,
-        // REMOVED: abortGeneration: false, // Removed, handled by AbortController in API
+        // REMOVED: appInfo: null,
+        // REMOVED: currentConversationId: null, // Not used in workflow mode
+        // REMOVED: currentMessageId: null, // Not used in workflow mode (taskId handled by client)
+        isGenerating: false, // Keep for general state tracking
+        startTime: null // Keep for potential timing
     },
     
     // ADDED: Store UI instance
     ui: null,
+    // ADDED: Store DifyClient instance
+    difyClient: null,
     
     /**
      * 初始化应用
@@ -48,36 +49,31 @@ const UserStoryApp = {
         
         // 检查用户登录状态
         if (!Header.currentUser) {
-             // MODIFIED: Use this.ui if available, otherwise fallback
+             // Initialize minimal UI to show error
+             if (!this.ui && typeof DifyAppUI === 'function') {
+                 this.ui = new DifyAppUI({ t, marked });
+                 this.ui.initUserInterface({ inputElementId: 'requirement-description', inputErrorElementId: 'requirement-error' });
+             }
              if (this.ui) {
                  this.ui.showError(t('userStory.notLoggedIn', { default: '请先登录以使用此功能。' }));
              } else {
-                 // Fallback if UI hasn't initialized yet
-                 const errorContainer = document.getElementById('app-info-error');
-                 const errorMessageEl = document.getElementById('error-message');
-                 if (errorContainer && errorMessageEl) {
-                     errorMessageEl.textContent = t('userStory.notLoggedIn', { default: '请先登录以使用此功能。' });
-                     errorContainer.style.display = 'block';
-                     document.getElementById('app-info-loading').style.display = 'none';
-                 }
+                 document.body.innerHTML = `<p style="color:red; padding: 20px;">${t('userStory.notLoggedIn', { default: '请先登录以使用此功能。'})}</p>`;
              }
             return;
         }
 
         try {
             // Initialize UI elements
-            // MODIFIED: Instantiate DifyAppUI
             if (typeof DifyAppUI === 'function') {
                 this.ui = new DifyAppUI({ t, marked });
                  this.ui.initUserInterface({
-                     // Specify correct input/error IDs for the main textarea
-                     inputElementId: 'requirement-description', 
-                     inputErrorElementId: 'requirement-error' 
-                     // Error handling for other inputs will be done manually
+                     // Only provide main textarea for char count etc.
+                     inputElementId: 'requirement-description',
+                     inputErrorElementId: 'requirement-error'
                  });
             } else {
                 console.error("DifyAppUI class not loaded correctly for User Story.");
-                document.body.innerHTML = '<p style="color:red; padding: 20px;">Error loading UI components. Please refresh.</p>'; 
+                document.body.innerHTML = '<p style="color:red; padding: 20px;">Error loading UI components. Please refresh.</p>';
                 return;
             }
 
@@ -90,7 +86,7 @@ const UserStoryApp = {
                     default: `未能找到 ${DIFY_APP_API_KEY_NAME} 的 API 密钥，请在管理员面板配置。`,
                     key: DIFY_APP_API_KEY_NAME
                 });
-                this.ui.showError(errorMsg); // Use this.ui
+                this.ui.showError(errorMsg);
                 return;
             }
             
@@ -99,7 +95,7 @@ const UserStoryApp = {
                     default: `未能获取 ${DIFY_APP_API_KEY_NAME} API 地址，请联系管理员检查全局配置。`,
                     key: DIFY_APP_API_KEY_NAME
                 });
-                 this.ui.showError(errorMsg); // Use this.ui
+                 this.ui.showError(errorMsg);
                  return;
              }
             
@@ -108,8 +104,8 @@ const UserStoryApp = {
             this.state.apiEndpoint = globalConfig.apiEndpoints[DIFY_APP_API_KEY_NAME];
             this.state.currentUser = Header.currentUser;
             
-            // 获取应用信息
-            this.fetchAppInformation();
+            // ADDED: Fetch dynamic app information
+            await this._fetchAppInformation();
             
             // 绑定事件
             this.bindEvents();
@@ -117,47 +113,47 @@ const UserStoryApp = {
             // Initial UI state update for main textarea
              const requirementInput = document.getElementById('requirement-description');
              if (requirementInput && this.ui) {
-                 this.ui.handleInput(requirementInput.value); // Update initial count/button state
+                 this.ui.handleInput(requirementInput.value);
              }
             
         } catch (error) {
             console.error("Error initializing User Story App:", error);
             const initErrorMsg = t('userStory.initError', { default: '初始化应用时出错，请刷新页面重试。' });
-             // Use this.ui
              if (this.ui && typeof this.ui.showError === 'function') {
                  this.ui.showError(initErrorMsg);
              }
         }
     },
     
-    async fetchAppInformation() {
+    // ADDED: Fetch dynamic app information
+    async _fetchAppInformation() {
         if (!this.state.apiKey || !this.state.apiEndpoint) return;
+        if (!this.ui) return; // Ensure UI is initialized
 
-        // --- Define Callbacks for API.fetchAppInfo --- 
-        const callbacks = {
-            onLoading: () => {
-                if (this.ui) this.ui.showLoading();
-            },
-            onError: (msg) => {
-                if (this.ui) this.ui.showError(msg);
-            },
-            onAppInfo: (info) => {
-                if (info) {
-                    this.state.appInfo = info;
-                    if (this.ui) this.ui.displayAppInfo(info); 
-                } else {
-                    if (this.ui) this.ui.displayAppInfo({}); // Show empty/default info
-                }
-            }
-        };
-        // --- End Callbacks --- 
+        this.ui.showLoading();
+        const infoUrl = `${this.state.apiEndpoint}/info`;
 
         try {
-            await API.fetchAppInfo(this.state.apiKey, this.state.apiEndpoint, callbacks); // Pass callbacks
+            const response = await fetch(infoUrl, {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${this.state.apiKey}` }
+            });
+
+            this.ui.hideLoading();
+
+            if (!response.ok) {
+                let errorDetail = '';
+                try { errorDetail = JSON.stringify(await response.json()); } catch { errorDetail = await response.text(); }
+                throw new Error(`Request failed: ${response.status} ${response.statusText}. Details: ${errorDetail}`);
+            }
+
+            const data = await response.json();
+            this.ui.displayAppInfo(data);
+
         } catch (error) {
-            // Errors should be handled by the onError callback
-            console.error("[Index US] Failed to fetch app info wrapper (should have been handled by callback):", error);
-             if (this.ui && this.ui.hideLoading) this.ui.hideLoading(); // Ensure loading is hidden on unexpected errors
+            console.error("[UserStoryApp] Error fetching Dify app info:", error);
+            const errorMsg = t('userStory.connectionError', { default: '无法连接到 Dify API'});
+            this.ui.showError(`${errorMsg}: ${error.message}`);
         }
     },
     
@@ -166,7 +162,7 @@ const UserStoryApp = {
      */
     bindEvents() {
         const generateButton = document.getElementById('generate-button');
-        const retryButton = document.getElementById('retry-connection');
+        // REMOVED: Retry button binding
         const clearFormButton = document.getElementById('clear-form');
         const copyResultButton = document.getElementById('copy-result');
         const expandTextareaButton = document.getElementById('expand-textarea');
@@ -178,36 +174,32 @@ const UserStoryApp = {
         const moduleInput = document.getElementById('module-name');
         const requirementInput = document.getElementById('requirement-description');
 
-        // --- Bind Main Textarea Input --- 
-        if (requirementInput) {
+        // --- Bind Main Textarea Input for char count --- 
+        if (requirementInput && this.ui) {
             requirementInput.addEventListener('input', () => {
-                 // MODIFIED: Use this.ui.handleInput for char count and button state
-                 if (this.ui) {
-                      this.ui.handleInput(requirementInput.value);
-                      this.ui.clearInputError('requirement'); // Clear specific error on input
-                 }
+                this.ui.handleInput(requirementInput.value); // Update char count/button state
+                this.ui.clearInputError('requirement-error'); // Clear its specific error on input
             });
         }
         
         // --- Bind Extra Input Fields to Clear Errors --- 
-        const setupInputListener = (inputId) => {
-            const inputElement = document.getElementById(inputId);
+        const setupInputListener = (inputElement, errorElementId) => {
             if (inputElement && this.ui) {
                 inputElement.addEventListener('input', () => {
-                    this.ui.clearInputError(inputId);
+                    this.ui.clearInputError(errorElementId);
                 });
             }
         };
-        setupInputListener('platform-name');
-        setupInputListener('system-name');
-        setupInputListener('module-name');
+        setupInputListener(platformInput, 'platform-error');
+        setupInputListener(systemInput, 'system-error');
+        setupInputListener(moduleInput, 'module-error');
         // --- End Extra Input Bindings --- 
 
         // --- Bind Generate/Stop Button --- 
         if (generateButton) {
             generateButton.addEventListener('click', async (e) => {
                 e.preventDefault();
-                const currentAction = generateButton.getAttribute('data-action');
+                const currentAction = generateButton.getAttribute('data-action') || 'generate';
                 
                 if (currentAction === 'stop') {
                     await this.stopGeneration(); 
@@ -217,14 +209,7 @@ const UserStoryApp = {
             });
         }
         
-        // --- Bind Retry Button --- 
-        if (retryButton) {
-            retryButton.addEventListener('click', () => {
-                this.fetchAppInformation(); 
-            });
-        }
-
-        // --- Bind Other Buttons (delegating to UI) --- 
+        // --- Bind Other Buttons --- 
         if (clearFormButton) {
             clearFormButton.addEventListener('click', this.handleClearForm.bind(this));
         }
@@ -234,146 +219,171 @@ const UserStoryApp = {
         if (expandTextareaButton) {
             expandTextareaButton.addEventListener('click', this.toggleTextareaExpand.bind(this));
         }
-        if (toggleSystemInfoButton) {
-            toggleSystemInfoButton.addEventListener('click', () => { if (this.ui) this.ui.toggleSystemInfo(); });
+        if (toggleSystemInfoButton && this.ui) {
+            toggleSystemInfoButton.addEventListener('click', () => this.ui.toggleSystemInfo());
         }
     },
     
-    // --- ADD Central handleGenerate Function --- 
+    /**
+     * 处理生成请求 (Workflow Mode)
+     */
     async handleGenerate() {
-        // Get all input values
-        const platformInput = document.getElementById('platform-name');
-        const systemInput = document.getElementById('system-name');
-        const moduleInput = document.getElementById('module-name');
-        const requirementInput = document.getElementById('requirement-description');
+        console.log("[UserStoryApp] handleGenerate called (Workflow).");
+        if (!this.ui || !this.state.apiKey || !this.state.apiEndpoint || !this.state.currentUser) {
+            console.error("Cannot generate: App not fully initialized.");
+            this.ui?.showError(t('userStory.initError', { default: '应用未完全初始化，无法生成。' }));
+            return;
+        }
 
-        const platformName = platformInput.value.trim();
-        const systemName = systemInput.value.trim();
-        const moduleName = moduleInput.value.trim();
-        const requirementDescription = requirementInput.value.trim();
-        
-        // Validation
+        // --- Input Gathering and Validation ---
+        const inputs = {
+            Platform: document.getElementById('platform-name')?.value?.trim(),
+            System: document.getElementById('system-name')?.value?.trim(),
+            Module: document.getElementById('module-name')?.value?.trim(),
+            Requirements: document.getElementById('requirement-description')?.value?.trim()
+        };
+
         let isValid = true;
-        // Clear previous errors
-        this.ui.clearInputError('platform-name');
-        this.ui.clearInputError('system-name');
-        this.ui.clearInputError('module-name');
-        this.ui.clearInputError('requirement-description'); // Use hyphenated ID
+        const requiredFields = {
+            'platform-name': { value: inputs.Platform, errorId: 'platform-error', msgKey: 'userStory.error.platformRequired' },
+            'system-name': { value: inputs.System, errorId: 'system-error', msgKey: 'userStory.error.systemRequired' },
+            'module-name': { value: inputs.Module, errorId: 'module-error', msgKey: 'userStory.error.moduleRequired' },
+            'requirement-description': { value: inputs.Requirements, errorId: 'requirement-error', msgKey: 'userStory.error.requirementRequired' }
+        };
 
-        if (!platformName) {
-            this.ui.showInputError('platform-name', t('userStory.error.platformRequired', { default: '平台名称不能为空。' }));
-            isValid = false;
+        // Clear all errors first
+        Object.values(requiredFields).forEach(field => this.ui.clearInputError(field.errorId));
+
+        // Validate required fields
+        for (const [inputId, field] of Object.entries(requiredFields)) {
+            if (!field.value) {
+                isValid = false;
+                this.ui.showInputError(field.errorId, t(field.msgKey, { default: '此字段不能为空。' }));
+            }
         }
-        if (!systemName) {
-            this.ui.showInputError('system-name', t('userStory.error.systemRequired', { default: '系统名称不能为空。' }));
-            isValid = false;
-        }
-        if (!moduleName) {
-            this.ui.showInputError('module-name', t('userStory.error.moduleRequired', { default: '模块名称不能为空。' }));
-            isValid = false;
-        }
-        if (!requirementDescription) {
-            this.ui.showInputError('requirement-description', t('userStory.error.requirementRequired', { default: '需求描述不能为空。' }));
-            isValid = false;
-        }
-        if (requirementDescription.length > 5000) {
-             this.ui.showInputError('requirement-description', t('userStory.error.requirementTooLong', { default: '需求描述不能超过5000字符。' }));
+
+        // Validate length for requirement description
+        const reqDescMaxLength = 5000;
+        if (inputs.Requirements && inputs.Requirements.length > reqDescMaxLength) {
              isValid = false;
+             this.ui.showInputError('requirement-error', t('userStory.error.requirementTooLong', {
+                 default: `需求描述不能超过 ${reqDescMaxLength} 字符。`,
+                 maxLength: reqDescMaxLength
+             }));
          }
 
-        if (!isValid) return;
+        if (!isValid) {
+            console.log("[UserStoryApp] Validation failed.");
+            return; // Stop if validation fails
+        }
+        // --- End Validation ---
 
-        // Update state and prepare for API call
-        this.state.isGenerating = true;
-        this.state.startTime = Date.now();
-        this.state.currentMessageId = null;
-        // Do NOT reset conversationId here to allow follow-up messages
+        // Set UI state
+        this.ui.setGeneratingState();
+        this.ui.clearResultArea();
+        this.ui.showResultContainer();
 
-        // --- Define Callbacks for API.generateUserStory --- 
-        const callbacks = {
-            onRequesting: () => this.ui.setRequestingState(),
-            onGenerating: () => this.ui.setGeneratingState(),
-            onStopping: () => this.ui.setStoppingState(),
-            onComplete: () => {
-                this.state.isGenerating = false;
-                this.state.currentMessageId = null;
-                this.state.startTime = null;
-                this.ui.showGenerationCompleted();
-                this.ui.renderMarkdown(); 
-            },
-            onStats: (metadata) => this.ui.displayStats(metadata),
-            onStreamChunk: (chunk) => this.ui.appendStreamContent(chunk),
-            onSystemInfo: (data) => this.ui.displaySystemInfo(data),
-            onStopMessage: () => this.ui.showStopMessage(),
-            onErrorInResult: (msg) => this.ui.showErrorInResult(msg),
-            onMessageIdReceived: (id) => { this.state.currentMessageId = id; },
-            onConversationIdReceived: (id) => { this.state.currentConversationId = id; },
-            onClearResult: () => this.ui.clearResultArea(),
-            onShowResultContainer: () => this.ui.showResultContainer(),
-        };
-        // --- End Callbacks --- 
+        // Prepare DifyClient call
+        const apiKey = this.state.apiKey;
+        const apiEndpoint = this.state.apiEndpoint;
+        const user = this.state.currentUser.username || 'unknown-user';
 
         try {
-            const result = await API.generateUserStory(
-                platformName,
-                systemName,
-                moduleName,
-                requirementDescription,
-                this.state.apiKey,
-                this.state.apiEndpoint,
-                this.state.currentUser,
-                this.state.currentConversationId,
-                callbacks // Pass callbacks
-            );
-             // Conversation ID updated via callback
+            this.difyClient = new DifyClient({
+                baseUrl: apiEndpoint,
+                apiKey: apiKey,
+                mode: 'workflow' // Explicitly set workflow mode
+            });
 
-        } catch (error) {
-            // Errors handled by callbacks
-             console.error("[Index US] Error during handleGenerate call (should have been handled by callback):", error);
-             if (this.state.isGenerating) {
-                 callbacks.onComplete(); 
-             }
+            const payload = {
+                inputs: inputs, // Use the gathered inputs object
+                user: user,
+                response_mode: 'streaming'
+                // No conversation_id or query in workflow mode
+            };
+
+            const callbacks = {
+                onMessage: (content, isFirstChunk) => {
+                    // Workflow mode might send agent_message or just text in node_finished
+                    // DifyClient should normalize this to just call onMessage with the text
+                    this.ui.appendStreamContent(content);
+                },
+                onComplete: (metadata) => {
+                    console.log("[UserStoryApp] Workflow complete. Metadata:", metadata);
+                    this.ui.showGenerationCompleted();
+                    this.ui.displaySystemInfo(metadata); // Display final workflow metadata
+                    // Check if metadata and usage data are valid before displaying stats
+                    if (metadata && metadata.usage && (metadata.usage.total_tokens || metadata.usage.completion_tokens)) {
+                        this.ui.displayStats(metadata);
+                    } else {
+                        console.warn('[UserStoryApp] Metadata or usage data is missing/incomplete. Skipping stats display.', metadata);
+                         // Optionally display a user-friendly message if stats are missing
+                         // this.ui.displayMessage("Statistics are currently unavailable.", "warning");
+                    }
+                    this.ui.renderMarkdown(); // Render final accumulated content
+                    this.difyClient = null;
+                },
+                onError: (error) => {
+                    if (error.name === 'AbortError') {
+                        console.log("[UserStoryApp] Workflow aborted by user.");
+                        this.ui.showToast(t('userStory.generationStoppedByUser', { default: '生成已由用户停止。' }), 'info');
+                    } else {
+                        console.error("[UserStoryApp] Workflow error:", error);
+                        this.ui.showError(t('userStory.generationFailed', { default: '生成失败:'}) + ` ${error.message}`);
+                    }
+                    this.ui.showGenerationCompleted(); // Ensure button reset
+                    this.difyClient = null;
+                },
+                // --- Workflow Specific Callbacks --- 
+                onWorkflowStarted: (data) => {
+                    console.log('[UserStoryApp] Workflow started:', data);
+                    this.ui.displaySystemInfo(data); // Show initial workflow info
+                },
+                onNodeStarted: (data) => {
+                    console.log('[UserStoryApp] Node started:', data?.data?.title);
+                     // Optionally update UI to show current node
+                     // this.ui.updateNodeStatus(data?.data?.title, 'running'); 
+                    this.ui.displaySystemInfo(data); // Append node info
+                },
+                onNodeCompleted: (data) => {
+                    console.log('[UserStoryApp] Node finished:', data?.data?.title);
+                    // Optionally update UI
+                    // this.ui.updateNodeStatus(data?.data?.title, 'completed');
+                    this.ui.displaySystemInfo(data); // Append node info
+                    // Text from node output is handled by onMessage via DifyClient
+                },
+                 onWorkflowCompleted: (data) => {
+                     console.log('[UserStoryApp] Workflow finished event received:', data);
+                     // Final metadata usually comes with onComplete
+                 },
+                 onThought: (thought) => {
+                    // Agent thoughts might appear in workflow too
+                    console.log("[UserStoryApp] Agent thought:", thought);
+                    // this.ui.displaySystemInfo({ thought: thought });
+                 }
+            };
+
+            await this.difyClient.generateStream(payload, callbacks);
+
+        } catch (initError) {
+            console.error("[UserStoryApp] Error setting up generation:", initError);
+            this.ui.showGenerationCompleted(); // Ensure button reset
+            this.ui.showError(t('userStory.generationSetupError', { default: '启动生成时出错:'}) + ` ${initError.message}`);
+            this.difyClient = null;
         }
     },
     
-    // --- ADD Central stopGeneration Function --- 
+    /**
+     * 处理停止生成请求 (Workflow)
+     */
     async stopGeneration() {
-         if (!this.state.isGenerating || !this.state.currentMessageId) {
-             console.warn("Stop request ignored (US): Not generating or no message ID.");
-             return;
-         }
-         try {
-             // --- Define Callbacks for API.stopGeneration --- 
-             const callbacks = {
-                 onStopping: () => this.ui.setStoppingState(),
-                 onComplete: () => {
-                     this.state.isGenerating = false;
-                     this.state.currentMessageId = null;
-                     this.state.startTime = null;
-                     this.ui.showGenerationCompleted();
-                     this.ui.renderMarkdown(); // Render markdown on stop
-                 },
-                 onStopMessage: () => this.ui.showStopMessage(),
-                 onError: (msg) => { 
-                     console.error("Stop Generation Error (US):", msg);
-                     this.ui.showToast(msg, 'error'); 
-                 }
-             };
-             // --- End Callbacks --- 
-
-            await API.stopGeneration(
-                this.state.currentMessageId,
-                this.state.apiKey,
-                this.state.apiEndpoint,
-                this.state.currentUser,
-                callbacks // Pass callbacks
-            );
-        } catch (error) {
-            // Errors handled by callbacks
-             console.error("[Index US] Error during stopGeneration call (should have been handled by callback):", error);
-             if (this.state.isGenerating) {
-                 callbacks.onComplete();
-             }
+        console.log("[UserStoryApp] Attempting to stop generation (Workflow)...");
+        if (this.difyClient) {
+            this.difyClient.stopGeneration();
+            // UI state reset is handled by the onError callback catching AbortError
+        } else {
+            console.warn("[UserStoryApp] No active DifyClient instance to stop.");
+            if (this.ui) this.ui.showGenerationCompleted();
         }
     },
     
@@ -381,41 +391,28 @@ const UserStoryApp = {
      * 复制结果
      */
     handleCopyResult() {
-        // MODIFIED: Delegate to this.ui
-        if (this.ui) {
+        if (this.ui && typeof this.ui.copyResult === 'function') {
             this.ui.copyResult();
         }
     },
     
     /**
-     * 清空表单 (Modified to clear all fields)
+     * 清空表单和结果
      */
     handleClearForm() {
-         if (this.ui) {
-             // Call the UI clearForm which handles the main textarea and result area
-             this.ui.clearForm();
-             
-             // Manually clear the extra input fields
-             const platformInput = document.getElementById('platform-name');
-             const systemInput = document.getElementById('system-name');
-             const moduleInput = document.getElementById('module-name');
-             if (platformInput) platformInput.value = '';
-             if (systemInput) systemInput.value = '';
-             if (moduleInput) moduleInput.value = '';
-             
-             // Clear any errors associated with these fields
-             this.ui.clearInputError('platform-name');
-             this.ui.clearInputError('system-name');
-             this.ui.clearInputError('module-name');
+         if (this.ui && typeof this.ui.clearForm === 'function' && typeof this.ui.clearResultArea === 'function') {
+             this.ui.clearForm(); // Should clear all inputs based on DifyAppUI implementation
+             this.ui.clearResultArea();
+             // No conversation ID to clear for workflow
+             console.log("[UserStoryApp] Form and results cleared.");
          }
     },
     
     /**
-     * 切换文本框放大状态
+     * 切换文本区域展开/收起
      */
     toggleTextareaExpand() {
-        // MODIFIED: Delegate to this.ui
-        if (this.ui) {
+        if (this.ui && typeof this.ui.toggleTextareaExpand === 'function') {
             this.ui.toggleTextareaExpand();
         }
     }
