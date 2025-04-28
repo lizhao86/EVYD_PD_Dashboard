@@ -17,28 +17,33 @@ import DifyClient from '../../common/dify-client.js'; // ADDED: Import the commo
 import { getCurrentUserSettings, getGlobalConfig } from '/scripts/services/storage.js';
 import { t } from '/scripts/i18n.js';
 import { marked } from 'marked'; // Keep for DifyAppUI
+import BaseDifyApp from '../../common/base-dify-app.js';
 
 // Specific key for User Story API in settings
 const DIFY_APP_API_KEY_NAME = 'userStory';
 
-// 命名空间
-const UserStoryApp = {
-    // 全局状态
-    state: {
-        apiKey: null,
-        apiEndpoint: null,
-        currentUser: null,
-        // REMOVED: appInfo: null,
-        // REMOVED: currentConversationId: null, // Not used in workflow mode
-        // REMOVED: currentMessageId: null, // Not used in workflow mode (taskId handled by client)
-        isGenerating: false, // Keep for general state tracking
-        startTime: null // Keep for potential timing
-    },
-    
-    // ADDED: Store UI instance
-    ui: null,
-    // ADDED: Store DifyClient instance
-    difyClient: null,
+class UserStoryApp extends BaseDifyApp {
+    constructor() {
+        super();
+        this.difyApiKeyName = 'userStory';
+        this.difyMode = 'workflow';
+        this.mainInputElementId = 'requirement-description'; // Keep for consistency
+        this.inputErrorElementId = 'requirement-error';
+
+        // Define all input elements for this specific app
+        this.inputElementIds = {
+            platform: 'platform-name',
+            system: 'system-name',
+            module: 'module-name',
+            requirements: 'requirement-description'
+        };
+        this.inputErrorElementIds = {
+            platform: 'platform-error',
+            system: 'system-error',
+            module: 'module-error',
+            requirements: 'requirement-error'
+        };
+    }
     
     /**
      * 初始化应用
@@ -68,12 +73,12 @@ const UserStoryApp = {
                 this.ui = new DifyAppUI({ t, marked });
                  this.ui.initUserInterface({
                      // Only provide main textarea for char count etc.
-                     inputElementId: 'requirement-description',
-                     inputErrorElementId: 'requirement-error'
+                     inputElementId: 'requirement-description', 
+                     inputErrorElementId: 'requirement-error' 
                  });
             } else {
                 console.error("DifyAppUI class not loaded correctly for User Story.");
-                document.body.innerHTML = '<p style="color:red; padding: 20px;">Error loading UI components. Please refresh.</p>';
+                document.body.innerHTML = '<p style="color:red; padding: 20px;">Error loading UI components. Please refresh.</p>'; 
                 return;
             }
 
@@ -123,7 +128,7 @@ const UserStoryApp = {
                  this.ui.showError(initErrorMsg);
              }
         }
-    },
+    }
     
     // ADDED: Fetch dynamic app information
     async _fetchAppInformation() {
@@ -155,7 +160,7 @@ const UserStoryApp = {
             const errorMsg = t('userStory.connectionError', { default: '无法连接到 Dify API'});
             this.ui.showError(`${errorMsg}: ${error.message}`);
         }
-    },
+    }
     
     /**
      * 绑定所有事件
@@ -222,13 +227,13 @@ const UserStoryApp = {
         if (toggleSystemInfoButton && this.ui) {
             toggleSystemInfoButton.addEventListener('click', () => this.ui.toggleSystemInfo());
         }
-    },
+    }
     
     /**
      * 处理生成请求 (Workflow Mode)
      */
     async handleGenerate() {
-        console.log("[UserStoryApp] handleGenerate called (Workflow).");
+        // console.log("[UserStoryApp] handleGenerate called (Workflow)."); // Removed
         if (!this.ui || !this.state.apiKey || !this.state.apiEndpoint || !this.state.currentUser) {
             console.error("Cannot generate: App not fully initialized.");
             this.ui?.showError(t('userStory.initError', { default: '应用未完全初始化，无法生成。' }));
@@ -257,7 +262,7 @@ const UserStoryApp = {
         // Validate required fields
         for (const [inputId, field] of Object.entries(requiredFields)) {
             if (!field.value) {
-                isValid = false;
+            isValid = false;
                 this.ui.showInputError(field.errorId, t(field.msgKey, { default: '此字段不能为空。' }));
             }
         }
@@ -273,7 +278,7 @@ const UserStoryApp = {
          }
 
         if (!isValid) {
-            console.log("[UserStoryApp] Validation failed.");
+            // console.log("[UserStoryApp] Validation failed."); // Removed
             return; // Stop if validation fails
         }
         // --- End Validation ---
@@ -306,26 +311,70 @@ const UserStoryApp = {
                 onMessage: (content, isFirstChunk) => {
                     // Workflow mode might send agent_message or just text in node_finished
                     // DifyClient should normalize this to just call onMessage with the text
-                    this.ui.appendStreamContent(content);
+                    // ADDED: Check if UI is available
+                    if (!this.ui) return;
+                    // MODIFIED: Use isFirstChunk logic correctly
+                    if (isFirstChunk) {
+                        this.ui.setResultContent(content); // Overwrite with the first chunk
+                    } else {
+                        this.ui.appendStreamContent(content); // Append subsequent chunks
+                    }
                 },
                 onComplete: (metadata) => {
-                    console.log("[UserStoryApp] Workflow complete. Metadata:", metadata);
+                    // console.log("[UserStoryApp] Workflow complete. Metadata:", metadata); // Removed
+                    // ADDED: Check if UI is available
+                    if (!this.ui) {
+                        this.difyClient = null;
+                        return;
+                    }
                     this.ui.showGenerationCompleted();
                     this.ui.displaySystemInfo(metadata); // Display final workflow metadata
+
+                    // --- Fallback Logic --- 
+                    // Check if the result area is still empty after stream completion
+                    // and if there's fallback text from node outputs in metadata.
+                    // MODIFIED: Check the rendered markdown element directly
+                    const renderedResultElement = this.ui.elements.resultMarkdown;
+                    const currentResultIsEmpty = !renderedResultElement || !renderedResultElement.innerHTML.trim();
+
+                    if (currentResultIsEmpty && metadata && metadata.nodeOutputText) {
+                        // console.log("[UserStoryApp] Using fallback text from node output:", metadata.nodeOutputText); // Removed
+                        // MODIFIED: Set raw content and then render
+                        if (this.ui.elements.resultContent) {
+                            this.ui.elements.resultContent.innerHTML = metadata.nodeOutputText; // Put fallback into raw content
+                            this.ui.renderMarkdown(); // Render it
+                        } else {
+                            console.error("[UserStoryApp] Cannot set fallback text: resultContent element missing.");
+                            // As a last resort, try putting directly into markdown area if it exists
+                            if (renderedResultElement) {
+                                renderedResultElement.innerHTML = `<p>${metadata.nodeOutputText.replace(/\n/g, '<br>')}</p>`; // Basic formatting
+                                renderedResultElement.style.display = 'block';
+                            }
+                        }
+                    } else {
+                         // If result is not empty, ensure markdown is rendered finally
+                         this.ui.renderMarkdown(); 
+                    }
+                    // --- End Fallback Logic ---
+
                     // Check if metadata and usage data are valid before displaying stats
-                    if (metadata && metadata.usage && (metadata.usage.total_tokens || metadata.usage.completion_tokens)) {
+                    if (metadata && metadata.usage && (metadata.usage.total_tokens || metadata.usage.completion_tokens || metadata.usage.prompt_tokens)) {
                         this.ui.displayStats(metadata);
                     } else {
                         console.warn('[UserStoryApp] Metadata or usage data is missing/incomplete. Skipping stats display.', metadata);
                          // Optionally display a user-friendly message if stats are missing
                          // this.ui.displayMessage("Statistics are currently unavailable.", "warning");
                     }
-                    this.ui.renderMarkdown(); // Render final accumulated content
                     this.difyClient = null;
                 },
                 onError: (error) => {
+                    // ADDED: Check if UI is available
+                    if (!this.ui) {
+                        this.difyClient = null;
+                        return;
+                    }
                     if (error.name === 'AbortError') {
-                        console.log("[UserStoryApp] Workflow aborted by user.");
+                        // console.log("[UserStoryApp] Workflow aborted by user."); // Removed
                         this.ui.showToast(t('userStory.generationStoppedByUser', { default: '生成已由用户停止。' }), 'info');
                     } else {
                         console.error("[UserStoryApp] Workflow error:", error);
@@ -336,30 +385,30 @@ const UserStoryApp = {
                 },
                 // --- Workflow Specific Callbacks --- 
                 onWorkflowStarted: (data) => {
-                    console.log('[UserStoryApp] Workflow started:', data);
-                    this.ui.displaySystemInfo(data); // Show initial workflow info
+                    // console.log('[UserStoryApp] Workflow started:', data); // Removed
+                    if (this.ui) this.ui.displaySystemInfo(data); // Show initial workflow info
                 },
                 onNodeStarted: (data) => {
-                    console.log('[UserStoryApp] Node started:', data?.data?.title);
+                    // console.log('[UserStoryApp] Node started:', data?.data?.title); // Removed
                      // Optionally update UI to show current node
                      // this.ui.updateNodeStatus(data?.data?.title, 'running'); 
-                    this.ui.displaySystemInfo(data); // Append node info
+                    if (this.ui) this.ui.displaySystemInfo(data); // Append node info
                 },
                 onNodeCompleted: (data) => {
-                    console.log('[UserStoryApp] Node finished:', data?.data?.title);
+                    // console.log('[UserStoryApp] Node finished:', data?.data?.title); // Removed
                     // Optionally update UI
                     // this.ui.updateNodeStatus(data?.data?.title, 'completed');
-                    this.ui.displaySystemInfo(data); // Append node info
-                    // Text from node output is handled by onMessage via DifyClient
+                    if (this.ui) this.ui.displaySystemInfo(data); // Append node info
+                    // Text from node output is handled by onMessage via DifyClient OR fallback in onComplete
                 },
                  onWorkflowCompleted: (data) => {
-                     console.log('[UserStoryApp] Workflow finished event received:', data);
+                     // console.log('[UserStoryApp] Workflow finished event received:', data); // Removed
                      // Final metadata usually comes with onComplete
                  },
                  onThought: (thought) => {
                     // Agent thoughts might appear in workflow too
-                    console.log("[UserStoryApp] Agent thought:", thought);
-                    // this.ui.displaySystemInfo({ thought: thought });
+                    // console.log("[UserStoryApp] Agent thought:", thought); // Removed
+                    // if (this.ui) this.ui.displaySystemInfo({ thought: thought });
                  }
             };
 
@@ -371,21 +420,21 @@ const UserStoryApp = {
             this.ui.showError(t('userStory.generationSetupError', { default: '启动生成时出错:'}) + ` ${initError.message}`);
             this.difyClient = null;
         }
-    },
+    }
     
     /**
      * 处理停止生成请求 (Workflow)
      */
     async stopGeneration() {
-        console.log("[UserStoryApp] Attempting to stop generation (Workflow)...");
+        // console.log("[UserStoryApp] Attempting to stop generation (Workflow)..."); // Removed
         if (this.difyClient) {
             this.difyClient.stopGeneration();
             // UI state reset is handled by the onError callback catching AbortError
         } else {
-            console.warn("[UserStoryApp] No active DifyClient instance to stop.");
+            // console.warn("[UserStoryApp] No active DifyClient instance to stop."); // Removed
             if (this.ui) this.ui.showGenerationCompleted();
         }
-    },
+    }
     
     /**
      * 复制结果
@@ -394,7 +443,7 @@ const UserStoryApp = {
         if (this.ui && typeof this.ui.copyResult === 'function') {
             this.ui.copyResult();
         }
-    },
+    }
     
     /**
      * 清空表单和结果
@@ -404,9 +453,9 @@ const UserStoryApp = {
              this.ui.clearForm(); // Should clear all inputs based on DifyAppUI implementation
              this.ui.clearResultArea();
              // No conversation ID to clear for workflow
-             console.log("[UserStoryApp] Form and results cleared.");
+             // console.log("[UserStoryApp] Form and results cleared."); // Removed
          }
-    },
+    }
     
     /**
      * 切换文本区域展开/收起
@@ -416,11 +465,120 @@ const UserStoryApp = {
             this.ui.toggleTextareaExpand();
         }
     }
-};
 
-// 在DOM加载完成后初始化应用
+    /**
+     * Binds additional input listeners for platform, system, and module fields.
+     */
+    _bindSpecificEvents() {
+        const platformInput = document.getElementById(this.inputElementIds.platform);
+        const systemInput = document.getElementById(this.inputElementIds.system);
+        const moduleInput = document.getElementById(this.inputElementIds.module);
+
+        const setupInputListener = (inputElement, errorElementId) => {
+            if (inputElement) {
+                inputElement.addEventListener('input', () => {
+                    this.ui.clearInputError(errorElementId);
+                });
+            }
+        };
+
+        setupInputListener(platformInput, this.inputErrorElementIds.platform);
+        setupInputListener(systemInput, this.inputErrorElementIds.system);
+        setupInputListener(moduleInput, this.inputErrorElementIds.module);
+        // The main requirement input listener is already handled by the base class bindEvents
+    }
+
+    /**
+     * Gathers and validates inputs from all four fields.
+     * @returns {object | null} Object with validated inputs or null if validation fails.
+     */
+    _gatherAndValidateInputs() {
+        const inputs = {};
+        let isValid = true;
+
+        // Clear previous errors
+        Object.values(this.inputErrorElementIds).forEach(id => this.ui.clearInputError(id));
+
+        // Get and validate each input
+        const fieldsToValidate = [
+            { key: 'Platform', elementId: this.inputElementIds.platform, errorId: this.inputErrorElementIds.platform, msgKey: 'userStory.error.platformRequired' },
+            { key: 'System', elementId: this.inputElementIds.system, errorId: this.inputErrorElementIds.system, msgKey: 'userStory.error.systemRequired' },
+            { key: 'Module', elementId: this.inputElementIds.module, errorId: this.inputErrorElementIds.module, msgKey: 'userStory.error.moduleRequired' },
+            { key: 'Requirements', elementId: this.inputElementIds.requirements, errorId: this.inputErrorElementIds.requirements, msgKey: 'userStory.error.requirementRequired' }
+        ];
+
+        for (const field of fieldsToValidate) {
+            const inputElement = document.getElementById(field.elementId);
+            const value = inputElement ? inputElement.value.trim() : '';
+            inputs[field.key] = value; // Store the value regardless
+
+            if (!value) {
+                isValid = false;
+                this.ui.showInputError(field.errorId, t(field.msgKey, { default: '此字段不能为空。' }));
+            }
+        }
+
+        // Additional validation for requirements length
+        const reqDescMaxLength = 5000;
+        if (inputs.Requirements && inputs.Requirements.length > reqDescMaxLength) {
+             isValid = false;
+             this.ui.showInputError(this.inputErrorElementIds.requirements, t('userStory.error.requirementTooLong', {
+                 default: `需求描述不能超过 ${reqDescMaxLength} 字符。`,
+                 maxLength: reqDescMaxLength
+             }));
+         }
+
+        return isValid ? inputs : null;
+    }
+
+    /**
+     * Builds the payload for the Dify Workflow API.
+     * @param {object} inputs - Validated input object from _gatherAndValidateInputs.
+     * @returns {object} The payload object.
+     */
+    _buildPayload(inputs) {
+        return {
+            inputs: inputs, // Pass the validated inputs object directly
+            user: this.state.currentUser.username || 'unknown-user',
+            response_mode: 'streaming'
+            // No conversation_id needed for workflow mode
+        };
+    }
+
+    /**
+     * Provides workflow-specific callbacks.
+     * @returns {object} Object containing workflow event handlers.
+     */
+    _getSpecificCallbacks() {
+        return {
+            onWorkflowStarted: (data) => {
+                this.ui.displaySystemInfo(data); // Show initial workflow info
+            },
+            onNodeStarted: (data) => {
+                this.ui.displaySystemInfo(data); // Append node info
+            },
+            onNodeCompleted: (data) => {
+                this.ui.displaySystemInfo(data); // Append node info
+                // Text output is handled by base onMessage callback via DifyClient
+            },
+             onWorkflowCompleted: (data) => {
+                 // Final metadata is handled by base _handleCompletion
+             },
+             onThought: (thought) => {
+                // Optionally display thoughts if needed: this.ui.displaySystemInfo({ thought: thought });
+             }
+        };
+    }
+    
+    // Override _handleCompletion if needed (e.g., workflow doesn't use conversation_id)
+    // Currently, the base _handleCompletion is sufficient as it checks difyMode.
+    // _handleCompletion(metadata) { super._handleCompletion(metadata); /* Add specific logic */ }
+}
+
+// Initialize the app
 document.addEventListener('DOMContentLoaded', () => {
-    UserStoryApp.init();
+    const app = new UserStoryApp();
+    app.init();
 }); 
 
 // --- ADD EXPORT --- 

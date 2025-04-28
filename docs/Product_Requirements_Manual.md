@@ -41,10 +41,10 @@
 | 1.6.10 | 2025-04-15 | EVYD产品团队 | **国际化体验优化**: 解决页面加载时语言内容闪烁问题，通过在HTML加载早期添加CSS类隐藏内容，待翻译应用后再显示，确保流畅视觉体验。 |
 | 1.6.11 | 2025-04-22 | EVYD产品团队 | **新功能与优化**: 上线"需求分析助手"功能。修复翻译文件加载路径问题，删除冗余的 `/locales` 目录，统一使用 `/public/locales`。删除未使用的旧版 `modules/apps/requirements/` 目录及其内容。 |
 | 1.6.12 | 2025-04-23 | EVYD产品团队 | **代码标准化**: 统一四个AI应用(需求分析,用户手册,用户故事,UX设计)的主要操作按钮ID(`generate-button`)、移除独立停止按钮逻辑、统一系统信息切换按钮功能、统一字符计数警告CSS类名(`.warning`)。修复需求分析助手按钮点击无响应问题。 |
-| 1.6.13 | 2025-04-24 | EVYD产品团队 | **UI层标准化重构**: 重构四个AI应用(需求分析, 用户手册, 用户故事, UX设计)以使用通用的UI模块 (`DifyAppUI`)，移除冗余代码，统一UI交互逻辑。完成对User Story工作流模式的API适配。删除废弃的 `ui.js` 文件。 |
+| 1.6.13 | 2025-04-24 | EVYD产品团队 | **UI层标准化重构**: 重构四个AI应用(`index.js`)以使用通用的UI模块 (`DifyAppUI`)，移除冗余的UI处理代码，统一UI交互逻辑。完成对User Story工作流模式的API适配。删除废弃的 `ui.js` 文件。 |
 | 1.6.14 | 2025-04-25 | EVYD产品团队 | **API流处理修复**: 修复 User Story 生成器 API 流处理问题，解决与 Dify Workflow 交互时出现的 JSON 解析错误 (`Unterminated string`) 和内容重复显示 Bug，优化 SSE 事件处理逻辑。 |
-| 1.6.15 | 2025-04-26 | EVYD产品团队 | **JS模块化重构 (进行中)**: 创建通用 Dify API 客户端 (`modules/common/dify-client.js`) 用于统一处理与 Dify 的流式 (SSE) 交互和中止请求。成功将此客户端集成到用户手册生成器 (`user-manual`)，并删除其独立的 `api.js`。 |
-| 1.6.16 | 2025-04-28 | EVYD产品团队 | **JS模块化重构 (完成)**: 将通用 Dify API 客户端 (`dify-client.js`) 集成到 UX Design, Requirement Analysis, User Story 应用中，并删除它们各自独立的 `api.js` 文件。同时，为这三个应用恢复了从 `/info` 端点动态加载应用信息的功能。修复了通用客户端在处理Dify Workflow事件时，未能正确捕获和合并 `usage` (Token用量), `elapsed_time` (运行时间), `total_steps` (总步数) 等元数据的问题，确保AI应用完成后的统计信息显示完整准确。 |
+| 1.6.15 | 2025-04-26 | EVYD产品团队 | **JS模块化重构 (API客户端-Part 1)**: 创建通用 Dify API 客户端 (`dify-client.js`)。成功将此客户端集成到用户手册生成器 (`user-manual/index.js`)，并删除其独立的 `api.js`。 |
+| 1.6.16 | 2025-04-28 | EVYD产品团队 | **JS模块化重构 (API客户端-Part 2 完成)**: 将通用 Dify API 客户端 (`dify-client.js`) 集成到 UX Design, Requirement Analysis, User Story 应用 (`index.js`) 中，并删除它们各自独立的 `api.js` 文件。恢复动态加载应用信息功能。修复通用客户端处理Workflow元数据(usage, elapsed_time, total_steps)的Bug。 |
 
 ## 3 产品概述
 
@@ -439,23 +439,3 @@ EVYD 产品经理 AI 工作台是基于EVYD科技先进的人工智能技术，�
 - AWS S3静态网站托管文档 
 - [AWS Amplify V5 文档](https://docs.amplify.aws/) - 官方参考文档
 - [Vite 环境变量指南](https://vitejs.dev/guide/env-and-mode.html) - 环境变量配置参考 
-
-## 11 技术重构待办事项 (JS模块统一)
-
-基于 2025-04-22 的代码分析，计划进行以下重构以统一 AI 应用模块的 JavaScript 代码：
-
-1.  **~~创建通用 UI 模块 (`/modules/common/dify-app-ui.js`):~~ (已于 V1.6.13 完成)**
-    -   ~~整合四个 `ui.js` 文件中的通用逻辑（DOM 元素缓存、状态显示、按钮状态管理、结果处理、表单交互等）。~~
-    -   ~~依赖标准化的 HTML ID 和 CSS 类名。~~
-2.  **创建通用 API 客户端 (`/modules/common/dify-client.js`) (已完成):**
-    -   整合四个 `api.js` 文件中的通用逻辑（获取应用信息、流式请求生成、停止生成、处理流式响应）。
-    -   通过配置或策略模式处理 Chat App 与 Workflow App 的差异 (端点、ID、事件)。
-    -   使用回调或事件将结果通知调用方，解耦依赖。
--   **进展 (2025-04-28):** 已创建 `dify-client.js` 并实现核心功能。已集成到所有四个AI应用 (`user-manual`, `ux-design`, `requirement-analysis`, `user-story`)，并修复了Workflow元数据处理的Bug。
-3.  **创建应用基类 (`/modules/common/base-dify-app.js`) (待办):**
-    -   整合四个 `index.js` 文件中的通用逻辑（状态管理、`init` 流程、`bindEvents`、通用事件处理）。
-    -   实例化通用 UI 和 API 模块。
-    -   定义抽象方法（如 `getGenerationInputs`, `validateSpecificInputs`）供子类实现特定逻辑。
-4.  **~~重构各 AI 应用:~~ (UI 层已于 V1.6.13 完成, API层已于 V1.6.16 完成)**
-    -   ~~修改 `requirement-analysis/index.js`, `user-manual/index.js`, `user-story/index.js`, `ux-design/index.js`，使其继承 `BaseDifyApp`。~~ (改为使用通用UI模块和通用API客户端)
-    -   移除或大幅简化各应用独立的 `api.js` 和 `ui.js` 文件。 (ui.js 已移除, 所有 `api.js` 已移除) 

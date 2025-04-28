@@ -22,9 +22,25 @@
 ├── styles/            # CSS 样式
 ├── scripts/           # JavaScript 脚本 (核心, 工具, 服务, 页面初始化)
 │   ├── amplify-config.js # Amplify配置统一初始化
+│   └── ...
 ├── public/
 │   └── locales/       # 语言文件 (唯一来源)
 ├── modules/           # 功能模块 (认证, 管理员, 通用组件, 各 AI 应用)
+│   ├── common/        # 通用模块 (Header, UI, API Client 等)
+│   │   ├── header.js
+│   │   ├── dify-app-ui.js  # 通用 AI 应用 UI 逻辑
+│   │   ├── dify-client.js  # 通用 Dify API 交互客户端
+│   │   └── ...
+│   ├── apps/          # 各个 AI 应用模块
+│   │   ├── user-story/
+│   │   │   └── index.js  # 应用主逻辑 (已重构)
+│   │   ├── user-manual/
+│   │   │   └── index.js  # 应用主逻辑 (已重构)
+│   │   ├── ux-design/
+│   │   │   └── index.js  # 应用主逻辑 (已重构)
+│   │   └── requirement-analysis/
+│   │       └── index.js  # 应用主逻辑 (已重构)
+│   └── ...
 ├── templates/         # HTML 页面模板
 ├── docs/              # 文档
 ├── node_modules/      # npm 依赖 (本地)
@@ -82,10 +98,10 @@
 - **可扩展性:** 模块化设计。
 
 ## 最近更新 (重点)
-- **[2025-04-28]** **JS模块化重构 (完成)**: 将通用 Dify API 客户端 (`dify-client.js`) 集成到所有四个 AI 应用 (User Manual, UX Design, Requirement Analysis, User Story) 中，删除了它们独立的 `api.js` 文件。统一了 Dify API 交互逻辑，包括流式处理和中止请求。恢复了动态加载应用信息的功能。
-- **[2025-04-26]** **JS模块化重构 (进行中)**: 创建通用 Dify API 客户端 (`modules/common/dify-client.js`) 用于统一处理与 Dify 的流式 (SSE) 交互和中止请求。成功将此客户端集成到用户手册生成器 (`user-manual`)，并删除其独立的 `api.js`。
-- **[2025-04-25]** **流处理修复**: 修复 User Story 生成器与 Dify Workflow API 交互中的流处理错误，解决了 JSON 解析失败 (`Unterminated string`) 和内容重复显示的问题，优化了 SSE 事件解析逻辑。
-- **[2025-04-24]** **UI层标准化重构**: 重构四个AI应用(需求分析, 用户手册, 用户故事, UX设计)以使用通用的UI模块 (`DifyAppUI`)，移除冗余代码，统一UI交互逻辑并适配Workflow。删除废弃的 `ui.js` 文件。
+- **[2025-04-28]** **JS模块化重构 (API客户端-Part 2 完成)**: 将通用 Dify API 客户端 (`dify-client.js`) 集成到 UX Design, Requirement Analysis, User Story 应用的 `index.js` 中，并删除它们各自独立的 `api.js` 文件。恢复动态加载应用信息功能。修复通用客户端处理Workflow元数据(usage, elapsed_time, total_steps)的Bug。
+- **[2025-04-26]** **JS模块化重构 (API客户端-Part 1)**: 创建通用 Dify API 客户端 (`dify-client.js`)。成功将此客户端集成到用户手册生成器 (`user-manual/index.js`)，并删除其独立的 `api.js`。
+- **[2025-04-25]** **流处理修复**: 修复 User Story 生成器 (`user-story/index.js`) 与 Dify Workflow API 交互中的流处理错误，优化 SSE 事件解析逻辑。
+- **[2025-04-24]** **UI层标准化重构**: 重构四个AI应用的 `index.js` 以使用通用的UI模块 (`DifyAppUI`)，移除冗余的UI处理代码，统一UI交互逻辑。删除废弃的 `ui.js` 文件。
 - **[2025-04-23]** **代码标准化**: 统一四个AI应用(需求分析,用户手册,用户故事,UX设计)的JS代码，包括统一主要按钮ID、移除独立停止按钮、统一系统信息切换和CSS类名使用，提升代码一致性和可维护性。
 - **[2025-04-22]** **国际化与代码清理**: 修复翻译文件加载路径问题，删除冗余的 `/locales` 目录，统一使用 `/public/locales`。删除未使用的旧版 `modules/apps/requirements/` 目录及其内容。
 - **[2025-04-15]** **国际化体验优化**: 解决页面加载时语言内容闪烁问题，通过在HTML加载早期添加CSS类隐藏内容，待翻译应用后再显示，确保流畅视觉体验。

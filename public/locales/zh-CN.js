@@ -73,7 +73,11 @@ window.zhCN = {
             generate: '发送给Dify',
             processing: '处理中...',
             generating: '生成中...点击停止'
-        }
+        },
+        
+        // Stats display related
+        fetchFailed: '获取失败',
+        secondsSuffix: '秒'
     },
     
     // 导航

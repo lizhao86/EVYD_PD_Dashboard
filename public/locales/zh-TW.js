@@ -73,7 +73,11 @@ window.zhTW = {
             generate: '發送給Dify',
             processing: '處理中...',
             generating: '生成中...點擊停止'
-        }
+        },
+
+        // Stats display related
+        fetchFailed: '獲取失敗',
+        secondsSuffix: '秒'
     },
     
     // 導航

@@ -73,7 +73,11 @@ window.en = {
             generate: 'Send to Dify',
             processing: 'Processing...',
             generating: 'Generating...Click to stop'
-        }
+        },
+        
+        // Stats display related
+        fetchFailed: 'Fetch failed',
+        secondsSuffix: 's'
     },
     
     // Navigation
