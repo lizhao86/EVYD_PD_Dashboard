@@ -454,11 +454,12 @@ body {
 }
 
 .tool-card-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--gray-200);
     display: flex;
     justify-content: flex-end;
-    padding: 0.75rem 1.25rem;
-    background-color: rgba(245, 247, 250, 0.7);
-    border-top: 1px solid var(--gray-200);
+    align-items: center;
+    flex-wrap: nowrap;
 }
 
 .tool-card-footer span {
@@ -1240,11 +1241,12 @@ a:hover {
 }
 
 .tool-card-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--gray-200);
     display: flex;
     justify-content: flex-end;
-    padding: 0.75rem 1.25rem;
-    background-color: rgba(245, 247, 250, 0.7);
-    border-top: 1px solid var(--gray-200);
+    align-items: center;
+    flex-wrap: nowrap;
 }
 
 .tool-card-footer span {
@@ -1259,8 +1261,6 @@ a:hover {
 .tool-card:hover .tool-card-footer span {
     transform: translateX(4px);
 }
-
-
 
 /* 确保链接没有下划线的通用规则 */
 a, a:visited, a:active, a:focus {

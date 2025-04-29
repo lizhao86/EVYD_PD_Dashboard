@@ -45,6 +45,7 @@
 | 1.6.14 | 2025-04-25 | EVYD产品团队 | **API流处理修复**: 修复 User Story 生成器 API 流处理问题，解决与 Dify Workflow 交互时出现的 JSON 解析错误 (`Unterminated string`) 和内容重复显示 Bug，优化 SSE 事件处理逻辑。 |
 | 1.6.15 | 2025-04-26 | EVYD产品团队 | **JS模块化重构 (API客户端-Part 1)**: 创建通用 Dify API 客户端 (`dify-client.js`)。成功将此客户端集成到用户手册生成器 (`user-manual/index.js`)，并删除其独立的 `api.js`。 |
 | 1.6.16 | 2025-04-28 | EVYD产品团队 | **JS模块化重构 (API客户端-Part 2 完成)**: 将通用 Dify API 客户端 (`dify-client.js`) 集成到 UX Design, Requirement Analysis, User Story 应用 (`index.js`) 中，并删除它们各自独立的 `api.js` 文件。恢复动态加载应用信息功能。修复通用客户端处理Workflow元数据(usage, elapsed_time, total_steps)的Bug。 |
+| 1.6.17 | 2025-04-29 | EVYD产品团队 | **用户手册生成器交互优化**: 针对基于 Dify Chat API 的用户手册生成器(`user-manual-new`)，进行了核心交互功能的优化和修复。1. **按钮定位**: 通过调整 CSS (`styles/user-manual-new.css`) 和 JS (`modules/apps/user-manual-new/index.js`)，确保消息操作按钮（复制、重试、点赞/点踩）始终精准定位在消息气泡的右下角，并修复了按钮间分隔线的显示。2. **重新生成逻辑**: 修复了"重新生成"按钮的事件处理逻辑，确保能通过 `e.target.closest('.message')` 正确找到并移除当前的 AI 回复，并基于最近的用户消息 (`.message.user-message`) 的内容，可靠地触发对 Dify API 的新生成请求。这些改动旨在提升基于 Dify 的交互式 AI 应用的用户体验和功能稳定性。 |
 
 ## 3 产品概述
 
@@ -138,6 +139,8 @@ EVYD 产品经理 AI 工作台是基于EVYD科技先进的人工智能技术，�
    - **核心模型**: 在撰写用户手册时，主要使用了 Gemini 模型 (langgenius/gemini/google:gemini-2.0-flash-thinking-exp-01-21)。Gemini 模型在这个 ChatBot 中扮演着资深技术文档撰写专家的角色。
    - **工作流程**: 这个工作流相对直接，你只需要提供  User Story (包含功能描述和验收标准)，ChatBot 就会根据预设的提示词，自动生成用户手册的相应章节。
 
+##### 4.2.2.2 待办事项 (TODO for tomorrow - 2025-04-30)
+   - **完善反馈机制**: 当前消息气泡上的"点赞"/"点踩"按钮仅更新前端UI状态。需要实现将用户的具体反馈（哪个消息被评价、评价类型、关联的用户查询/AI回复ID等）发送并存储到后端（如通过AppSync更新DynamoDB `UserSettings` 或专门的反馈表），或直接发送给 Dify API（若支持）。目标是收集反馈数据用于未来分析模型效果或进行优化。
 
 #### 4.2.3 UX界面设计(POC)
 - 根据需求描述和User Story生成Figma界面设计的AI提示词

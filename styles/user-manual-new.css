@@ -1,0 +1,436 @@
+/* styles/user-manual-new.css */
+
+/* 基础聊天容器样式 */
+.chat-container {
+    max-width: 800px; /* 或者你希望的宽度 */
+    margin: 2rem auto; /* 居中显示 */
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    height: 70vh; /* 设定一个高度，让其像一个聊天窗口 */
+    background-color: #fff;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+    overflow: hidden;
+}
+
+/* 消息显示区域 */
+.chat-messages {
+    flex-grow: 1; /* 占据剩余空间 */
+    overflow-y: auto; /* 超出内容时滚动 */
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background-color: #f9fafb;
+}
+
+/* 头像样式 */
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    margin-right: 12px;
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+}
+
+.user-avatar {
+    background-color: #edf6ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #4285f4;
+    font-weight: bold;
+}
+
+.assistant-avatar {
+    background-color: #f0f4fd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 单条消息样式 */
+.message {
+    display: flex;
+    margin-bottom: 8px;
+    max-width: 90%;
+    word-wrap: break-word; /* 长单词换行 */
+    line-height: 1.5;
+    position: relative;
+}
+
+/* 消息内容容器 */
+.message-content {
+    padding: 12px 16px;
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+    position: relative;
+}
+
+/* 用户消息 */
+.message.user-message {
+    align-self: flex-end; /* 靠右对齐 */
+    flex-direction: row-reverse;
+}
+
+.message.user-message .message-content {
+    background-color: #4d91ff; /* 蓝色背景 */
+    color: white;
+    border-bottom-right-radius: 4px; /* 小尖角效果 */
+}
+
+/* AI 助手消息 */
+.message.assistant-message {
+    align-self: flex-start; /* 靠左对齐 */
+}
+
+.message.assistant-message .message-content {
+    background-color: white; /* 白色背景 */
+    color: #111827;
+    border: 1px solid #e5e7eb;
+    border-bottom-left-radius: 4px; /* 小尖角效果 */
+}
+
+/* 系统消息 (例如欢迎语、错误提示) */
+.message.system-message {
+    padding: 10px 14px;
+    background-color: #f3f4f6; /* 淡灰色背景 */
+    color: #4b5563;
+    align-self: center; /* 居中 */
+    border-radius: 8px;
+    font-size: 0.9em;
+    text-align: center;
+    max-width: 90%;
+}
+.message.system-message.error {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+.message.system-message.info {
+    background-color: #e0f2fe;
+    color: #0369a1;
+}
+
+/* 消息内容段落 */
+.message p {
+    margin: 0;
+}
+
+/* 消息内的代码块 */
+.message pre {
+    background-color: #f8fafc; /* 浅色背景 */
+    color: #334155; /* 深色文字 */
+    padding: 12px;
+    border-radius: 8px;
+    overflow-x: auto; /* 水平滚动 */
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.9em;
+    border: 1px solid #e2e8f0;
+}
+
+.message code:not(pre code) {
+    background-color: #f1f5f9;
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+    font-size: 85%;
+    color: #2563eb;
+}
+
+/* 输入区域 */
+.chat-input-area {
+    display: flex !important; /* 强制始终显示 */
+    flex-direction: column;
+    padding: 16px;
+    border-top: 1px solid #e5e7eb;
+    background-color: #fff;
+}
+
+/* 错误消息样式 */
+.input-error {
+    color: #ef4444;
+    margin-bottom: 8px;
+    font-size: 0.9em;
+}
+
+/* 输入容器，包含输入框和按钮 */
+.input-container {
+    display: flex;
+    align-items: flex-end;
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 24px;
+    padding: 8px;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.input-container:focus-within {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* 输入框 */
+#message-input {
+    flex-grow: 1; /* 占据尽可能多的空间 */
+    padding: 12px 16px;
+    border: none;
+    background-color: transparent;
+    resize: none; /* 禁止调整大小 */
+    font-size: 0.95rem;
+    line-height: 1.5;
+    max-height: 120px; /* 限制最大高度 */
+    overflow-y: auto; /* 内容多时允许滚动 */
+}
+
+#message-input:focus {
+    outline: none;
+}
+
+/* 发送和停止按钮 */
+.button.primary-button {
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.button.primary-button:hover {
+    background-color: #2563eb;
+}
+
+.button.secondary-button {
+    background-color: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.button.secondary-button:hover {
+    background-color: #dc2626;
+}
+
+.button svg {
+    width: 18px;
+    height: 18px;
+}
+
+.button span {
+    display: none;
+}
+
+/* 加载指示器 */
+.loading-indicator {
+    padding: 8px 12px;
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.9em;
+    background-color: #f9fafb;
+    border-radius: 8px;
+    margin: 8px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: fit-content;
+}
+
+.loading-indicator .spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(107, 114, 128, 0.3);
+    border-radius: 50%;
+    border-top-color: #6b7280;
+    animation: spin 1s linear infinite;
+    margin-right: 8px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* 滚动条样式 */
+.chat-messages::-webkit-scrollbar {
+    width: 5px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 5px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+/* 建议问题区域 */
+.suggested-questions {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.suggested-questions h4 {
+    margin-bottom: 10px;
+    color: #6b7280;
+    font-size: 0.95rem;
+    font-weight: normal;
+}
+
+.question-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.question-button {
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    color: #4b5563;
+    transition: all 0.2s ease;
+}
+
+.question-button:hover {
+    background: #e5e7eb;
+    color: #1f2937;
+}
+
+/* Markdown增强样式 */
+.message.assistant-message a {
+    color: #0066cc;
+    text-decoration: none;
+}
+
+.message.assistant-message a:hover {
+    text-decoration: underline;
+}
+
+.message.assistant-message ul, 
+.message.assistant-message ol {
+    padding-left: 1.5em;
+    margin: 0.5em 0;
+}
+
+.message.assistant-message li {
+    margin-bottom: 0.25em;
+}
+
+.message.assistant-message table {
+    border-collapse: collapse;
+    margin: 1em 0;
+    width: 100%;
+}
+
+.message.assistant-message table th,
+.message.assistant-message table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.message.assistant-message table th {
+    background-color: #f2f2f2;
+}
+
+.message.assistant-message blockquote {
+    border-left: 4px solid #ddd;
+    margin: 0.5em 0;
+    padding-left: 1em;
+    color: #666;
+}
+
+.message.assistant-message img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* 消息操作按钮容器 */
+.message-actions {
+    display: none;
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 4px;
+    z-index: 10;
+}
+
+/* 分隔线样式 */
+.message-actions .divider {
+    display: inline-block;
+    width: 1px;
+    height: 16px;
+    background-color: #e5e7eb;
+    margin: 0 2px;
+}
+
+/* 当消息被悬停时显示操作按钮 */
+.message:hover .message-actions {
+    display: flex;
+}
+
+/* 操作按钮样式 */
+.action-button {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #6b7280;
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0 2px;
+}
+
+.action-button:hover {
+    background-color: #f3f4f6;
+    color: #4b5563;
+}
+
+/* 特定操作按钮样式 */
+.action-button.copy:hover {
+    color: #2563eb;
+}
+
+.action-button.retry:hover {
+    color: #059669;
+}
+
+.action-button.like.active {
+    color: #059669;
+    background-color: #dcfce7;
+}
+
+.action-button.dislike.active {
+    color: #dc2626;
+    background-color: #fee2e2;
+} 

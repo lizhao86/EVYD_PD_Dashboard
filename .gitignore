@@ -23,3 +23,6 @@ amplifytools.xcconfig
 
 # Environment variables
 .env
+
+# Added by AI to ignore cloned example code
+Learn/

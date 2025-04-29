@@ -647,4 +647,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 // Export the main object and the helper function
 export const t = (key, params) => I18n.t(key, params);
+
+// 添加默认导出
 export default I18n; 

@@ -77,7 +77,8 @@ window.zhCN = {
         
         // Stats display related
         fetchFailed: '获取失败',
-        secondsSuffix: '秒'
+        secondsSuffix: '秒',
+        tryNewVersion: '尝试新版'
     },
     
     // 导航
@@ -164,6 +165,12 @@ window.zhCN = {
                 description: '为您的产品生成清晰简洁的用户手册，自动创建操作指南和常见问题解答',
                 tag1: 'Dify Agent',
                 tag2: '文档生成'
+            },
+            aiUserManualNew: {
+                title: 'AI 写 User Manual (新版)',
+                description: '为您的产品生成清晰简洁的用户手册，全新对话式界面，支持连续对话',
+                tag1: '对话式界面',
+                tag2: 'Dify Chat'
             },
             uxDesign: {
                 title: 'UX 界面设计(POC)',

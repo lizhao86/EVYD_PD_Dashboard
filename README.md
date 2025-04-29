@@ -98,6 +98,7 @@
 - **可扩展性:** 模块化设计。
 
 ## 最近更新 (重点)
+- **[2025-04-29]** **用户手册交互优化**: 修复了用户手册生成器(`user-manual-new`)的核心交互问题。通过调整CSS和JS，确保了消息操作按钮（复制、重试、反馈）的右下角精确定位及分隔线显示。同时，优化了"重新生成"功能的JS逻辑，确保能正确移除当前AI回复并基于上一条用户提问可靠地触发Dify API调用，提升了应用的稳定性和用户体验。
 - **[2025-04-28]** **JS模块化重构 (API客户端-Part 2 完成)**: 将通用 Dify API 客户端 (`dify-client.js`) 集成到 UX Design, Requirement Analysis, User Story 应用的 `index.js` 中，并删除它们各自独立的 `api.js` 文件。恢复动态加载应用信息功能。修复通用客户端处理Workflow元数据(usage, elapsed_time, total_steps)的Bug。
 - **[2025-04-26]** **JS模块化重构 (API客户端-Part 1)**: 创建通用 Dify API 客户端 (`dify-client.js`)。成功将此客户端集成到用户手册生成器 (`user-manual/index.js`)，并删除其独立的 `api.js`。
 - **[2025-04-25]** **流处理修复**: 修复 User Story 生成器 (`user-story/index.js`) 与 Dify Workflow API 交互中的流处理错误，优化 SSE 事件解析逻辑。
