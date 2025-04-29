@@ -1,13 +1,13 @@
 {
   "api": {
-    "evydpddashboard": {
+    "evydpdplatform": {
       "dependsOn": [
         {
           "attributes": [
             "UserPoolId"
           ],
           "category": "auth",
-          "resourceName": "evydpddashboardbc6d4075"
+          "resourceName": "evydpdplatform61d1db62"
         }
       ],
       "output": {
@@ -16,7 +16,7 @@
           "defaultAuthentication": {
             "authenticationType": "AMAZON_COGNITO_USER_POOLS",
             "userPoolConfig": {
-              "userPoolId": "authevydpddashboardbc6d4075"
+              "userPoolId": "authevydpdplatform61d1db62"
             }
           }
         }
@@ -26,7 +26,7 @@
     }
   },
   "auth": {
-    "evydpddashboardbc6d4075": {
+    "evydpdplatform61d1db62": {
       "customAuth": false,
       "dependsOn": [],
       "frontendAuthConfig": {

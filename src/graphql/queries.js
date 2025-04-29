@@ -7,15 +7,11 @@ export const getUserSettings = /* GraphQL */ `
       id
       role
       language
-      apiKeys {
-        userStory
-        userManual
-        requirementsAnalysis
-        uxDesign
-        __typename
-      }
       createdAt
       updatedAt
+      _version
+      _deleted
+      _lastChangedAt
       owner
       __typename
     }
@@ -34,10 +30,262 @@ export const listUserSettings = /* GraphQL */ `
         language
         createdAt
         updatedAt
+        _version
+        _deleted
+        _lastChangedAt
         owner
         __typename
       }
       nextToken
+      startedAt
+      __typename
+    }
+  }
+`;
+export const syncUserSettings = /* GraphQL */ `
+  query SyncUserSettings(
+    $filter: ModelUserSettingsFilterInput
+    $limit: Int
+    $nextToken: String
+    $lastSync: AWSTimestamp
+  ) {
+    syncUserSettings(
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+      lastSync: $lastSync
+    ) {
+      items {
+        id
+        role
+        language
+        createdAt
+        updatedAt
+        _version
+        _deleted
+        _lastChangedAt
+        owner
+        __typename
+      }
+      nextToken
+      startedAt
+      __typename
+    }
+  }
+`;
+export const getApplication = /* GraphQL */ `
+  query GetApplication($id: ID!) {
+    getApplication(id: $id) {
+      id
+      name
+      description
+      createdAt
+      updatedAt
+      _version
+      _deleted
+      _lastChangedAt
+      __typename
+    }
+  }
+`;
+export const listApplications = /* GraphQL */ `
+  query ListApplications(
+    $filter: ModelApplicationFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listApplications(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        name
+        description
+        createdAt
+        updatedAt
+        _version
+        _deleted
+        _lastChangedAt
+        __typename
+      }
+      nextToken
+      startedAt
+      __typename
+    }
+  }
+`;
+export const syncApplications = /* GraphQL */ `
+  query SyncApplications(
+    $filter: ModelApplicationFilterInput
+    $limit: Int
+    $nextToken: String
+    $lastSync: AWSTimestamp
+  ) {
+    syncApplications(
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+      lastSync: $lastSync
+    ) {
+      items {
+        id
+        name
+        description
+        createdAt
+        updatedAt
+        _version
+        _deleted
+        _lastChangedAt
+        __typename
+      }
+      nextToken
+      startedAt
+      __typename
+    }
+  }
+`;
+export const getUserApplicationApiKey = /* GraphQL */ `
+  query GetUserApplicationApiKey($id: ID!) {
+    getUserApplicationApiKey(id: $id) {
+      id
+      applicationID
+      apiKey
+      owner
+      createdAt
+      updatedAt
+      _version
+      _deleted
+      _lastChangedAt
+      __typename
+    }
+  }
+`;
+export const listUserApplicationApiKeys = /* GraphQL */ `
+  query ListUserApplicationApiKeys(
+    $filter: ModelUserApplicationApiKeyFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listUserApplicationApiKeys(
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        applicationID
+        apiKey
+        owner
+        createdAt
+        updatedAt
+        _version
+        _deleted
+        _lastChangedAt
+        __typename
+      }
+      nextToken
+      startedAt
+      __typename
+    }
+  }
+`;
+export const syncUserApplicationApiKeys = /* GraphQL */ `
+  query SyncUserApplicationApiKeys(
+    $filter: ModelUserApplicationApiKeyFilterInput
+    $limit: Int
+    $nextToken: String
+    $lastSync: AWSTimestamp
+  ) {
+    syncUserApplicationApiKeys(
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+      lastSync: $lastSync
+    ) {
+      items {
+        id
+        applicationID
+        apiKey
+        owner
+        createdAt
+        updatedAt
+        _version
+        _deleted
+        _lastChangedAt
+        __typename
+      }
+      nextToken
+      startedAt
+      __typename
+    }
+  }
+`;
+export const getConversation = /* GraphQL */ `
+  query GetConversation($id: ID!) {
+    getConversation(id: $id) {
+      id
+      title
+      messages
+      createdAt
+      updatedAt
+      _version
+      _deleted
+      _lastChangedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const listConversations = /* GraphQL */ `
+  query ListConversations(
+    $filter: ModelConversationFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listConversations(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        title
+        messages
+        createdAt
+        updatedAt
+        _version
+        _deleted
+        _lastChangedAt
+        owner
+        __typename
+      }
+      nextToken
+      startedAt
+      __typename
+    }
+  }
+`;
+export const syncConversations = /* GraphQL */ `
+  query SyncConversations(
+    $filter: ModelConversationFilterInput
+    $limit: Int
+    $nextToken: String
+    $lastSync: AWSTimestamp
+  ) {
+    syncConversations(
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+      lastSync: $lastSync
+    ) {
+      items {
+        id
+        title
+        messages
+        createdAt
+        updatedAt
+        _version
+        _deleted
+        _lastChangedAt
+        owner
+        __typename
+      }
+      nextToken
+      startedAt
       __typename
     }
   }
@@ -46,15 +294,13 @@ export const getGlobalConfig = /* GraphQL */ `
   query GetGlobalConfig($id: ID!) {
     getGlobalConfig(id: $id) {
       id
-      apiEndpoints {
-        userStory
-        userManual
-        requirementsAnalysis
-        uxDesign
-        __typename
-      }
+      configKey
+      configValue
       createdAt
       updatedAt
+      _version
+      _deleted
+      _lastChangedAt
       __typename
     }
   }
@@ -68,11 +314,82 @@ export const listGlobalConfigs = /* GraphQL */ `
     listGlobalConfigs(filter: $filter, limit: $limit, nextToken: $nextToken) {
       items {
         id
+        configKey
+        configValue
         createdAt
         updatedAt
+        _version
+        _deleted
+        _lastChangedAt
         __typename
       }
       nextToken
+      startedAt
+      __typename
+    }
+  }
+`;
+export const syncGlobalConfigs = /* GraphQL */ `
+  query SyncGlobalConfigs(
+    $filter: ModelGlobalConfigFilterInput
+    $limit: Int
+    $nextToken: String
+    $lastSync: AWSTimestamp
+  ) {
+    syncGlobalConfigs(
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+      lastSync: $lastSync
+    ) {
+      items {
+        id
+        configKey
+        configValue
+        createdAt
+        updatedAt
+        _version
+        _deleted
+        _lastChangedAt
+        __typename
+      }
+      nextToken
+      startedAt
+      __typename
+    }
+  }
+`;
+export const userApplicationApiKeysByApplicationIDAndOwner = /* GraphQL */ `
+  query UserApplicationApiKeysByApplicationIDAndOwner(
+    $applicationID: ID!
+    $owner: ModelStringKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelUserApplicationApiKeyFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    userApplicationApiKeysByApplicationIDAndOwner(
+      applicationID: $applicationID
+      owner: $owner
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        applicationID
+        apiKey
+        owner
+        createdAt
+        updatedAt
+        _version
+        _deleted
+        _lastChangedAt
+        __typename
+      }
+      nextToken
+      startedAt
       __typename
     }
   }

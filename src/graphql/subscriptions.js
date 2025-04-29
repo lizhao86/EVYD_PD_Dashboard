@@ -10,15 +10,11 @@ export const onCreateUserSettings = /* GraphQL */ `
       id
       role
       language
-      apiKeys {
-        userStory
-        userManual
-        requirementsAnalysis
-        uxDesign
-        __typename
-      }
       createdAt
       updatedAt
+      _version
+      _deleted
+      _lastChangedAt
       owner
       __typename
     }
@@ -33,15 +29,11 @@ export const onUpdateUserSettings = /* GraphQL */ `
       id
       role
       language
-      apiKeys {
-        userStory
-        userManual
-        requirementsAnalysis
-        uxDesign
-        __typename
-      }
       createdAt
       updatedAt
+      _version
+      _deleted
+      _lastChangedAt
       owner
       __typename
     }
@@ -56,15 +48,176 @@ export const onDeleteUserSettings = /* GraphQL */ `
       id
       role
       language
-      apiKeys {
-        userStory
-        userManual
-        requirementsAnalysis
-        uxDesign
-        __typename
-      }
       createdAt
       updatedAt
+      _version
+      _deleted
+      _lastChangedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onCreateApplication = /* GraphQL */ `
+  subscription OnCreateApplication(
+    $filter: ModelSubscriptionApplicationFilterInput
+  ) {
+    onCreateApplication(filter: $filter) {
+      id
+      name
+      description
+      createdAt
+      updatedAt
+      _version
+      _deleted
+      _lastChangedAt
+      __typename
+    }
+  }
+`;
+export const onUpdateApplication = /* GraphQL */ `
+  subscription OnUpdateApplication(
+    $filter: ModelSubscriptionApplicationFilterInput
+  ) {
+    onUpdateApplication(filter: $filter) {
+      id
+      name
+      description
+      createdAt
+      updatedAt
+      _version
+      _deleted
+      _lastChangedAt
+      __typename
+    }
+  }
+`;
+export const onDeleteApplication = /* GraphQL */ `
+  subscription OnDeleteApplication(
+    $filter: ModelSubscriptionApplicationFilterInput
+  ) {
+    onDeleteApplication(filter: $filter) {
+      id
+      name
+      description
+      createdAt
+      updatedAt
+      _version
+      _deleted
+      _lastChangedAt
+      __typename
+    }
+  }
+`;
+export const onCreateUserApplicationApiKey = /* GraphQL */ `
+  subscription OnCreateUserApplicationApiKey(
+    $filter: ModelSubscriptionUserApplicationApiKeyFilterInput
+    $owner: String
+  ) {
+    onCreateUserApplicationApiKey(filter: $filter, owner: $owner) {
+      id
+      applicationID
+      apiKey
+      owner
+      createdAt
+      updatedAt
+      _version
+      _deleted
+      _lastChangedAt
+      __typename
+    }
+  }
+`;
+export const onUpdateUserApplicationApiKey = /* GraphQL */ `
+  subscription OnUpdateUserApplicationApiKey(
+    $filter: ModelSubscriptionUserApplicationApiKeyFilterInput
+    $owner: String
+  ) {
+    onUpdateUserApplicationApiKey(filter: $filter, owner: $owner) {
+      id
+      applicationID
+      apiKey
+      owner
+      createdAt
+      updatedAt
+      _version
+      _deleted
+      _lastChangedAt
+      __typename
+    }
+  }
+`;
+export const onDeleteUserApplicationApiKey = /* GraphQL */ `
+  subscription OnDeleteUserApplicationApiKey(
+    $filter: ModelSubscriptionUserApplicationApiKeyFilterInput
+    $owner: String
+  ) {
+    onDeleteUserApplicationApiKey(filter: $filter, owner: $owner) {
+      id
+      applicationID
+      apiKey
+      owner
+      createdAt
+      updatedAt
+      _version
+      _deleted
+      _lastChangedAt
+      __typename
+    }
+  }
+`;
+export const onCreateConversation = /* GraphQL */ `
+  subscription OnCreateConversation(
+    $filter: ModelSubscriptionConversationFilterInput
+    $owner: String
+  ) {
+    onCreateConversation(filter: $filter, owner: $owner) {
+      id
+      title
+      messages
+      createdAt
+      updatedAt
+      _version
+      _deleted
+      _lastChangedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onUpdateConversation = /* GraphQL */ `
+  subscription OnUpdateConversation(
+    $filter: ModelSubscriptionConversationFilterInput
+    $owner: String
+  ) {
+    onUpdateConversation(filter: $filter, owner: $owner) {
+      id
+      title
+      messages
+      createdAt
+      updatedAt
+      _version
+      _deleted
+      _lastChangedAt
+      owner
+      __typename
+    }
+  }
+`;
+export const onDeleteConversation = /* GraphQL */ `
+  subscription OnDeleteConversation(
+    $filter: ModelSubscriptionConversationFilterInput
+    $owner: String
+  ) {
+    onDeleteConversation(filter: $filter, owner: $owner) {
+      id
+      title
+      messages
+      createdAt
+      updatedAt
+      _version
+      _deleted
+      _lastChangedAt
       owner
       __typename
     }
@@ -76,15 +229,13 @@ export const onCreateGlobalConfig = /* GraphQL */ `
   ) {
     onCreateGlobalConfig(filter: $filter) {
       id
-      apiEndpoints {
-        userStory
-        userManual
-        requirementsAnalysis
-        uxDesign
-        __typename
-      }
+      configKey
+      configValue
       createdAt
       updatedAt
+      _version
+      _deleted
+      _lastChangedAt
       __typename
     }
   }
@@ -95,15 +246,13 @@ export const onUpdateGlobalConfig = /* GraphQL */ `
   ) {
     onUpdateGlobalConfig(filter: $filter) {
       id
-      apiEndpoints {
-        userStory
-        userManual
-        requirementsAnalysis
-        uxDesign
-        __typename
-      }
+      configKey
+      configValue
       createdAt
       updatedAt
+      _version
+      _deleted
+      _lastChangedAt
       __typename
     }
   }
@@ -114,15 +263,13 @@ export const onDeleteGlobalConfig = /* GraphQL */ `
   ) {
     onDeleteGlobalConfig(filter: $filter) {
       id
-      apiEndpoints {
-        userStory
-        userManual
-        requirementsAnalysis
-        uxDesign
-        __typename
-      }
+      configKey
+      configValue
       createdAt
       updatedAt
+      _version
+      _deleted
+      _lastChangedAt
       __typename
     }
   }

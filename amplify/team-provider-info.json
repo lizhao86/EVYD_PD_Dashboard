@@ -1,22 +1,22 @@
 {
   "dev": {
     "awscloudformation": {
-      "AuthRoleName": "amplify-evydpddashboard-dev-f5d1e-authRole",
-      "UnauthRoleArn": "arn:aws:iam::332190354907:role/amplify-evydpddashboard-dev-f5d1e-unauthRole",
-      "AuthRoleArn": "arn:aws:iam::332190354907:role/amplify-evydpddashboard-dev-f5d1e-authRole",
+      "AuthRoleName": "amplify-evydpdplatform-dev-a967e-authRole",
+      "UnauthRoleArn": "arn:aws:iam::332190354907:role/amplify-evydpdplatform-dev-a967e-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::332190354907:role/amplify-evydpdplatform-dev-a967e-authRole",
       "Region": "ap-southeast-1",
-      "DeploymentBucketName": "amplify-evydpddashboard-dev-f5d1e-deployment",
-      "UnauthRoleName": "amplify-evydpddashboard-dev-f5d1e-unauthRole",
-      "StackName": "amplify-evydpddashboard-dev-f5d1e",
-      "StackId": "arn:aws:cloudformation:ap-southeast-1:332190354907:stack/amplify-evydpddashboard-dev-f5d1e/943ada00-16b2-11f0-beb7-02dd0d4969b3",
-      "AmplifyAppId": "du9jzij3tzrt5"
+      "DeploymentBucketName": "amplify-evydpdplatform-dev-a967e-deployment",
+      "UnauthRoleName": "amplify-evydpdplatform-dev-a967e-unauthRole",
+      "StackName": "amplify-evydpdplatform-dev-a967e",
+      "StackId": "arn:aws:cloudformation:ap-southeast-1:332190354907:stack/amplify-evydpdplatform-dev-a967e/b43b41b0-2502-11f0-a1e1-027bb888fba7",
+      "AmplifyAppId": "d25iej2ytzcbzj"
     },
     "categories": {
       "auth": {
-        "evydpddashboardbc6d4075": {}
+        "evydpdplatform61d1db62": {}
       },
       "api": {
-        "evydpddashboard": {}
+        "evydpdplatform": {}
       }
     }
   }

@@ -8,350 +8,674 @@ import { API, Auth, graphqlOperation } from 'aws-amplify';
 import * as queries from '../../src/graphql/queries';
 import * as mutations from '../../src/graphql/mutations';
 
+// Helper function to remove __typename fields recursively (if needed by API.graphql)
+function cleanTypenameFields(obj) {
+  if (!obj || typeof obj !== 'object') return;
+  if (Array.isArray(obj)) {
+    obj.forEach(cleanTypenameFields);
+  } else {
+    delete obj.__typename;
+    Object.values(obj).forEach(cleanTypenameFields);
+  }
+}
+
 // --- User Settings ---
 
 /**
- * 获取当前登录用户的设置 (role, apiKeys).
+ * 获取当前登录用户的设置 (role, language).
  * @returns {Promise<object|null>} 用户设置对象或 null (如果未登录或未找到)
  */
 export async function getCurrentUserSettings() {
     try {
+        // 使用 Cognito 用户名或 sub 作为 ID 查询 DynamoDB
         const user = await Auth.currentAuthenticatedUser();
-        const userId = user.username; // 或者使用 user.attributes.sub
+        const userId = user.username; // 或者: user.attributes.sub; 视你的 schema 设计而定
+        // console.log(`Fetching settings for user ID (Cognito): ${userId}`);
 
-        const result = await API.graphql(
-            graphqlOperation(queries.getUserSettings, { id: userId })
-        );
-        return result.data.getUserSettings;
+        // Correct way to call API.graphql with query and variables
+        const result = await API.graphql({
+            query: queries.getUserSettings, 
+            variables: { id: userId }
+            // authMode: 'AMAZON_COGNITO_USER_POOLS' // Consider if authMode needs to be explicitly set
+        });
+        // Old incorrect call:
+        // const result = await API.graphql(
+        //     userId,
+        //     queries.getUserSettings,
+        //     graphqlOperation(`query GetUserSettings($id: ID!) {
+        //       getUserSettings(id: $id) {
+        //         id
+        //         role
+        //         language
+        //         owner
+        //         createdAt
+        //         updatedAt
+        //         _version
+        //         _deleted
+        //         _lastChangedAt
+        //       }
+        //     }`)
+        // );
+
+        if (result.data.getUserSettings) {
+           // console.log('Fetched user settings:', result.data.getUserSettings);
+            return result.data.getUserSettings;
+        } else {
+           // console.log('No user settings found for ID:', userId);
+            return null;
+        }
     } catch (error) {
-        console.error('Error fetching user settings:', error);
+        // Distinguish between 'user not found' (expected) and other errors
+        if (error.errors && error.errors.some(e => e.message.includes("Cannot return null for non-nullable field"))) {
+             // console.log('User settings not found (expected error for new user). ID:', userId);
+             return null;
+        }
+        console.error('Error fetching user settings:', JSON.stringify(error));
         return null;
     }
 }
 
 /**
- * 保存当前用户设置到DynamoDB
- * @param {Object} settings - 要保存的设置对象
+ * 保存当前用户设置 (role, language) 到DynamoDB
+ * @param {Object} settings - 要保存的设置对象 { role, language }
  * @param {number} retryCount - 当前重试次数（内部使用）
- * @returns {Promise<Object>} - 保存的设置对象
+ * @returns {Promise<Object|null>} - 保存或更新后的设置对象，或 null on failure
  */
 export async function saveCurrentUserSetting(settings, retryCount = 0) {
     const MAX_RETRIES = 3;
     const RETRY_DELAY = 1000; // 重试延迟1秒
-    
-    if (!settings) {
-        console.error('保存用户设置失败: 设置对象为空');
+
+    if (!settings || typeof settings !== 'object') {
+        console.error('保存用户设置失败: 无效的设置对象', settings);
         return null;
     }
-    
+     // Ensure required 'role' field exists, default to 'user' if missing during creation
+     if (!settings.role && retryCount === 0) { // Only default on first try
+         settings.role = 'user';
+         console.log("Role missing, defaulting to 'user'");
+     } else if (!settings.role) {
+         console.error("保存用户设置失败: 'role' 字段是必需的");
+         return null; // Fail if role is missing on retry or explicitly null/undefined
+     }
+
+    // Validate role
+    if (settings.role !== 'admin' && settings.role !== 'user') {
+         console.error(`保存用户设置失败: 无效的角色值 '${settings.role}'. 只允许 'admin' 或 'user'.`);
+         return null;
+    }
+
+
     try {
-        // 确保语言字段存在且有效
-        if (settings.language !== undefined && retryCount === 0) {
-            console.log(`尝试保存语言设置: ${settings.language}`);
+        if (retryCount === 0) {
+            // console.log(`saveCurrentUserSetting called (attempt ${retryCount + 1}/${MAX_RETRIES+1}) with settings:`, JSON.stringify(settings));
         }
-        
+
         // 获取认证用户信息
         let user;
         try {
             user = await Auth.currentAuthenticatedUser();
-            if (!user) {
-                throw new Error('无法获取当前认证用户');
-            }
         } catch (authError) {
-            // 如果有强制标记并且提供了ID，尝试绕过认证检查
-            if (settings._force && settings.id) {
-                user = { username: settings.id };
-            } else {
-                throw new Error('用户未登录或认证失败');
-            }
+            console.error('保存用户设置失败: 获取当前认证用户失败:', authError);
+            return null; // Cannot save settings if user is not authenticated
         }
-        
-        const userId = user.username; // 或者使用 user.attributes.sub
-        
-        // 获取现有设置
+
+        // Use sub or username consistently with getCurrentUserSettings
+        const userId = user.username; // Or preferably: user.attributes.sub;
+        // console.log(`Saving settings for user ID (Cognito): ${userId}`);
+
+
+        // 检查现有设置以确定是创建还是更新
         let existingSettingsData = null;
         try {
-            existingSettingsData = await getCurrentUserSettings(); 
-            
-            // 移除所有__typename字段，避免GraphQL错误
-            if (existingSettingsData) {
-                // 深度复制并清理metadata
-                existingSettingsData = JSON.parse(JSON.stringify(existingSettingsData));
-                cleanTypenameFields(existingSettingsData);
-            }
+            // Pass userId to fetch specific user's settings
+            existingSettingsData = await getCurrentUserSettings(); // Already uses userId
         } catch (fetchError) {
-            // 获取失败时不中断流程，因为我们可以创建新设置
+             // Log but continue, as we might be creating a new record
+            console.error('获取现有设置以确定创建/更新时出错:', fetchError);
         }
-        
-        let payload;
-        let isCreating = false;
 
-        if (existingSettingsData) {
-            // 特别关注language字段
-            const newLanguage = settings.language !== undefined ? settings.language : (existingSettingsData.language || 'zh-CN');
-            const oldLanguage = existingSettingsData.language || 'zh-CN';
-            
-            // 确保apiKeys对象不包含__typename
-            const apiKeys = settings.apiKeys !== undefined 
-                ? {
-                    userStory: settings.apiKeys?.userStory ?? (existingSettingsData.apiKeys?.userStory ?? ''),
-                    userManual: settings.apiKeys?.userManual ?? (existingSettingsData.apiKeys?.userManual ?? ''),
-                    requirementsAnalysis: settings.apiKeys?.requirementsAnalysis ?? (existingSettingsData.apiKeys?.requirementsAnalysis ?? ''),
-                    uxDesign: settings.apiKeys?.uxDesign ?? (existingSettingsData.apiKeys?.uxDesign ?? '')
-                } 
-                : (existingSettingsData.apiKeys ? {
-                    userStory: existingSettingsData.apiKeys.userStory || '',
-                    userManual: existingSettingsData.apiKeys.userManual || '',
-                    requirementsAnalysis: existingSettingsData.apiKeys.requirementsAnalysis || '',
-                    uxDesign: existingSettingsData.apiKeys.uxDesign || ''
-                } : {
-                    userStory: '',
-                    userManual: '',
-                    requirementsAnalysis: '',
-                    uxDesign: ''
-                });
-            
-            payload = { 
-                id: userId,
-                role: settings.role !== undefined ? settings.role : existingSettingsData.role, 
-                language: newLanguage,
-                apiKeys: apiKeys
+        let payload;
+        const isCreating = !existingSettingsData;
+
+        if (isCreating) {
+            // console.log('Creating new settings record.');
+            payload = {
+                id: userId, // Use Cognito ID as the primary key
+                role: settings.role, // Already validated/defaulted
+                // Use provided language or default, prevent setting null/undefined
+                language: settings.language || 'zh-CN',
+                // REMOVED apiKeys
             };
         } else {
-            isCreating = true;
-            payload = { 
-                id: userId,
-                role: settings.role || 'viewer',
-                language: settings.language || 'zh-CN',
-                apiKeys: settings.apiKeys || {
-                    userStory: '',
-                    userManual: '',
-                    requirementsAnalysis: '',
-                    uxDesign: ''
-                }
+           // console.log('Updating existing settings record.');
+            // Prepare payload for update, only include fields being changed + required ID + _version
+            payload = {
+                id: userId, // Must include ID for update
+                _version: existingSettingsData._version, // Must include _version for update
             };
+            if (settings.role !== undefined && settings.role !== existingSettingsData.role) {
+                 payload.role = settings.role;
+            }
+             if (settings.language !== undefined && settings.language !== existingSettingsData.language) {
+                 payload.language = settings.language;
+             }
+            // REMOVED apiKeys logic
+
+            // If no fields other than ID and version are being updated, no need to call API
+            if (Object.keys(payload).length <= 2) {
+                 // console.log("No changes detected to update.");
+                 return existingSettingsData; // Return existing data as no update was needed
+            }
         }
-        
-        // 最后检查确保payload中没有__typename字段
-        cleanTypenameFields(payload);
+
+        // console.log('Payload prepared:', JSON.stringify(payload));
 
         let result;
         try {
             if (isCreating) {
+                // console.log('Executing createUserSettings mutation...');
                 result = await API.graphql(
                     graphqlOperation(mutations.createUserSettings, { input: payload })
                 );
+                // console.log('createUserSettings result:', result.data.createUserSettings);
                 return result.data.createUserSettings;
             } else {
-                // 确保传输所有必要字段
-                if(!payload.role) payload.role = existingSettingsData.role || 'viewer';
-                if(!payload.language) payload.language = existingSettingsData.language || 'zh-CN';
-                
+               // console.log('Executing updateUserSettings mutation...');
                 result = await API.graphql(
                     graphqlOperation(mutations.updateUserSettings, { input: payload })
                 );
-                
-                const updatedSettings = result.data.updateUserSettings;
-                
-                // 验证更新结果
-                if (settings.language && updatedSettings.language !== settings.language) {
-                    // 如果是强制更新且结果不匹配，记录错误但不重试
-                    if (settings._force) {
-                        console.error('强制更新失败，语言不匹配');
-                    } 
-                    // 否则尝试重试
-                    else if (retryCount < MAX_RETRIES) {
-                        return new Promise(resolve => {
-                            setTimeout(async () => {
-                                const retryResult = await saveCurrentUserSetting(settings, retryCount + 1);
-                                resolve(retryResult);
-                            }, RETRY_DELAY);
-                        });
-                    }
-                }
-                
-                return updatedSettings;
+               // console.log('updateUserSettings result:', result.data.updateUserSettings);
+                return result.data.updateUserSettings;
             }
         } catch (graphqlError) {
-            console.error('GraphQL操作失败');
-            
-            // 分析GraphQL错误
-            const errorMessage = JSON.stringify(graphqlError);
-            const isTypeNameError = errorMessage.includes('__typename') || 
-                                    errorMessage.includes('variables input contains a field that is not defined');
-            
-            if (isTypeNameError) {
-                // 再次清理payload确保没有__typename字段
-                cleanTypenameFields(payload);
-                
-                if (retryCount < MAX_RETRIES) {
-                    return new Promise(resolve => {
-                        setTimeout(async () => {
-                            try {
-                                // 直接重试请求，使用清理后的payload
-                                if (isCreating) {
-                                    result = await API.graphql(
-                                        graphqlOperation(mutations.createUserSettings, { input: payload })
-                                    );
-                                    resolve(result.data.createUserSettings);
-                                } else {
-                                    result = await API.graphql(
-                                        graphqlOperation(mutations.updateUserSettings, { input: payload })
-                                    );
-                                    resolve(result.data.updateUserSettings);
-                                }
-                            } catch (retryError) {
-                                // 如果仍然失败，尝试整个函数的重试
-                                const retryResult = await saveCurrentUserSetting(settings, retryCount + 1);
-                                resolve(retryResult);
-                            }
-                        }, RETRY_DELAY);
-                    });
-                }
+            console.error('GraphQL operation failed:', JSON.stringify(graphqlError));
+
+             // Basic retry logic for potential network issues or specific AWS errors
+             const isNetworkError = graphqlError.message?.includes('Network') || graphqlError.networkError; // Check both possible properties
+             const isRetryableAWSError = graphqlError.errors?.some(e =>
+                 e.errorType === 'ConflictUnhandled' || // DataStore conflict if version mismatched
+                 e.errorType === 'LimitExceededException' ||
+                 e.errorType === 'ProvisionedThroughputExceededException'
+             );
+
+             if ((isNetworkError || isRetryableAWSError) && retryCount < MAX_RETRIES) {
+                console.log(`Retrying operation due to ${isNetworkError ? 'network issue' : 'AWS error'} (${retryCount + 1}/${MAX_RETRIES})...`);
+                 await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * Math.pow(2, retryCount))); // Exponential backoff
+                 return saveCurrentUserSetting(settings, retryCount + 1); // Return the promise from the recursive call
             }
-            
-            // 检查是否为网络错误或其他可重试的错误
-            const isNetworkError = errorMessage.includes('Network') || 
-                errorMessage.includes('network') ||
-                errorMessage.includes('timeout') ||
-                errorMessage.includes('断开') ||
-                errorMessage.includes('连接') ||
-                errorMessage.includes('ECONNREFUSED');
-            
-            // 如果是网络错误并且未超过最大重试次数，则重试
-            if (isNetworkError && retryCount < MAX_RETRIES) {
-                return new Promise(resolve => {
-                    setTimeout(async () => {
-                        const retryResult = await saveCurrentUserSetting(settings, retryCount + 1);
-                        resolve(retryResult);
-                    }, RETRY_DELAY);
-                });
-            }
-            
-            throw graphqlError; // 重新抛出以便上层捕获
+
+            // If update failed due to version mismatch (ConditionalCheckFailedException)
+             if (graphqlError.errors?.some(e => e.errorType === 'ConflictUnhandled' || e.errorType === 'ConditionalCheckFailedException') && !isCreating) {
+                 console.warn("Update failed due to version conflict. Data may have changed since last read.");
+                 // Optionally: could trigger a re-fetch and merge strategy here, or just inform the user.
+                 // For now, we just return null to indicate failure.
+                 return null;
+             }
+
+
+            throw graphqlError; // Re-throw if not retried or other error
         }
 
     } catch (error) {
-        console.error('保存用户设置时出错');
-        
-        // 如果是已知可重试的错误类型且未超过最大重试次数
-        const isRetryableError = error.message && (
-            error.message.includes('ConditionalCheckFailedException') ||
-            error.message.includes('LimitExceededException') ||
-            error.message.includes('ProvisionedThroughputExceededException') ||
-            error.message.includes('ResourceNotFoundException')
-        );
-        
-        if (isRetryableError && retryCount < MAX_RETRIES) {
-            return new Promise(resolve => {
-                setTimeout(async () => {
-                    const retryResult = await saveCurrentUserSetting(settings, retryCount + 1);
-                    resolve(retryResult);
-                }, RETRY_DELAY);
-            });
-        }
-        
-        return null;
+        console.error('Error saving user settings:', error);
+         // Final catch-all, return null on unhandled errors during the process
+         return null;
     }
 }
 
+// --- Application Functions ---
+
 /**
- * 递归清理对象中的__typename字段
- * @param {Object} obj - 要清理的对象
+ * 获取所有定义的 Application 列表.
+ * 需要用户登录，因为 Application 模型的读取权限设置为 private.
+ * @returns {Promise<Array<object>>} Application 对象数组，或空数组 if error.
  */
-function cleanTypenameFields(obj) {
-    if (!obj || typeof obj !== 'object') return;
+export async function listApplications() {
+    try {
+        // The listApplications query might have auth rules applied based on the schema.
+        // If read is allowed for private (authenticated users), this should work.
+        const result = await API.graphql(graphqlOperation(queries.listApplications));
+        return result.data?.listApplications?.items || [];
+    } catch (error) {
+        console.error("Error listing applications:", JSON.stringify(error));
+        // Check for specific auth errors if needed
+        return [];
+    }
+}
+
+// Example: Function to create an Application (requires Admin privileges via @auth rule)
+export async function createApplication(name, description) {
+  if (!name) {
+    console.error("Application name is required.");
+    return null;
+  }
+  const payload = { name, description };
+  try {
+    const result = await API.graphql(
+      graphqlOperation(mutations.createApplication, { input: payload })
+    );
+    console.log("Application created:", result.data.createApplication);
+    return result.data.createApplication;
+  } catch (error) {
+    console.error("Error creating application:", JSON.stringify(error));
+    // Check if it's an auth error
+    if (error.errors && error.errors.some(e => e.errorType === 'Unauthorized')) {
+        console.error("Permission denied. User might not be in the 'Admin' group.");
+    }
+    return null;
+  }
+}
+
+// --- User Application API Key Functions ---
+
+// Example: Function for a user to create their API Key for a specific application
+export async function createUserApiKey(applicationID, apiKey) {
+   if (!applicationID || !apiKey) {
+       console.error("Application ID and API Key are required.");
+       return null;
+   }
+    // Owner is handled automatically by @auth rule, applicationID and apiKey are required
+    const payload = { applicationID, apiKey };
+    try {
+        const result = await API.graphql(
+           graphqlOperation(mutations.createUserApplicationApiKey, { input: payload })
+        );
+        console.log("User API Key created:", result.data.createUserApplicationApiKey);
+        return result.data.createUserApplicationApiKey;
+    } catch (error) {
+       console.error("Error creating user API key:", JSON.stringify(error));
+       return null;
+    }
+}
+
+// 更新用户现有的API密钥
+export async function updateUserApiKey(recordId, apiKey, version) {
+   if (!recordId || !apiKey) {
+       console.error("Record ID and API Key are required for update.");
+       return null;
+   }
+    // 需要提供记录ID和版本号来更新
+    const payload = { 
+        id: recordId, 
+        apiKey: apiKey
+    };
     
-    // 删除当前对象中的__typename
-    if ('__typename' in obj) {
-        delete obj.__typename;
+    // 如果提供了版本号，添加到payload中
+    if (version) {
+        payload._version = version;
     }
     
-    // 递归处理所有子对象
-    Object.keys(obj).forEach(key => {
-        if (obj[key] && typeof obj[key] === 'object') {
-            cleanTypenameFields(obj[key]);
+    try {
+        const result = await API.graphql(
+           graphqlOperation(mutations.updateUserApplicationApiKey, { input: payload })
+        );
+        console.log("User API Key updated:", result.data.updateUserApplicationApiKey);
+        return result.data.updateUserApplicationApiKey;
+    } catch (error) {
+       console.error("Error updating user API key:", JSON.stringify(error));
+       
+       // 如果是版本冲突错误，尝试获取最新版本并重试
+       if (error.errors?.some(e => e.errorType === 'ConflictUnhandled')) {
+           try {
+               // 获取最新记录
+               const getResult = await API.graphql(
+                   graphqlOperation(queries.getUserApplicationApiKey, { id: recordId })
+               );
+               const latestRecord = getResult.data?.getUserApplicationApiKey;
+               
+               if (latestRecord) {
+                   // 使用最新版本重试更新
+                   const retryPayload = {
+                       id: recordId,
+                       apiKey: apiKey,
+                       _version: latestRecord._version
+                   };
+                   
+                   const retryResult = await API.graphql(
+                       graphqlOperation(mutations.updateUserApplicationApiKey, { input: retryPayload })
+                   );
+                   console.log("User API Key updated after retry:", retryResult.data.updateUserApplicationApiKey);
+                   return retryResult.data.updateUserApplicationApiKey;
+               }
+           } catch (retryError) {
+               console.error("Error retrying update:", JSON.stringify(retryError));
+           }
+       }
+       
+       return null;
+    }
+}
+
+// 删除用户的API密钥
+export async function deleteUserApiKey(recordId, version) {
+   if (!recordId) {
+       console.error("Record ID is required for deletion.");
+       return false;
+   }
+   
+   const payload = { id: recordId };
+   if (version) {
+       payload._version = version;
+   }
+   
+   try {
+        const result = await API.graphql(
+           graphqlOperation(mutations.deleteUserApplicationApiKey, { input: payload })
+        );
+        console.log("User API Key deleted:", result.data.deleteUserApplicationApiKey);
+        return true;
+    } catch (error) {
+       console.error("Error deleting user API key:", JSON.stringify(error));
+       
+       // 如果是版本冲突错误，尝试获取最新版本并重试
+       if (error.errors?.some(e => e.errorType === 'ConflictUnhandled')) {
+           try {
+               // 获取最新记录
+               const getResult = await API.graphql(
+                   graphqlOperation(queries.getUserApplicationApiKey, { id: recordId })
+               );
+               const latestRecord = getResult.data?.getUserApplicationApiKey;
+               
+               if (latestRecord) {
+                   // 使用最新版本重试删除
+                   const retryResult = await API.graphql(
+                       graphqlOperation(mutations.deleteUserApplicationApiKey, { 
+                           input: { id: recordId, _version: latestRecord._version } 
+                       })
+                   );
+                   console.log("User API Key deleted after retry:", retryResult.data.deleteUserApplicationApiKey);
+                   return true;
+               }
+           } catch (retryError) {
+               console.error("Error retrying deletion:", JSON.stringify(retryError));
+           }
+       }
+       
+       return false;
+    }
+}
+
+// Example: Function to get API Keys for the current user
+export async function getCurrentUserApiKeys() {
+    try {
+        const user = await Auth.currentAuthenticatedUser();
+        const ownerId = user.username; // 或者 user.attributes.sub
+
+        console.log("正在查询当前用户API密钥，用户ID:", ownerId);
+        
+        // 移除对owner的过滤，直接获取所有记录然后在客户端筛选
+        // 这是因为在某些配置下，Amplify可能无法正确处理owner字段的筛选
+        const result = await API.graphql(
+            graphqlOperation(queries.listUserApplicationApiKeys)
+        );
+        
+        let allItems = result.data.listUserApplicationApiKeys.items || [];
+        console.log("获取到总API密钥记录数:", allItems.length);
+        
+        // 在客户端筛选属于当前用户的记录
+        let items = allItems.filter(item => item.owner === ownerId);
+        console.log("筛选后当前用户的API密钥记录数:", items.length);
+        
+        if (items.length > 0) {
+            // 按updatedAt排序，最新的在前
+            items.sort((a, b) => {
+                const dateA = new Date(a.updatedAt);
+                const dateB = new Date(b.updatedAt);
+                return dateB - dateA; // 降序排序
+            });
+            
+            // 去重：每个应用只保留最新的一条记录
+            const appKeyMap = new Map();
+            for (const item of items) {
+                if (!appKeyMap.has(item.applicationID)) {
+                    appKeyMap.set(item.applicationID, item);
+                }
+            }
+            
+            // 转换回数组
+            items = Array.from(appKeyMap.values());
+            console.log("去重后的API密钥记录数:", items.length);
+            
+            // 输出详细调试信息
+            items.forEach(item => {
+                console.log(`API密钥 - 应用ID: ${item.applicationID}, 记录ID: ${item.id}, 所有者: ${item.owner}`);
+            });
         }
-    });
+        
+        return items;
+    } catch (error) {
+       console.error("Error fetching user API keys:", JSON.stringify(error));
+       return [];
+    }
 }
 
 // --- Global Config ---
 
-// Use a consistent, known ID for the single global configuration record
-const GLOBAL_CONFIG_ID = "GLOBAL_CONFIG";
+// REMOVED: const GLOBAL_CONFIG_ID = "GLOBAL_CONFIG"; // No longer fetching a single record
 
 /**
- * 获取全局配置 (apiEndpoints).
- * @returns {Promise<object|null>} 全局配置对象或 null (如果未找到或出错)
+ * 获取所有全局配置项，并以 Map<configKey, configValue> 的形式返回.
+ * @returns {Promise<Map<string, string>>} 包含所有全局配置的 Map.
  */
 export async function getGlobalConfig() {
+    const configMap = new Map();
     try {
-        const result = await API.graphql(
-            graphqlOperation(queries.getGlobalConfig, { id: GLOBAL_CONFIG_ID })
-        );
-        if (result.data.getGlobalConfig) {
-            return result.data.getGlobalConfig;
-        } else {
-            return null;
-        }
+        // Assuming listGlobalConfigs query exists and returns items with configKey and configValue
+        // The query might need pagination handling for very large numbers of configs, but unlikely here.
+        const result = await API.graphql(graphqlOperation(queries.listGlobalConfigs)); 
+        const items = result.data?.listGlobalConfigs?.items || [];
+        
+        items.forEach(item => {
+            if (item && item.configKey) { // Ensure item and key exist
+                configMap.set(item.configKey, item.configValue || ''); // Store value or empty string
+            }
+        });
+        // console.log("Fetched global configs and created map:", configMap);
+        return configMap;
     } catch (error) {
-        console.error('Error fetching global config:', error);
-        return null;
+        console.error('Error fetching global configs:', error);
+        return configMap; // Return empty map on error
     }
 }
 
 /**
- * 保存全局配置 (需要管理员权限).
- * 注意：首次保存需要调用此函数来 *创建* 全局配置记录.
- * @param {object} config - 包含 apiEndpoints 的对象.
- * @param {object} config.apiEndpoints - 包含 API 端点 URL 的对象.
- * @param {string} [config.apiEndpoints.userStory]
- * @param {string} [config.apiEndpoints.userManual]
- * @param {string} [config.apiEndpoints.requirementsAnalysis]
- * @param {string} [config.apiEndpoints.uxDesign]
- * @returns {Promise<object|null>} 更新/创建后的全局配置对象或 null (如果出错或权限不足)
+ * 保存全局配置对象 (用于管理员配置API端点等全局设置)
+ * @param {Object} config - 配置对象，包含要保存的各种全局配置
+ * @returns {Promise<boolean>} - 保存成功返回true
  */
 export async function saveGlobalConfig(config) {
-    if (!config || !config.apiEndpoints) {
-        console.error("Invalid global config format provided for saving.");
-        return null;
+    if (!config || typeof config !== 'object') {
+        console.error("Invalid config object provided:", config);
+        return false;
     }
 
-    const inputData = {
-        id: GLOBAL_CONFIG_ID,
-        apiEndpoints: {
-            userStory: config.apiEndpoints.userStory ?? '',
-            userManual: config.apiEndpoints.userManual ?? '',
-            requirementsAnalysis: config.apiEndpoints.requirementsAnalysis ?? '',
-            uxDesign: config.apiEndpoints.uxDesign ?? ''
-        }
-    };
+    const MAX_RETRIES = 2; // 最大重试次数
+    const RETRY_DELAY = 500; // 重试间隔，毫秒
 
-    try {
-        let result;
+    // API端点保存处理
+    if (config.apiEndpoints && typeof config.apiEndpoints === 'object') {
+        console.log("Saving global config entries:", config.apiEndpoints);
+        
+        // 预加载所有现有配置，以减少API调用次数
+        // 这样我们可以先检查是否需要更新，不需要时避免API调用
+        let existingConfigsMap = new Map();
         try {
-            result = await API.graphql(
-                graphqlOperation(mutations.updateGlobalConfig, { input: inputData })
-            );
-            return result.data.updateGlobalConfig;
-        } catch (updateError) {
-            const isNotFoundError = updateError.errors?.some(e => 
-                e.errorType?.includes('ConditionalCheckFailed') || 
-                e.message?.includes('conditional request failed')
-            );
+            const globalConfig = await getGlobalConfig();
+            for (const key in globalConfig) {
+                existingConfigsMap.set(key, globalConfig[key]);
+            }
+            // 对于UI中特定命名的输入框，也映射其ID
+            document.querySelectorAll('[id^="global-"][id$="-api-endpoint"]').forEach(input => {
+                const appId = input.id.replace('global-', '').replace('-api-endpoint', '');
+                if (globalConfig[appId]) {
+                    existingConfigsMap.set(input.id, globalConfig[appId]);
+                }
+            });
+        } catch (loadError) {
+            // 加载失败时继续，仅意味着我们将无法预先检查是否需要更新
+        }
+        
+        // 处理每个API端点配置
+        const results = await Promise.all(
+            Object.entries(config.apiEndpoints).map(async ([configKey, configValue]) => {
+                return await processConfigKeySave(configKey, configValue, 0, existingConfigsMap);
+            })
+        );
+        
+        // 如果所有配置都保存成功，返回true
+        return results.every(result => result);
+    }
+    
+    return false;
+}
 
-            if (isNotFoundError) {
-                result = await API.graphql(
-                    graphqlOperation(mutations.createGlobalConfig, { input: inputData })
-                );
-                return result.data.createGlobalConfig;
+/**
+ * 处理单个配置键的保存，支持重试
+ * @private
+ */
+async function processConfigKeySave(configKey, configValue, retryCount = 0, existingConfigsMap = new Map()) {
+    const MAX_RETRIES = 2; // 最大重试次数
+    const RETRY_DELAY = 500; // 重试间隔，毫秒
+    
+    try {
+        let version;
+        let needsUpdate = true;
+        let shouldCreate = false;
+        let existing = null;
+        
+        // 尝试获取现有的配置
+        try {
+            // 1. 首先检查预加载的配置
+            if (existingConfigsMap.has(configKey)) {
+                const existingValue = existingConfigsMap.get(configKey);
+                if (existingValue === configValue) {
+                    needsUpdate = false;
+                }
+            }
+            
+            // 即使预加载的值表明不需要更新，我们仍需获取完整记录以获取版本号
+            const result = await API.graphql(
+                graphqlOperation(queries.getGlobalConfig, { id: configKey })
+            );
+            
+            existing = result.data.getGlobalConfig;
+            if (existing) {
+                version = existing._version;
+                
+                // 如果值相同，不需要更新
+                if (existing.configValue === configValue) {
+                    needsUpdate = false;
+                }
             } else {
-                throw updateError;
+                shouldCreate = true;
+            }
+        } catch (getError) {
+            // 如果错误表明记录不存在，则创建新记录
+            if (getError.errors && getError.errors.some(e => e.message.includes("not found"))) {
+                shouldCreate = true;
+            } else {
+                throw getError; // 重新抛出其他错误
             }
         }
+        
+        let result = false;
+        
+        if (!needsUpdate) {
+            // 值相同，不需要更新
+            return true;
+        } else if (shouldCreate) {
+            // 创建新配置
+            const createInput = {
+                id: configKey,
+                configKey: configKey,
+                configValue: configValue
+            };
+            
+            const createResult = await API.graphql(
+                graphqlOperation(mutations.createGlobalConfig, { input: createInput })
+            );
+            
+            result = !!createResult.data.createGlobalConfig;
+        } else {
+            // 更新现有配置
+            const updateInput = {
+                id: configKey,
+                configValue: configValue,
+                _version: version
+            };
+            
+            const updateResult = await API.graphql(
+                graphqlOperation(mutations.updateGlobalConfig, { input: updateInput })
+            );
+            
+            result = !!updateResult.data.updateGlobalConfig;
+        }
+        
+        return result;
     } catch (error) {
-        console.error('Error saving global config (permissions?):', error);
-        return null;
+        // 处理冲突错误和其他错误
+        const isVersionConflict = 
+            error.errors && 
+            error.errors.some(e => 
+                e.errorType === 'ConflictUnhandled' || 
+                e.message.includes('Conflict') || 
+                e.message.includes('version')
+            );
+        
+        if (isVersionConflict && retryCount < MAX_RETRIES) {
+            // 版本冲突，等待然后重试
+            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * (retryCount + 1)));
+            return processConfigKeySave(configKey, configValue, retryCount + 1, existingConfigsMap);
+        }
+        
+        // 最后一次尝试使用list-then-update方法
+        if (retryCount === MAX_RETRIES) {
+            try {
+                // 先尝试使用list操作获取最新项
+                const listResult = await API.graphql(
+                    graphqlOperation(queries.listGlobalConfigs, {
+                        filter: { id: { eq: configKey } }
+                    })
+                );
+                
+                const items = listResult.data.listGlobalConfigs.items;
+                if (items && items.length > 0) {
+                    // 找到了项，使用最新版本更新
+                    const latestItem = items[0];
+                    
+                    const updateInput = {
+                        id: configKey,
+                        configValue: configValue,
+                        _version: latestItem._version
+                    };
+                    
+                    await API.graphql(
+                        graphqlOperation(mutations.updateGlobalConfig, { input: updateInput })
+                    );
+                    
+                    return true;
+                } else {
+                    // 没有找到项，创建新项
+                    const createInput = {
+                        id: configKey,
+                        configKey: configKey,
+                        configValue: configValue
+                    };
+                    
+                    await API.graphql(
+                        graphqlOperation(mutations.createGlobalConfig, { input: createInput })
+                    );
+                    
+                    return true;
+                }
+            } catch (finalError) {
+                console.error(`Failed to save config for key ${configKey} (final attempt):`, finalError);
+                return false;
+            }
+        }
+        
+        console.error(`Failed to save config for key ${configKey}:`, error);
+        return false;
     }
 }
 
@@ -373,4 +697,18 @@ export async function getCurrentUser() {
     return {
         userId: user.username // 或 user.attributes.sub
     };
-} 
+}
+
+// Removed duplicated functions below this line
+// // Add functions for other models as needed...
+// 
+// // Example: Function to create an Application (requires Admin privileges via @auth rule)
+// export async function createApplication(name, description) { ... }
+// 
+// // Example: Function for a user to create their API Key for a specific application
+// export async function createUserApiKey(applicationID, apiKey) { ... }
+// 
+// // Example: Function to get API Keys for the current user
+// export async function getCurrentUserApiKeys() { ... }
+//
+// // Add functions for listApplications, get/create/update GlobalConfig, Conversation etc. as needed 

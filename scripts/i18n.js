@@ -645,8 +645,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 });
 
-// Export the main object and the helper function
+// Helper function to get translation with fallback
+// (This seems like the intended export for general use)
 export const t = (key, params) => I18n.t(key, params);
 
-// 添加默认导出
+// Export the main I18n object as the default export
 export default I18n; 
