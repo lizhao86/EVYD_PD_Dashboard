@@ -20,4 +20,13 @@
     - CSS (`styles/user-manual-new.css`): 添加了侧边栏、对话列表、切换按钮及折叠状态的详细样式，并引用了 CSS 变量。
 - **[Planning]** 决定下一步实现聊天历史记录功能的后端部分。
 
+## 2025-04-29 (之后)
+
+- **[Fix]** 解决了 `user-manual-new.html` 页面部署到 Amplify 后 404 的问题。
+    - 问题原因：默认的 `vite build` 配置没有将 `templates/pages/user-manual-new.html` 作为入口文件包含在构建产物中。
+    - 解决方法：
+        - 安装了 `glob` 依赖 (`npm install --save-dev glob`)。
+        - 创建了 `vite.config.js` 文件，配置 Vite 使用 `globSync` 查找 `templates/pages/*.html` 并将其作为多页面入口。
+        - 修复了 `vite.config.js` 中 `glob` 的导入和使用方式，从 `glob.sync` 改为 `globSync`。
+
 --- 

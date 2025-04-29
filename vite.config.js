@@ -1,53 +1,38 @@
 import { resolve } from 'path';
 import { defineConfig } from 'vite';
+import { fileURLToPath } from 'url'; // Needed for __dirname in ESM
+import { globSync } from 'glob';
 
-// Function to generate entry points from a list of files
-const getEntryPoints = (files) => {
-  const entries = {};
-  files.forEach(file => {
-    // Generate a key based on the file path, replacing '/' and '.' with '_'
-    // Example: templates/pages/Homepage.html -> templates_pages_Homepage_html
-    // Special case for root index.html -> main
-    let key;
-    if (file === 'index.html') {
-      key = 'main';
-    } else {
-      key = file.replace(/^\.\//, '').replace(/\//g, '_').replace(/\.html$/, '');
-    }
-    entries[key] = resolve(__dirname, file);
-  });
-  return entries;
-};
+// Helper to get __dirname in ESM
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
-// List of HTML files to be included as entry points
-// Exclude templates/pages/index.html as it's deemed unnecessary
-const entryHtmlFiles = [
-  'index.html', // Root index file
-  'templates/pages/Homepage.html',
-  'templates/pages/user-manual.html',
-  'templates/pages/user-story.html',
-  'templates/pages/ux-design.html',
-  'templates/pages/requirement-analysis.html'
-  // Add other necessary HTML files here
-];
+// Find all HTML files in templates/pages
+// Use absolute paths for input object values
+const htmlFilesInput = globSync('templates/pages/*.html').reduce((acc, file) => {
+  // Use filename without extension as the key, this will place HTML files at the root of dist
+  // e.g., 'templates/pages/Homepage.html' -> dist/Homepage.html
+  const name = file.replace(/^templates\/pages\//, '').replace(/\.html$/, '');
+  acc[name] = resolve(__dirname, file);
+  return acc;
+}, {});
+
+// Also check for index.html at the root, if it exists
+try {
+  if (globSync('index.html').length > 0) {
+     htmlFilesInput['index'] = resolve(__dirname, 'index.html');
+  }
+} catch (e) { /* ignore if index.html doesn't exist */ }
 
 export default defineConfig({
-  // 添加解析选项，定义路径别名（移除 '/' 别名）
-  resolve: {
-    alias: {
-      // 移除根路径别名'/'，保留其他别名
-      '/src': resolve(__dirname, './src'),
-      '/scripts': resolve(__dirname, './scripts'),
-      '/modules': resolve(__dirname, './modules'),
-    }
-  },
-  
+  // If your project root is not the web server root, adjust 'base' if needed
+  // base: '/',
+  root: '.', // Set project root explicitly
   build: {
+    outDir: 'dist', // Matches amplify.yml's baseDirectory
     rollupOptions: {
-      input: getEntryPoints(entryHtmlFiles),
+      input: htmlFilesInput // Use the generated input object for multiple HTML entries
     },
-    // Optional: Configure output directory if needed (defaults to 'dist')
-    // outDir: 'dist',
+    emptyOutDir: true, // Clean dist before build
   },
   // Optional: Configure server options for development (npm run dev)
   // server: {
