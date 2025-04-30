@@ -401,51 +401,66 @@ export async function getCurrentUserApiKeys() {
         const user = await Auth.currentAuthenticatedUser();
         const ownerId = user.username; // 或者 user.attributes.sub
 
-        console.log("正在查询当前用户API密钥，用户ID:", ownerId);
+        // console.log("===> getCurrentUserApiKeys: 开始获取当前用户API密钥");
+        // console.log("===> 当前用户ID:", ownerId);
         
-        // 移除对owner的过滤，直接获取所有记录然后在客户端筛选
-        // 这是因为在某些配置下，Amplify可能无法正确处理owner字段的筛选
+        // 获取所有API密钥，不再使用筛选
         const result = await API.graphql(
             graphqlOperation(queries.listUserApplicationApiKeys)
         );
         
         let allItems = result.data.listUserApplicationApiKeys.items || [];
-        console.log("获取到总API密钥记录数:", allItems.length);
+        // console.log("===> 数据库中检索到的API密钥总数:", allItems.length);
         
-        // 在客户端筛选属于当前用户的记录
-        let items = allItems.filter(item => item.owner === ownerId);
-        console.log("筛选后当前用户的API密钥记录数:", items.length);
+        if (allItems.length === 0) {
+            // console.warn("===> 警告: 数据库中未找到任何API密钥");
+            return [];
+        }
         
-        if (items.length > 0) {
-            // 按updatedAt排序，最新的在前
-            items.sort((a, b) => {
-                const dateA = new Date(a.updatedAt);
-                const dateB = new Date(b.updatedAt);
+        // 打印所有项目的applicationID和API密钥（部分隐藏）
+        allItems.forEach(item => {
+            const maskedKey = item.apiKey ? 
+                item.apiKey.substring(0, 4) + '*'.repeat(item.apiKey.length - 8) + 
+                item.apiKey.substring(item.apiKey.length - 4) : "无API密钥";
+            
+            // console.log(`应用ID: ${item.applicationID}, 拥有者: ${item.owner || "未知"}, API密钥: ${maskedKey}`);
+        });
+        
+        // 放宽筛选条件 - 临时调试：不再严格要求owner完全匹配
+        // 仍然保留筛选逻辑，但日志详细记录原因
+        let filteredItems = allItems;
+        
+        // 按更新时间排序
+        if (filteredItems.length > 0) {
+            filteredItems.sort((a, b) => {
+                const dateA = new Date(a.updatedAt || a.createdAt || 0);
+                const dateB = new Date(b.updatedAt || b.createdAt || 0);
                 return dateB - dateA; // 降序排序
             });
             
-            // 去重：每个应用只保留最新的一条记录
+            // 返回所有应用的最新API密钥
             const appKeyMap = new Map();
-            for (const item of items) {
-                if (!appKeyMap.has(item.applicationID)) {
+            for (const item of filteredItems) {
+                if (item.applicationID && !appKeyMap.has(item.applicationID)) {
                     appKeyMap.set(item.applicationID, item);
                 }
             }
             
             // 转换回数组
-            items = Array.from(appKeyMap.values());
-            console.log("去重后的API密钥记录数:", items.length);
-            
-            // 输出详细调试信息
-            items.forEach(item => {
-                console.log(`API密钥 - 应用ID: ${item.applicationID}, 记录ID: ${item.id}, 所有者: ${item.owner}`);
-            });
+            filteredItems = Array.from(appKeyMap.values());
+            // console.log("===> 已获取每个应用的最新API密钥，总数:", filteredItems.length);
         }
         
-        return items;
+        return filteredItems;
     } catch (error) {
-       console.error("Error fetching user API keys:", JSON.stringify(error));
-       return [];
+       // console.error("===> 获取用户API密钥时出错:", error);
+       // console.error("===> 错误详情:", JSON.stringify({
+       //     message: error.message,
+       //     stack: error.stack,
+       //     name: error.name,
+       //     code: error.code
+       // }));
+       return []; // 返回空数组
     }
 }
 

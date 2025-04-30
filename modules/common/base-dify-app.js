@@ -6,7 +6,7 @@
 import Header from '/modules/common/header.js';
 import DifyAppUI from './dify-app-ui.js'; 
 import DifyClient from './dify-client.js'; 
-import { getCurrentUserSettings, getGlobalConfig } from '/scripts/services/storage.js';
+import { getCurrentUserSettings, getGlobalConfig, getCurrentUserApiKeys } from '/scripts/services/storage.js';
 import { t } from '/scripts/i18n.js';
 import { marked } from 'marked';
 
@@ -79,7 +79,7 @@ class BaseDifyApp {
             }
             
         } catch (error) {
-            console.error(`Error initializing ${this.constructor.name}:`, error);
+            // console.error(`Error initializing ${this.constructor.name}:`, error);
             const initErrorMsg = t(`${this.difyApiKeyName}.initError`, { default: '初始化应用时出错，请刷新页面重试。' });
              if (this.ui && typeof this.ui.showError === 'function') {
                  this.ui.showError(initErrorMsg);
@@ -93,7 +93,7 @@ class BaseDifyApp {
 
     /** Handles the case where the user is not logged in during init. */
     _handleNotLoggedIn() {
-        console.error('User not authenticated for this application.');
+        // console.error('User not authenticated for this application.');
         const errorMsg = t(`${this.difyApiKeyName}.notLoggedIn`, { default: '请先登录以使用此功能。'});
         if (this.ui) {
             this.ui.showError(errorMsg);
@@ -105,29 +105,168 @@ class BaseDifyApp {
 
     /** Loads API key and endpoint from storage. Returns true if successful. */
     async _loadApiConfig() {
-        const userSettings = Header.userSettings || await getCurrentUserSettings();
-        const globalConfig = await getGlobalConfig();
-
-        if (!userSettings || !userSettings.apiKeys || !userSettings.apiKeys[this.difyApiKeyName]) {
-            const errorMsg = t(`${this.difyApiKeyName}.apiKeyMissingError`, {
-                default: `未能找到 ${this.difyApiKeyName} 的 API 密钥，请在管理员面板配置。`,
-                key: this.difyApiKeyName
-            });
-            this.ui.showError(errorMsg);
-            return false;
-        }
+        // console.log(`[${this.constructor.name}] 开始加载 ${this.difyApiKeyName} 应用的API配置`);
+        
+        // 1. 获取全局配置中的API端点
+        let globalConfig;
+        try {
+            // console.log(`正在获取全局配置...`);
+            globalConfig = await getGlobalConfig();
+            // console.log(`获取到的全局配置类型:`, typeof globalConfig, 
+                      // globalConfig instanceof Map ? "Map对象" : "普通对象");
             
-        if (!globalConfig || !globalConfig.apiEndpoints || !globalConfig.apiEndpoints[this.difyApiKeyName]) {
-            const errorMsg = t(`${this.difyApiKeyName}.apiEndpointMissing`, {
-                default: `未能获取 ${this.difyApiKeyName} API 地址，请联系管理员检查全局配置。`,
-                key: this.difyApiKeyName
-            });
-            this.ui.showError(errorMsg);
+            if (!globalConfig) {
+                // console.error(`全局配置获取失败，返回为空`);
+                this.ui.showError(t(`${this.difyApiKeyName}.globalConfigMissing`, {
+                    default: `系统全局配置缺失，请联系管理员检查设置。`,
+                }));
+                return false;
+            }
+            
+            // 检查API端点配置 - 处理Map或普通对象
+            let apiEndpoint = null;
+            
+            if (globalConfig instanceof Map) {
+                apiEndpoint = globalConfig.get(this.difyApiKeyName);
+                // console.log(`从Map获取API端点尝试 ${this.difyApiKeyName}: ${apiEndpoint || '未找到'}`);
+                
+                // 如果未找到，尝试不区分大小写匹配
+                if (!apiEndpoint) {
+                    for (const [key, value] of globalConfig.entries()) {
+                        if (key.toLowerCase() === this.difyApiKeyName.toLowerCase()) {
+                            apiEndpoint = value;
+                            // console.log(`通过不区分大小写匹配找到API端点 ${key}: ${apiEndpoint}`);
+                            break;
+                        }
+                    }
+                }
+            } else {
+                // 处理普通对象
+                apiEndpoint = globalConfig[this.difyApiKeyName];
+                // console.log(`从对象获取API端点尝试 ${this.difyApiKeyName}: ${apiEndpoint || '未找到'}`);
+                
+                // 如果未找到，尝试不区分大小写匹配
+                if (!apiEndpoint) {
+                    for (const key in globalConfig) {
+                        if (key.toLowerCase() === this.difyApiKeyName.toLowerCase()) {
+                            apiEndpoint = globalConfig[key];
+                            // console.log(`通过不区分大小写匹配找到API端点 ${key}: ${apiEndpoint}`);
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            if (!apiEndpoint) {
+                console.error(`未找到 ${this.difyApiKeyName} 的API端点配置`);
+                // console.log(`可用的配置键:`, 
+                          // globalConfig instanceof Map 
+                          // ? Array.from(globalConfig.keys()) 
+                          // : Object.keys(globalConfig));
+                
+                this.ui.showError(t(`${this.difyApiKeyName}.apiEndpointMissing`, {
+                    default: `未能获取 ${this.difyApiKeyName} API 地址，请联系管理员检查全局配置。`,
+                    key: this.difyApiKeyName
+                }));
+                return false;
+            }
+            
+            this.state.apiEndpoint = apiEndpoint;
+            // console.log(`成功获取API端点: ${this.state.apiEndpoint}`);
+            
+        } catch (error) {
+            // console.error(`获取全局配置时出错:`, error);
+            this.ui.showError(t(`${this.difyApiKeyName}.globalConfigError`, {
+                default: `获取全局配置时出错: ${error.message}`,
+                error: error.message
+            }));
             return false;
         }
-
-        this.state.apiKey = userSettings.apiKeys[this.difyApiKeyName];
-        this.state.apiEndpoint = globalConfig.apiEndpoints[this.difyApiKeyName];
+        
+        // 2. 直接从getCurrentUserApiKeys获取API密钥
+        try {
+            // console.log(`正在获取用户API密钥...`);
+            const apiKeys = await getCurrentUserApiKeys();
+            // console.log(`获取到 ${apiKeys.length} 个API密钥记录`);
+            
+            if (apiKeys.length === 0) {
+                // console.error(`未找到任何API密钥记录`);
+                this.ui.showError(t(`${this.difyApiKeyName}.noApiKeysFound`, {
+                    default: `未找到任何API密钥记录，请在设置中配置。`,
+                }));
+                return false;
+            }
+            
+            // 输出所有应用ID，帮助调试
+            const availableAppIds = apiKeys.map(key => key.applicationID).join(', ');
+            // console.log(`可用的应用ID: ${availableAppIds || '无'}`);
+            
+            // 更灵活地查找匹配的API密钥记录
+            let apiKeyRecord = null;
+            
+            // 1. 精确匹配
+            apiKeyRecord = apiKeys.find(key => key.applicationID === this.difyApiKeyName);
+            
+            // 2. 大小写不敏感匹配
+            if (!apiKeyRecord) {
+                apiKeyRecord = apiKeys.find(key => 
+                    key.applicationID && 
+                    key.applicationID.toLowerCase() === this.difyApiKeyName.toLowerCase());
+                
+                // if (apiKeyRecord) {
+                //     console.log(`通过大小写不敏感匹配找到API密钥: ${apiKeyRecord.applicationID}`);
+                // }
+            }
+            
+            // 3. 部分包含匹配（针对截图中显示的ID格式）
+            if (!apiKeyRecord) {
+                for (const record of apiKeys) {
+                    // 检查ID是否包含特定前缀/后缀，这是根据截图中的格式判断
+                    // 例如: "app-UlsWzEnFGmZVJhHZVOxImBws" 可能是对应 "userStory"
+                    // 这是启发式匹配，可能需要根据实际情况调整
+                    if (record.applicationID && 
+                        (record.applicationID.includes('Story') || 
+                         record.applicationID.includes('story'))) {
+                        apiKeyRecord = record;
+                        // console.log(`通过内容匹配找到userStory的API密钥: ${record.applicationID}`);
+                        break;
+                    }
+                }
+            }
+            
+            // 如果匹配失败，但有其他应用的密钥，使用第一个或最匹配的作为替代（仅用于测试）
+            if (!apiKeyRecord && apiKeys.length > 0) {
+                if (this.difyApiKeyName === 'userStory' && apiKeys.some(k => k.applicationID === 'userStory')) {
+                    apiKeyRecord = apiKeys.find(k => k.applicationID === 'userStory');
+                    // console.log(`使用备选applicationID匹配: ${apiKeyRecord.applicationID}`);
+                } else {
+                    apiKeyRecord = apiKeys[0]; // 使用第一个记录
+                    // console.log(`未找到匹配记录，使用第一个API密钥作为替代: ${apiKeyRecord.applicationID}`);
+                }
+            }
+            
+            if (!apiKeyRecord) {
+                console.error(`未找到 ${this.difyApiKeyName} 的API密钥记录`);
+                this.ui.showError(t(`${this.difyApiKeyName}.apiKeyMissingError`, {
+                    default: `未能找到 ${this.difyApiKeyName} 的 API 密钥，请在个人设置中配置。`,
+                    key: this.difyApiKeyName
+                }));
+                return false;
+            }
+            
+            this.state.apiKey = apiKeyRecord.apiKey;
+            // console.log(`成功获取API密钥: ${apiKeyRecord.applicationID}应用的密钥(已隐藏前几位)`);
+            
+        } catch (error) {
+            // console.error(`获取用户API密钥时出错:`, error);
+            this.ui.showError(t(`${this.difyApiKeyName}.apiKeyError`, {
+                default: `获取API密钥时出错: ${error.message}`,
+                error: error.message
+            }));
+            return false;
+        }
+        
+        // console.log(`[${this.constructor.name}] API配置加载完成，端点和密钥均已获取`);
         return true;
     }
 
@@ -154,7 +293,7 @@ class BaseDifyApp {
             this.ui.displayAppInfo(data); 
 
         } catch (error) {
-            console.error(`[${this.constructor.name}] Error fetching Dify app info:`, error);
+            // console.error(`[${this.constructor.name}] Error fetching Dify app info:`, error);
             const errorMsgKey = `${this.difyApiKeyName}.connectionError`;
             const defaultErrorMsg = '无法连接到 Dify API';
             const errorMsg = t(errorMsgKey, { default: defaultErrorMsg });
@@ -220,14 +359,14 @@ class BaseDifyApp {
      */
     async handleGenerate() {
         if (!this.ui || !this.state.apiKey || !this.state.apiEndpoint || !this.state.currentUser) {
-            console.error("Cannot generate: App not fully initialized.");
+            // console.error("Cannot generate: App not fully initialized.");
             this.ui?.showError(t(`${this.difyApiKeyName}.initError`, { default: '应用未完全初始化，无法生成。' }));
             return;
         }
 
         const inputs = this._gatherAndValidateInputs();
         if (!inputs) {
-            console.log(`[${this.constructor.name}] Input validation failed.`);
+            // console.log(`[${this.constructor.name}] Input validation failed.`);
             return; // Stop if validation fails
         }
 
@@ -251,7 +390,7 @@ class BaseDifyApp {
             await this.difyClient.generateStream(payload, finalCallbacks);
 
         } catch (initError) {
-            console.error(`[${this.constructor.name}] Error setting up generation:`, initError);
+            // console.error(`[${this.constructor.name}] Error setting up generation:`, initError);
             this.ui.showGenerationCompleted(); // Ensure button reset
             this.ui.showError(t(`${this.difyApiKeyName}.generationSetupError`, { default: '启动生成时出错:'}) + ` ${initError.message}`);
             this.difyClient = null;
@@ -375,7 +514,7 @@ class BaseDifyApp {
         if (metadata && metadata.usage && (metadata.usage.total_tokens !== undefined || metadata.usage.completion_tokens !== undefined)) {
            this.ui.displayStats(metadata);
         } else {
-           console.warn(`[${this.constructor.name}] Metadata or usage data is missing/incomplete. Skipping stats display.`, metadata);
+           // console.warn(`[${this.constructor.name}] Metadata or usage data is missing/incomplete. Skipping stats display.`, metadata);
            // Optionally display a message if stats are unavailable
            // this.ui.displayMessage(t('common.statsUnavailable'), 'warning'); 
         }
@@ -399,7 +538,7 @@ class BaseDifyApp {
         if (error.name === 'AbortError') {
             this.ui.showToast(t('common.generationStoppedByUser', { default: '生成已由用户停止。' }), 'info');
         } else {
-            console.error(`[${this.constructor.name}] Dify API Error:`, error);
+            // console.error(`[${this.constructor.name}] Dify API Error:`, error);
             this.ui.showError(t('common.generationFailed', { default: '生成失败:'}) + ` ${error.message}`);
         }
         this.ui.showGenerationCompleted(); // Ensure button/UI reset

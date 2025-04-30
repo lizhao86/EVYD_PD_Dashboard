@@ -12,7 +12,7 @@ configureAmplify();
 
 // DOM 加载完成后执行初始化
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('DOM fully loaded. Initializing UserManualNewApp...');
+    // console.log('DOM fully loaded. Initializing UserManualNewApp...');
     
     try {
         // 等待i18n加载完成

@@ -3,9 +3,9 @@
 ## 1 文档信息
 
 - **文档名称**：EVYD 产品经理 AI 工作台产品需求手册
-- **当前版本**：1.6.11
+- **当前版本**：1.6.20
 - **创建日期**：2025-03-01
-- **最后更新**：2025-04-22
+- **最后更新**：2025-05-01 
 - **文档状态**：更新中
 - **文档所有者**：EVYD产品团队
 
@@ -46,6 +46,9 @@
 | 1.6.15 | 2025-04-26 | EVYD产品团队 | **JS模块化重构 (API客户端-Part 1)**: 创建通用 Dify API 客户端 (`dify-client.js`)。成功将此客户端集成到用户手册生成器 (`user-manual/index.js`)，并删除其独立的 `api.js`。 |
 | 1.6.16 | 2025-04-28 | EVYD产品团队 | **JS模块化重构 (API客户端-Part 2 完成)**: 将通用 Dify API 客户端 (`dify-client.js`) 集成到 UX Design, Requirement Analysis, User Story 应用 (`index.js`) 中，并删除它们各自独立的 `api.js` 文件。恢复动态加载应用信息功能。修复通用客户端处理Workflow元数据(usage, elapsed_time, total_steps)的Bug。 |
 | 1.6.17 | 2025-04-29 | EVYD产品团队 | **用户手册生成器交互优化**: 针对基于 Dify Chat API 的用户手册生成器(`user-manual-new`)，进行了核心交互功能的优化和修复。1. **按钮定位**: 通过调整 CSS (`styles/user-manual-new.css`) 和 JS (`modules/apps/user-manual-new/index.js`)，确保消息操作按钮（复制、重试、点赞/点踩）始终精准定位在消息气泡的右下角，并修复了按钮间分隔线的显示。2. **重新生成逻辑**: 修复了"重新生成"按钮的事件处理逻辑，确保能通过 `e.target.closest('.message')` 正确找到并移除当前的 AI 回复，并基于最近的用户消息 (`.message.user-message`) 的内容，可靠地触发对 Dify API 的新生成请求。这些改动旨在提升基于 Dify 的交互式 AI 应用的用户体验和功能稳定性。 |
+| 1.6.18 | 2025-04-30 | EVYD产品团队 | **管理员面板稳定性优化**: 调试并修复管理员面板用户列表加载问题，增强权限验证逻辑（结合Cognito组与数据库角色），改进错误处理和会话状态检查，提升用户列表功能的健壮性。 |
+| 1.6.19 | 2025-05-01 | EVYD产品团队 | **AI 应用连接修复**: 修复 Dify 应用 API 密钥的匹配逻辑，通过在各 AI 应用模块中实现多级匹配策略（应用ID、应用名、关键词），确保能正确识别和加载数据库中存储的 API 密钥，解决连接 Dify API 失败的问题。 |
+| 1.6.20 | 2025-05-01 | EVYD产品团队 | **功能交互修复**: 修复 User Story 应用中"重试连接"按钮未绑定事件的问题。解决 Requirement Analysis 模块因缺少 `getGlobalConfig` 导入导致的运行时错误。统一了各 AI 应用的重试连接逻辑。 |
 
 ## 3 产品概述
 
@@ -96,7 +99,7 @@ EVYD 产品经理 AI 工作台是基于EVYD科技先进的人工智能技术，�
 
 #### 4.1.3 管理员面板
 - 应提供统一的管理员面板。
-- **(功能调整)** "用户管理"标签页功能暂时受限，提示管理员使用 Cognito 控制台。
+- **(功能调整)** "用户管理"标签页功能暂时受限，提示管理员使用 Cognito 控制台。近期已进行调试和优化，增强了用户列表加载的稳定性和权限检查逻辑，但核心管理操作仍需依赖 Cognito。
 - **(保留)** "API 地址配置"标签页允许管理员修改存储在 DynamoDB `GlobalConfig` 表中的全局 API Endpoints。
 - **(待调整)** "API Key 配置"标签页功能暂时受限，为其他用户配置 API Key 需要更安全的后端实现。
 - 管理员面板链接仅对 `UserSettings.role` 为 `admin` 的用户可见。
@@ -109,6 +112,7 @@ EVYD 产品经理 AI 工作台是基于EVYD科技先进的人工智能技术，�
 - 提供输出内容的一键复制功能
 - 支持应急暂停正在生成的任务，节省 Token
 - 完成输出后展示每次生成的耗时，Token消耗，步骤次数
+- **(已修复)** 修复了"重试连接"按钮的功能。
 
 ##### 4.2.1.1 Dify 工作流原理
 - **工作流名称**: 产品工作流 - 创建需求
@@ -131,6 +135,7 @@ EVYD 产品经理 AI 工作台是基于EVYD科技先进的人工智能技术，�
 - 提供输出内容的一键复制功能
 - 支持应急暂停正在生成的任务，节省 Token
 - 完成输出后展示每次生成的耗时，Token消耗，步骤次数
+- **(已优化)** 优化了消息操作按钮（复制、重试、反馈）的定位和重新生成逻辑。
 
 ##### 4.2.2.1 Dify 工作流
    - **工作流名称**: 产品 ChatBot - 撰写 User Manual
@@ -166,6 +171,7 @@ EVYD 产品经理 AI 工作台是基于EVYD科技先进的人工智能技术，�
 - 提供输出内容的一键复制功能。
 - 支持应急暂停正在生成的任务，节省 Token。
 - 完成输出后展示每次生成的耗时，Token消耗，步骤次数。
+- **(已修复)** 解决了模块导入错误问题。
 
 ##### 4.2.4.1 Dify 工作流 (更正：应为 ChatBot)
 - **工作流作用 (更正后)**：该助手相当于资深产品需求分析师，可以将产品经理收集来的零散客户想法或需求，转化为结构化、可执行的需求收集文档，并对解决方案部分进行系统性分解，提出模块化功能建议。
@@ -187,6 +193,7 @@ EVYD 产品经理 AI 工作台是基于EVYD科技先进的人工智能技术，�
     - **(待实现)** 需要为登录用户提供查看/编辑**自己** API Keys 的界面（例如在账号设置中）。
     - **(待调整)** 管理员为**其他用户**配置 API Keys 的功能需要重新设计和实现。
     - API Keys 存储在 DynamoDB 的 `UserSettings` 表中，与用户 ID 关联。
+    - **(已修复)** 改进了应用层读取和匹配这些 API 密钥的逻辑，以确保 AI 功能模块能正确连接。
 - **安全性:** API Keys 存储在后端数据库，不再暴露于前端 `localStorage`。
 
 ### 4.4 多语言支持
@@ -361,51 +368,6 @@ EVYD 产品经理 AI 工作台是基于EVYD科技先进的人工智能技术，�
     - `aws-exports.js` 已包含在项目源码中，避免依赖 Amplify CLI。
     - 构建过程自动使用生产环境的回调URL。
 - **后端:** Amplify 管理的 Cognito, DynamoDB, AppSync 等资源保持不变。
-
-### 7.5 数据存储
-
-#### 7.5.1 `Conversations` 表 (DynamoDB)
-
-为了支持聊天应用的对话历史管理功能（包括历史列表、置顶、重命名、删除等），新增一个专门的 DynamoDB 表 `Conversations` (Amplify 会自动添加环境后缀)。
-
-- **目的**: 持久化存储用户与 AI 应用的对话会话元数据。**每一行代表一个独立的对话会话**。
-- **与 `UserSettings` 表的关系**: 该表与 `UserSettings` 表独立，但都通过 `userId` 与用户关联。
-
-**主键 (Primary Key):**
-
-- **分区键 (Partition Key)**: `userId` (String)
-    - **描述**: 用户的唯一标识 (如 Cognito `sub` ID)。用于将同一用户的所有对话聚合在一起。
-- **排序键 (Sort Key)**: `conversationId` (String)
-    - **描述**: Dify Chat API 返回的会话 ID (`conversation_id`)。在用户范围内唯一标识一个对话。
-
-**核心属性 (Attributes):**
-
-- `userId` (String): 分区键。
-- `conversationId` (String): 排序键。
-- `title` (String): 对话标题。
-    - **来源**: 优先使用 Dify API (`POST /conversations/:conversation_id/name` 与 `auto_generate: true`) 获取的 AI 总结标题。支持用户后续手动重命名。
-    - **用途**: 在侧边栏对话列表中显示。
-- `createdAt` (AWSDateTime): 对话创建时间戳 (通常由 Amplify `@model` 自动管理)。
-- `updatedAt` (AWSDateTime): 对话最后交互时间戳 (通常由 Amplify `@model` 自动管理)。
-    - **用途**: 用于按最近活动排序对话列表。每次对话有新消息时应更新。
-- `isPinned` (Int): 是否置顶。
-    - **值**: `1` 表示置顶，`0` 表示未置顶 (使用 Int 方便索引)。
-    - **用途**: 实现置顶功能。
-- `appType` (String): 应用类型标识。
-    - **值**: 例如 `'userManual'`, `'requirementAnalysis'` 等。
-    - **用途**: 区分不同 AI 应用的对话，便于未来扩展。
-
-**全局二级索引 (Global Secondary Index - GSI):**
-
-- **索引名称**: `byUserSortedByUpdate` (或 Amplify 自动生成的类似名称)
-- **GSI 分区键 (GSI PK)**: `userId` (String)
-- **GSI 排序键 (GSI SK)**: `updatedAt` (AWSDateTime)
-- **目的**: 支持高效查询某个用户的所有对话，并按最后更新时间倒序排列。
-- **查询逻辑**:
-    1. 使用此 GSI 查询指定 `userId` 的所有对话，按 `updatedAt` 降序排列。
-    2. 在前端 JavaScript 中对查询结果进行二次处理，将 `isPinned` 为 `1` 的对话优先显示在列表顶部。
-
-**备注**: 该表结构仅存储对话的元数据，不存储具体的聊天消息内容（为了简化实现和降低成本）。用户切换到历史对话时，将使用 `conversationId` 继续与 Dify API 交互。
 
 ## 8 发布计划
 

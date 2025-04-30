@@ -47,7 +47,7 @@ const I18n = {
         
         // 3. 验证初始语言是否支持
         if (!this.supportedLanguages[initialLang]) {
-            console.warn(`本地存储语言 '${initialLang}' 无效, 重置为 zh-CN`);
+            // console.warn(`本地存储语言 '${initialLang}' 无效, 重置为 zh-CN`);
             initialLang = 'zh-CN';
             localStorage.setItem('language', initialLang); // 修正本地存储
         }
@@ -71,19 +71,19 @@ const I18n = {
                         
                         // 验证云端语言是否支持
                         if (!this.supportedLanguages[preferredLang]) {
-                            console.warn(`用户云端设置语言 '${preferredLang}' 无效，将忽略`);
+                            // console.warn(`用户云端设置语言 '${preferredLang}' 无效，将忽略`);
                             preferredLang = null; // 忽略无效的云端设置
                         }
                     } else {
                         // console.log('用户已登录但无云端语言设置');
                     }
                 } catch (settingsError) {
-                     console.error("获取用户设置时出错:", settingsError);
+                     // console.error("获取用户设置时出错:", settingsError);
                      // 即使获取设置失败，也继续使用localStorage的语言
                 }
             }
         } catch (error) {
-            console.error("检查用户认证时出错:", error);
+            // console.error("检查用户认证时出错:", error);
         }
         
         // 6. 确定最终语言 (用户设置优先)
@@ -161,12 +161,12 @@ const I18n = {
                         // console.log(`語言文件 ${lang}.js 重新加载成功`);
                         resolve();
                     } else {
-                        console.error(`重新加载语言文件后，window.${langCode}仍不存在`);
+                        // console.error(`重新加载语言文件后，window.${langCode}仍不存在`);
                         reject(new Error(`語言文件 ${lang}.js 加載失敗，window.${langCode}不存在`));
                     }
                 };
                 script.onerror = () => {
-                    console.error(`無法加載語言文件: ${lang}.js`);
+                    // console.error(`無法加載語言文件: ${lang}.js`);
                     reject(new Error(`無法加載語言文件: ${lang}.js`));
                 };
                 document.head.appendChild(script);
@@ -183,12 +183,12 @@ const I18n = {
                     // console.log(`語言文件 ${lang}.js 加載成功`);
                     resolve();
                 } else {
-                    console.error(`加载语言文件后，window.${langCode}不存在`);
+                    // console.error(`加载语言文件后，window.${langCode}不存在`);
                     reject(new Error(`語言文件 ${lang}.js 加載失敗，window.${langCode}不存在`));
                 }
             };
             script.onerror = () => {
-                console.error(`無法加載語言文件: ${lang}.js`);
+                // console.error(`無法加載語言文件: ${lang}.js`);
                 reject(new Error(`無法加載語言文件: ${lang}.js`));
             };
             document.head.appendChild(script);
@@ -216,7 +216,7 @@ const I18n = {
             this.translations = window[langCode] || {};
             
             if (!this.translations || Object.keys(this.translations).length === 0) {
-                console.warn(`警告: 語言包 ${this.currentLang} 加載失敗或為空`);
+                // console.warn(`警告: 語言包 ${this.currentLang} 加載失敗或為空`);
             } else {
                 // console.log(`成功设置语言 ${this.currentLang} 的翻译内容，包含 ${Object.keys(this.translations).length} 个顶级键`);
             }
@@ -229,11 +229,11 @@ const I18n = {
             // console.log('已移除 <html> 上的 i18n-loading 类，内容已显示');
             
         } catch (error) {
-            console.error(`加載翻譯內容時出錯:`, error);
+            // console.error(`加載翻譯內容時出錯:`, error);
             this.translations = {};
             // 即使加载失败，也要移除加载状态
             document.documentElement.classList.remove('i18n-loading');
-            console.error('翻译加载失败，但已移除 <html> 上的 i18n-loading 类');
+            // console.error('翻译加载失败，但已移除 <html> 上的 i18n-loading 类');
         }
     },
     
@@ -246,7 +246,7 @@ const I18n = {
     t(key, params = {}) {
         if (!key) return '';
         if (!this.translations) {
-            console.warn('调用t()时translations为null，尝试加载翻译');
+            // console.warn('调用t()时translations为null，尝试加载翻译');
             this.loadTranslations();
         }
         
@@ -259,7 +259,7 @@ const I18n = {
             if (value && value[k] !== undefined) {
                 value = value[k];
             } else {
-                console.warn(`翻译键不存在: ${key}`);
+                // console.warn(`翻译键不存在: ${key}`);
                 // 如果提供了默認值，則使用默認值
                 if (params.default) {
                     return params.default;
@@ -270,7 +270,7 @@ const I18n = {
         
         // 如果找到的值不是字符串，返回键名或默認值
         if (typeof value !== 'string') {
-            console.warn(`翻译值不是字符串: ${key}`);
+            // console.warn(`翻译值不是字符串: ${key}`);
             return params.default || key;
         }
         
@@ -293,16 +293,16 @@ const I18n = {
      */
     async switchLanguage(lang, skipSaving = false, forceReload = false) {
         try {
-            console.log(`尝试切换语言到: ${lang}`);
+            // console.log(`尝试切换语言到: ${lang}`);
 
             // 先检查语言是否已加载
             if (this.translations) {
-                console.log(`使用缓存的翻译数据切换到 ${lang}`);
+                // console.log(`使用缓存的翻译数据切换到 ${lang}`);
                 this.currentLang = lang;
                 this.applyTranslations();
             } else {
                 // 加载新语言
-                console.log(`尝试加载新语言: ${lang}`);
+                // console.log(`尝试加载新语言: ${lang}`);
                 await this.loadLanguageFile(lang);
                 this.currentLang = lang;
                 this.applyTranslations();
@@ -310,17 +310,17 @@ const I18n = {
 
             // 保存用户语言偏好
             if (!skipSaving) {
-                console.log(`将尝试保存语言偏好到云端: ${lang}`);
+                // console.log(`将尝试保存语言偏好到云端: ${lang}`);
                 const saveResult = await this.saveLanguagePreference(lang);
-                console.log(`保存语言偏好到云端结果: ${saveResult ? '成功' : '失败'}`);
+                // console.log(`保存语言偏好到云端结果: ${saveResult ? '成功' : '失败'}`);
                 
                 // 立即强制刷新页面确保翻译完全生效
                 // 无论是否为首次加载，都刷新
                 if (saveResult) {
-                    console.log('语言切换成功，将在300ms后刷新页面以完全应用新语言');
+                    // console.log('语言切换成功，将在300ms后刷新页面以完全应用新语言');
                     // 使用短暂延迟以确保设置已保存并允许日志输出
                     setTimeout(() => {
-                        console.log('执行页面刷新...');
+                        // console.log('执行页面刷新...');
                         window.location.reload();
                     }, 300);
                 }
@@ -328,13 +328,13 @@ const I18n = {
             
             // 强制页面刷新（当明确要求时）
             if (forceReload) {
-                console.log('根据请求强制刷新页面');
+                // console.log('根据请求强制刷新页面');
                 window.location.reload();
             }
 
             return true;
         } catch (error) {
-            console.error('切换语言时出错:', error);
+            // console.error('切换语言时出错:', error);
             return false;
         }
     },
@@ -346,7 +346,7 @@ const I18n = {
      */
     async saveLanguagePreference(lang) {
         if (!lang || typeof lang !== 'string' || lang.trim() === '') {
-            console.error(`无效的语言值: "${lang}"`);
+            // console.error(`无效的语言值: "${lang}"`);
             return false;
         }
         
@@ -354,7 +354,7 @@ const I18n = {
         
         // 总是保存到本地存储，确保在刷新页面后仍能保持语言设置
         localStorage.setItem('language', normalizedLang);
-        console.log(`语言偏好已保存到本地存储: ${normalizedLang}`);
+        // console.log(`语言偏好已保存到本地存储: ${normalizedLang}`);
         
         // 在会话存储中记录语言变更，以便在其他页面同步
         sessionStorage.setItem('languageJustChanged', 'true');
@@ -377,7 +377,7 @@ const I18n = {
                 this.currentUser = authInfo.user;
             }
         } catch (authError) {
-            console.error('检查认证状态时出错:', authError);
+            // console.error('检查认证状态时出错:', authError);
             isLoggedIn = false;
         }
         
@@ -433,14 +433,14 @@ const I18n = {
                         }
                     }
                 } catch (authRetryError) {
-                    console.error('通过Auth重试保存失败');
+                    // console.error('通过Auth重试保存失败');
                 }
                 
                 // 即使数据库保存失败，本地设置仍然已经更新，所以返回部分成功
                 return true;
             }
         } catch (error) {
-            console.error("保存语言偏好到云端时出错");
+            // console.error("保存语言偏好到云端时出错");
             
             // 尝试一次直接通过ID保存（跳过认证检查）
             if (userId) {
@@ -460,7 +460,7 @@ const I18n = {
                         return true;
                     }
                 } catch (emergencyError) {
-                    console.error('紧急保存失败');
+                    // console.error('紧急保存失败');
                 }
             }
             
@@ -484,7 +484,7 @@ const I18n = {
                     }
                 }
             } catch (finalError) {
-                console.error('所有保存尝试均失败');
+                // console.error('所有保存尝试均失败');
             }
             
             // 即使所有云端保存尝试都失败，本地设置已更新，标记为部分成功
@@ -537,7 +537,7 @@ const I18n = {
                     element.textContent = translatedText;
                     successCount++;
                 } else {
-                    console.warn(`未找到键 '${key}' 的有效翻译，或翻译值与键名相同。`);
+                    // console.warn(`未找到键 '${key}' 的有效翻译，或翻译值与键名相同。`);
                     failCount++;
                 }
             }
@@ -550,7 +550,7 @@ const I18n = {
                     element.setAttribute('placeholder', translatedPlaceholder);
                     successCount++;
                 } else {
-                    console.warn(`未找到 placeholder 键 '${placeholderKey}' 的有效翻译，或翻译值与键名相同。`);
+                    // console.warn(`未找到 placeholder 键 '${placeholderKey}' 的有效翻译，或翻译值与键名相同。`);
                     failCount++;
                 }
             }
@@ -563,7 +563,7 @@ const I18n = {
         try {
             // ... existing code ...
         } catch (error) {
-            console.error('保存语言偏好到 DynamoDB 失败:', error);
+            // console.error('保存语言偏好到 DynamoDB 失败:', error);
         }
     }
 };
@@ -580,7 +580,7 @@ window._debugI18n = {
         if (I18n.supportedLanguages[lang]) {
             return await I18n.switchLanguage(lang);
         } else {
-            console.error(`不支持的语言: ${lang}`);
+            // console.error(`不支持的语言: ${lang}`);
             return false;
         }
     },
@@ -639,7 +639,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         // console.log('I18n初始化完成');
         
     } catch (error) {
-        console.error('I18n初始化失败:', error);
+        // console.error('I18n初始化失败:', error);
         // 即使初始化失败，也要尝试移除loading类，防止页面卡死
         document.documentElement.classList.remove('i18n-loading');
     }

@@ -60,20 +60,20 @@ const Header = {
     async init(containerId = 'header-container') {
         // 如果已有初始化过程在进行中，直接返回该Promise
         if (this.initPromise) {
-            console.log("===> Header初始化已在进行中，复用现有初始化过程");
+            // console.log("===> Header初始化已在进行中，复用现有初始化过程");
             return this.initPromise;
         }
         
         // 如果已经完成初始化，直接返回
         if (this.initialized) {
-            console.log("===> Header已经初始化完成，跳过重复初始化");
+            // console.log("===> Header已经初始化完成，跳过重复初始化");
             return Promise.resolve();
         }
         
         // 创建初始化Promise
         this.initPromise = (async () => {
             try {
-                console.log("===> 开始Header初始化过程");
+                // console.log("===> 开始Header初始化过程");
                 configureAmplify(); // Initialize AWS Amplify
             } catch (error) {
                 console.error("[Header.init] Error configuring Amplify:", error);
@@ -116,7 +116,7 @@ const Header = {
             
             // 标记初始化完成
             this.initialized = true;
-            console.log("===> Header初始化完成");
+            // console.log("===> Header初始化完成");
         })();
         
         // 返回初始化Promise
@@ -1091,9 +1091,9 @@ const Header = {
                 this.handleSaveGlobalApiEndpoints();
             });
             saveEndpointsButton.setAttribute('data-event-bound', 'true');
-            console.log("===> 已为保存API端点按钮注册一次点击事件");
+            // console.log("===> 已为保存API端点按钮注册一次点击事件");
         } else if (saveEndpointsButton) {
-            console.log("===> 保存API端点按钮已经注册过事件，跳过");
+            // console.log("===> 保存API端点按钮已经注册过事件，跳过");
         } else {
             console.warn("Save endpoints button not found");
         }
@@ -1469,14 +1469,14 @@ const Header = {
      * 如果未认证，显示登录按钮。
      */
     async checkUserAuth() {
-        console.log("===> 开始检查用户认证状态");
+        // console.log("===> 开始检查用户认证状态");
         this.showLoading(t('header.checkingLoginStatus'));
         
         try {
             // 检查是否有已认证的用户
-            console.log("===> 尝试获取当前认证用户");
+            // console.log("===> 尝试获取当前认证用户");
             this.currentUser = await Auth.currentAuthenticatedUser();
-            console.log("===> 用户已认证:", this.currentUser.username);
+            // console.log("===> 用户已认证:", this.currentUser.username);
             
             // 显示用户信息区域，隐藏登录按钮
             const userInfo = document.getElementById('user-info');
@@ -1487,86 +1487,86 @@ const Header = {
             if (loginButton) loginButton.style.display = 'none';
             if (usernameDisplay) usernameDisplay.textContent = this.currentUser.username;
             
-            console.log("===> 已更新UI显示用户信息");
+            // console.log("===> 已更新UI显示用户信息");
             
             // 检查用户是否在Cognito Admin组中
-            console.log("===> 检查用户是否在Cognito Admin组中");
+            // console.log("===> 检查用户是否在Cognito Admin组中");
             let isAdminGroup = false;
             try {
                 isAdminGroup = await checkAdminGroup();
-                console.log("===> 用户是否在Cognito Admin组中:", isAdminGroup);
+                // console.log("===> 用户是否在Cognito Admin组中:", isAdminGroup);
             } catch (error) {
                 console.error("===> 检查管理员组时出错:", error);
             }
             
             // 获取用户设置以检查角色
-            console.log("===> 获取用户设置以检查角色");
+            // console.log("===> 获取用户设置以检查角色");
             this.userSettings = await getCurrentUserSettings();
             
             if (this.userSettings) {
-                console.log("===> 获取到用户设置，角色:", this.userSettings.role);
+                // console.log("===> 获取到用户设置，角色:", this.userSettings.role);
                 
                 // 如果用户在Cognito Admin组中，但数据库角色不是admin，则更新数据库角色
                 if (isAdminGroup && this.userSettings.role !== 'admin') {
-                    console.log("===> 发现Cognito组和数据库角色不一致，更新数据库角色为admin");
+                    // console.log("===> 发现Cognito组和数据库角色不一致，更新数据库角色为admin");
                     try {
                         this.userSettings = await saveCurrentUserSetting({
                             ...this.userSettings,
                             role: 'admin'
                         });
-                        console.log("===> 已更新用户角色为admin:", this.userSettings);
+                        // console.log("===> 已更新用户角色为admin:", this.userSettings);
                     } catch (error) {
                         console.error("===> 更新用户角色失败:", error);
                     }
                 }
                 // 如果用户不在Cognito Admin组，但数据库角色是admin，也更新数据库角色
                 else if (!isAdminGroup && this.userSettings.role === 'admin') {
-                    console.log("===> 发现用户不在Cognito Admin组，但数据库角色是admin，更新为user");
+                    // console.log("===> 发现用户不在Cognito Admin组，但数据库角色是admin，更新为user");
                     try {
                         this.userSettings = await saveCurrentUserSetting({
                             ...this.userSettings,
                             role: 'user'
                         });
-                        console.log("===> 已更新用户角色为user:", this.userSettings);
+                        // console.log("===> 已更新用户角色为user:", this.userSettings);
                     } catch (error) {
                         console.error("===> 更新用户角色失败:", error);
                     }
                 }
             } else {
-                console.log("===> 未找到用户设置，创建默认设置");
+                // console.log("===> 未找到用户设置，创建默认设置");
                 // 如果没有设置，创建默认设置，根据Cognito组设置正确的角色
                 this.userSettings = await saveCurrentUserSetting({
                     role: isAdminGroup ? 'admin' : 'user', // 根据Cognito组设置角色
                     language: I18n.getCurrentLanguage() || 'zh-CN'
                 });
-                console.log("===> 创建的默认设置:", this.userSettings);
+                // console.log("===> 创建的默认设置:", this.userSettings);
             }
             
             // 检查用户是否为管理员 (使用最终的角色信息)
             const isAdminUser = this.userSettings && this.userSettings.role === 'admin';
-            console.log("===> 用户是否为管理员(根据数据库角色):", isAdminUser);
+            // console.log("===> 用户是否为管理员(根据数据库角色):", isAdminUser);
             
             // 显示或隐藏管理员面板链接
             const adminPanelLink = document.getElementById('admin-panel-link');
             if (adminPanelLink) {
                 if (isAdminUser) {
                     adminPanelLink.style.display = 'block';
-                    console.log("===> 显示管理员面板链接");
+                    // console.log("===> 显示管理员面板链接");
                     // 初始化管理员面板
                     this.initAdminPanel();
                 } else {
                     adminPanelLink.style.display = 'none';
-                    console.log("===> 隐藏管理员面板链接");
+                    // console.log("===> 隐藏管理员面板链接");
                 }
             }
             
             // 预加载API密钥和应用程序列表
-            console.log("===> 预加载用户资料和API密钥");
+            // console.log("===> 预加载用户资料和API密钥");
             await this.loadUserProfileAndApiKeys();
             
         } catch (error) {
             // 用户未认证，显示登录按钮
-            console.log("===> 用户未认证:", error);
+            // console.log("===> 用户未认证:", error);
             const userInfo = document.getElementById('user-info');
             const loginButton = document.getElementById('login-button');
             
@@ -1575,13 +1575,13 @@ const Header = {
             
             // 根据不同类型的错误处理 - 通常是因为没有当前用户
             if (error.message === 'The user is not authenticated') {
-                console.log("===> 用户未登录");
+                // console.log("===> 用户未登录");
             } else {
                 console.error("===> 检查用户认证状态时出错:", error);
             }
         } finally {
             this.hideLoading();
-            console.log("===> 完成用户认证状态检查");
+            // console.log("===> 完成用户认证状态检查");
         }
     },
 
@@ -1690,7 +1690,7 @@ const Header = {
      * Assumes this is for the currently logged-in user's settings modal.
      */
     async loadUserApiKeys() {
-        console.log('开始加载用户 API Keys 到设置模态框...');
+        // console.log('开始加载用户 API Keys 到设置模态框...');
         const apiKeysSettingsContainer = document.getElementById('api-keys-settings');
         if (!apiKeysSettingsContainer) {
             console.error("API Keys settings container 'api-keys-settings' not found in modal.");
@@ -1707,18 +1707,18 @@ const Header = {
 
         // 确保应用和用户密钥已加载
         if (this.applications.length === 0) {
-            console.log('加载应用列表...');
+            // console.log('加载应用列表...');
             await this.loadApplications();
-            console.log(`加载到 ${this.applications.length} 个应用`);
+            // console.log(`加载到 ${this.applications.length} 个应用`);
         }
         
         if (this.userApiKeys.length === 0 && this.currentUser) {
-            console.log('加载用户API密钥...');
+            // console.log('加载用户API密钥...');
             await this.loadCurrentUserApiKeysInternal();
-            console.log(`加载到 ${this.userApiKeys.length} 个API密钥记录`);
+            // console.log(`加载到 ${this.userApiKeys.length} 个API密钥记录`);
         }
         
-        console.log('当前已加载的API密钥:', this.userApiKeys);
+        // console.log('当前已加载的API密钥:', this.userApiKeys);
 
         // 将API密钥填充到现有的输入字段中
         Object.entries(APP_ID_TO_INPUT_ID_MAP).forEach(([appId, inputId]) => {
@@ -1733,7 +1733,7 @@ const Header = {
             const currentKey = userApiKeyRecord ? userApiKeyRecord.apiKey : '';
             const recordId = userApiKeyRecord ? userApiKeyRecord.id : '';
             
-            console.log(`设置应用 ${appId} 的API密钥: ${currentKey ? '已设置' : '未设置'} (记录ID: ${recordId || 'N/A'})`);
+            // console.log(`设置应用 ${appId} 的API密钥: ${currentKey ? '已设置' : '未设置'} (记录ID: ${recordId || 'N/A'})`);
             
             // 设置输入字段的值和数据属性
             input.value = currentKey;
@@ -1741,12 +1741,12 @@ const Header = {
             input.setAttribute('data-record-id', recordId);
         });
         
-        console.log('用户 API Keys 加载完成');
+        // console.log('用户 API Keys 加载完成');
     },
 
     // New function to load applications from the backend
     async loadApplications() {
-        console.log("开始加载应用列表...");
+        // console.log("开始加载应用列表...");
         try {
             // 确保查询已导入
             if (!queries.listApplications) {
@@ -1762,12 +1762,12 @@ const Header = {
             }
             
             // 添加错误处理和详细日志
-            console.log("执行listApplications查询...");
+            // console.log("执行listApplications查询...");
             const result = await API.graphql(graphqlOperation(queries.listApplications));
             
             if (result && result.data && result.data.listApplications) {
                 this.applications = result.data.listApplications.items || [];
-                console.log(`查询成功，获取到${this.applications.length}个应用`);
+                // console.log(`查询成功，获取到${this.applications.length}个应用`);
             } else {
                 console.error("查询结果结构异常:", result);
                 this.applications = [];
@@ -1775,7 +1775,7 @@ const Header = {
             
             // 如果没有应用程序，创建默认的应用程序列表
             if (!this.applications || this.applications.length === 0) {
-                console.log("未找到应用，使用默认应用列表");
+                // console.log("未找到应用，使用默认应用列表");
                 // 创建默认应用程序列表
                 this.applications = [
                     { id: 'userStory', name: 'User Story' },
@@ -1798,10 +1798,10 @@ const Header = {
 
     // New function to load the current user's API keys internally
     async loadCurrentUserApiKeysInternal() {
-        console.log("开始加载当前用户API密钥...");
+        // console.log("开始加载当前用户API密钥...");
         try {
             const keys = await getCurrentUserApiKeys();
-            console.log(`从服务器获取到 ${keys.length} 个API密钥记录:`, keys);
+            // console.log(`从服务器获取到 ${keys.length} 个API密钥记录:`, keys);
             this.userApiKeys = keys;
         } catch (error) {
             console.error("加载用户API密钥时出错:", error);
@@ -1871,12 +1871,12 @@ const Header = {
             if (applicationID && apiKey) { // 只有在密钥不为空时保存
                 if (recordId && recordId !== 'null' && recordId !== '') {
                     // 更新现有记录
-                    console.log(`Updating existing API key for application ${applicationID}, record ID: ${recordId}`);
+                    // console.log(`Updating existing API key for application ${applicationID}, record ID: ${recordId}`);
                     const updatePromise = updateUserApiKey(recordId, apiKey)
                         .then(result => {
                             if(result) {
                                 successCount++;
-                                console.log(`Successfully updated API key for ${applicationID}`);
+                                // console.log(`Successfully updated API key for ${applicationID}`);
                             }
                             else errors.push(`Failed to update key for App ID ${applicationID}`);
                         })
@@ -1886,12 +1886,12 @@ const Header = {
                     savePromises.push(updatePromise);
                 } else if (!recordId || recordId === 'null' || recordId === '') {
                     // 创建新记录
-                    console.log(`Creating new API key for application ${applicationID}`);
+                    // console.log(`Creating new API key for application ${applicationID}`);
                     const createPromise = createUserApiKey(applicationID, apiKey)
                         .then(result => {
                             if(result) {
                                 successCount++;
-                                console.log(`Successfully created API key for ${applicationID}`);
+                                // console.log(`Successfully created API key for ${applicationID}`);
                             }
                             else errors.push(`Failed to create key for App ID ${applicationID}`);
                         })
@@ -1902,12 +1902,12 @@ const Header = {
                 }
             } else if (applicationID && !apiKey && recordId && recordId !== 'null' && recordId !== '') {
                 // 删除清空的密钥
-                console.log(`Deleting API key for application ${applicationID}, record ID: ${recordId}`);
+                // console.log(`Deleting API key for application ${applicationID}, record ID: ${recordId}`);
                 const deletePromise = deleteUserApiKey(recordId)
                     .then(result => {
                         if(result) {
                             successCount++;
-                            console.log(`Successfully deleted API key for ${applicationID}`);
+                            // console.log(`Successfully deleted API key for ${applicationID}`);
                         }
                         else errors.push(`Failed to delete key for App ID ${applicationID}`);
                     })
@@ -1942,11 +1942,11 @@ const Header = {
      * 加载用户资料和 API Keys 到设置模态框 (Updated for Amplify)
      */
     async loadUserProfileAndApiKeys() {
-        console.log("===> 开始加载用户资料和API密钥");
+        // console.log("===> 开始加载用户资料和API密钥");
         
         // 确保用户数据和设置已加载
         if (!this.currentUser) {
-            console.log("===> 当前用户未加载，尝试获取");
+            // console.log("===> 当前用户未加载，尝试获取");
             try {
                 this.currentUser = (await checkAuth())?.user; // 只获取用户部分
             } catch (error) {
@@ -1955,10 +1955,10 @@ const Header = {
         }
         
         if (!this.userSettings && this.currentUser) {
-            console.log("===> 用户设置未加载，尝试获取");
+            // console.log("===> 用户设置未加载，尝试获取");
             try {
                 this.userSettings = await getCurrentUserSettings();
-                console.log("===> 获取到的用户设置:", this.userSettings ? "成功" : "未找到");
+                // console.log("===> 获取到的用户设置:", this.userSettings ? "成功" : "未找到");
             } catch (error) {
                 console.error("===> 获取用户设置失败:", error);
             }
@@ -1966,36 +1966,36 @@ const Header = {
         
         // 无论是否为管理员，都加载应用程序列表
         try {
-            console.log("===> 加载应用程序列表");
+            // console.log("===> 加载应用程序列表");
             await this.loadApplications();
-            console.log(`===> 成功加载了 ${this.applications.length} 个应用程序`);
+            // console.log(`===> 成功加载了 ${this.applications.length} 个应用程序`);
         } catch (error) {
             console.error("===> 加载应用程序列表失败:", error);
         }
         
         // 加载用户API密钥
         try {
-            console.log("===> 加载用户API密钥");
+            // console.log("===> 加载用户API密钥");
             await this.loadCurrentUserApiKeysInternal();
-            console.log(`===> 成功加载了 ${this.userApiKeys.length} 个API密钥`);
+            // console.log(`===> 成功加载了 ${this.userApiKeys.length} 个API密钥`);
         } catch (error) {
             console.error("===> 加载用户API密钥失败:", error);
         }
         
         // 更新用户资料标签
-        console.log("===> 更新用户资料标签UI");
+        // console.log("===> 更新用户资料标签UI");
         const usernameInput = document.getElementById('profile-username');
         const roleInput = document.getElementById('profile-role');
         const createdInput = document.getElementById('profile-created'); 
         
         if (this.currentUser && usernameInput) {
             usernameInput.value = this.currentUser.username;
-            console.log("===> 已设置用户名:", this.currentUser.username);
+            // console.log("===> 已设置用户名:", this.currentUser.username);
         }
         
         if (this.userSettings && roleInput) {
             roleInput.value = this.userSettings.role || 'N/A';
-            console.log("===> 已设置角色:", this.userSettings.role || 'N/A');
+            // console.log("===> 已设置角色:", this.userSettings.role || 'N/A');
         }
         
         if (createdInput) {
@@ -2003,7 +2003,7 @@ const Header = {
         }
         
         // 更新API密钥标签
-        console.log("===> 更新API密钥设置UI");
+        // console.log("===> 更新API密钥设置UI");
         this.loadApiKeysToSettings();
         
         // 清除之前的消息
@@ -2013,7 +2013,7 @@ const Header = {
         const passwordMessage = document.getElementById('password-message');
         if(passwordMessage) passwordMessage.textContent = '';
         
-        console.log("===> 完成用户资料和API密钥加载");
+        // console.log("===> 完成用户资料和API密钥加载");
         return true;
     },
 
@@ -2233,7 +2233,7 @@ const Header = {
             }
             
             // 获取当前用户设置，确认用户角色
-            console.log("===> 尝试获取用户设置");
+            // console.log("===> 尝试获取用户设置");
             let userSettings = this.userSettings;
             if (!userSettings) {
                 console.log("===> this.userSettings不存在，从数据库获取用户设置");

@@ -81,7 +81,7 @@ class UserManualNewApp extends BaseDifyApp {
             // 设置发送/停止按钮的正确状态
             this.updateButtonState(false);
             
-            console.log('[UserManualNewApp] Initialization completed');
+            // console.log('[UserManualNewApp] Initialization completed');
         } catch (error) {
             console.error('[UserManualNewApp] Initialization error:', error);
             this.showErrorMessage('应用初始化失败: ' + error.message);
@@ -708,6 +708,13 @@ class UserManualNewApp extends BaseDifyApp {
         }, 2000);
     }
 }
+
+// Initialize the app when the DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    // console.log('DOM fully loaded. Initializing UserManualNewApp...');
+    const app = new UserManualNewApp();
+    app.init();
+});
 
 // 导出类，以便页面脚本可以导入和实例化
 export default UserManualNewApp; 
