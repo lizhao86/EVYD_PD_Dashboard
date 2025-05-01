@@ -53,6 +53,7 @@ type GlobalConfig @model @auth(rules: [
   id: ID!
   configKey: String!    # 配置键 (例如, Application ID 或应用名称)
   configValue: String!  # 配置值 (例如, API 地址 URL)
+  applicationType: String! # 应用类型，'chat' 或 'workflow'
 }
 
 # --- 注意事项 ---

@@ -47,24 +47,12 @@ class UserManualNewApp extends BaseDifyApp {
     }
 
     /**
-     * 初始化聊天应用特有的元素引用
+     * 初始化聊天应用特有的元素引用 (移除ID交换)
      */
     async init() {
         try {
-            // 在调用基类初始化前，保存message-input的原始ID
-            const messageInput = document.getElementById('message-input');
-            if (messageInput) {
-                // 临时修改ID，防止基类绑定事件
-                messageInput.id = 'temp-message-input';
-            }
-            
-            // 调用基类初始化
-            await super.init();
-            
-            // 恢复原始ID
-            if (messageInput) {
-                messageInput.id = 'message-input';
-            }
+            // 直接调用基类初始化，不再交换ID
+            await super.init(); 
             
             // 获取聊天界面的关键元素
             this.elements.chatMessages = document.getElementById('chat-messages');
@@ -89,6 +77,17 @@ class UserManualNewApp extends BaseDifyApp {
     }
 
     /**
+     * Override base class bindEvents to prevent it from attaching
+     * its default listeners (like the input listener) that conflict
+     * with the chat interface's specific needs.
+     * We will handle all necessary bindings in _bindSpecificEvents.
+     */
+    bindEvents() {
+        // Intentionally do nothing here to prevent base class bindings.
+        // console.log('[UserManualNewApp] Skipping BaseDifyApp.bindEvents');
+    }
+
+    /**
      * (覆盖基类方法)
      * 收集并验证此聊天应用的输入。
      * @returns {object | null} 包含验证后输入的对象，如果验证失败则返回 null。
@@ -109,12 +108,6 @@ class UserManualNewApp extends BaseDifyApp {
             mainInput.focus();
             return null;
         }
-        
-        // 添加用户消息到聊天界面
-        this.addUserMessage(query);
-        
-        // 清空输入框
-        mainInput.value = '';
         
         return { query };
     }
@@ -206,82 +199,55 @@ class UserManualNewApp extends BaseDifyApp {
             chatInputArea.style.display = 'flex';
         }
 
-        // 发送按钮事件 - 同步到generate-button
+        // 发送按钮事件
         const sendButton = document.getElementById('send-button');
-        if (sendButton) {
-            // 移除可能已经存在的事件监听器
-            sendButton.replaceWith(sendButton.cloneNode(true));
-            
-            // 重新获取发送按钮（因为replaceWith创建了新元素）
-            const newSendButton = document.getElementById('send-button');
-            
-            if (newSendButton) {
-                // 添加我们自己的事件监听器
-                newSendButton.addEventListener('click', async () => {
-                    if (!this.state.isGenerating) {
-                        // 通过调用基类按钮来处理生成
-                        const generateButton = document.getElementById('generate-button');
-                        if (generateButton) {
-                            generateButton.click();
-                        } else {
-                            // 如果找不到generate-button，直接调用handleGenerate
-                            await this.handleGenerate();
-                        }
-                    }
-                });
-                
-                // 更新引用
-                this.elements.sendButton = newSendButton;
-            }
-        }
-        
-        // 停止按钮事件
-        const stopButton = document.getElementById('stop-button');
-        if (stopButton) {
-            stopButton.addEventListener('click', async () => {
-                if (this.state.isGenerating) {
-                    await this.stopGeneration();
+        // 添加一个检查，防止重复绑定监听器
+        if (sendButton && !sendButton.dataset.listenerAttached) {
+            sendButton.addEventListener('click', async () => {
+                // 直接调用当前类的 handleGenerate 方法
+                if (!this.state.isGenerating) {
+                    await this.handleGenerate();
                 }
             });
+            sendButton.dataset.listenerAttached = 'true'; // 标记已绑定
+        } else if (!sendButton) {
+            console.error("Send button (#send-button) not found during binding.");
         }
         
-        // Enter键发送消息
+        // 停止按钮事件 (保持不变，但也加个检查)
+        const stopButton = document.getElementById('stop-button');
+         if (stopButton && !stopButton.dataset.listenerAttached) {
+            stopButton.addEventListener('click', async () => {
+                if (this.state.isGenerating) {
+                    await this.stopGeneration(); // stopGeneration 是基类方法，可以直接调用
+                }
+            });
+             stopButton.dataset.listenerAttached = 'true';
+        } else if (!stopButton) {
+             console.error("Stop button (#stop-button) not found during binding.");
+        }
+        
+        // Enter键发送消息 (移除 replaceWith，添加检查)
         const messageInput = document.getElementById(this.mainInputElementId);
-        if (messageInput) {
-            // 移除可能已经存在的事件监听器
-            messageInput.replaceWith(messageInput.cloneNode(true));
+         if (messageInput && !messageInput.dataset.listenerAttached) {
+             messageInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    const sendBtnRef = document.getElementById('send-button'); // 在事件处理时获取按钮
+                    if (sendBtnRef && !this.state.isGenerating) { // 检查按钮存在和生成状态
+                        sendBtnRef.click(); // 触发按钮点击
+                    }
+                }
+            });
             
-            // 重新获取输入框
-            const newMessageInput = document.getElementById(this.mainInputElementId);
-            
-            if (newMessageInput) {
-                // 添加我们自己的事件监听器
-                newMessageInput.addEventListener('keydown', (e) => {
-                    // 按下 Enter 且未按 Shift 键时发送消息
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault(); // 阻止默认换行
-                        const sendButton = document.getElementById('send-button');
-                        if (sendButton) {
-                            sendButton.click();
-                        }
-                    }
-                });
-                
-                // 确保输入框始终保持可见状态
-                newMessageInput.addEventListener('focus', () => {
-                    const chatInputArea = document.getElementById('chat-input-area');
-                    if (chatInputArea) {
-                        chatInputArea.style.display = 'flex';
-                    }
-                });
-                
-                newMessageInput.addEventListener('input', () => {
-                    const chatInputArea = document.getElementById('chat-input-area');
-                    if (chatInputArea) {
-                        chatInputArea.style.display = 'flex';
-                    }
-                });
-            }
+            // Keep focus listener to ensure visibility on focus
+            messageInput.addEventListener('focus', () => {
+                if (chatInputArea) chatInputArea.style.display = 'flex';
+            });
+
+            messageInput.dataset.listenerAttached = 'true'; // Mark keydown/focus attached
+        } else if (!messageInput) {
+             console.error("Message input (#message-input) not found during binding.");
         }
     }
 
@@ -306,6 +272,16 @@ class UserManualNewApp extends BaseDifyApp {
             return; // 验证失败，停止生成
         }
         
+        // --- ADDED: Add user message and clear input AFTER validation ---
+        const mainInput = document.getElementById(this.mainInputElementId);
+        if (mainInput) {
+            this.addUserMessage(inputs.query); // Add validated query to UI
+            mainInput.value = ''; // Clear input now
+        } else {
+             console.warn("Could not find input element to clear after successful validation.");
+        }
+        // --- END ADDED ---
+
         // 确保移除旧的current-assistant-message ID
         const existingMessage = document.getElementById('current-assistant-message');
         if (existingMessage) {

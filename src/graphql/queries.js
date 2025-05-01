@@ -296,6 +296,7 @@ export const getGlobalConfig = /* GraphQL */ `
       id
       configKey
       configValue
+      applicationType
       createdAt
       updatedAt
       _version
@@ -316,6 +317,7 @@ export const listGlobalConfigs = /* GraphQL */ `
         id
         configKey
         configValue
+        applicationType
         createdAt
         updatedAt
         _version
@@ -346,6 +348,7 @@ export const syncGlobalConfigs = /* GraphQL */ `
         id
         configKey
         configValue
+        applicationType
         createdAt
         updatedAt
         _version

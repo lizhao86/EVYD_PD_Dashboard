@@ -136,6 +136,7 @@ type EagerGlobalConfig = {
   readonly id: string;
   readonly configKey: string;
   readonly configValue: string;
+  readonly applicationType: string;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }
@@ -148,6 +149,7 @@ type LazyGlobalConfig = {
   readonly id: string;
   readonly configKey: string;
   readonly configValue: string;
+  readonly applicationType: string;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }

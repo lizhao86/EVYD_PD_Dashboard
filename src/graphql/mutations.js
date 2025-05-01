@@ -235,6 +235,7 @@ export const createGlobalConfig = /* GraphQL */ `
       id
       configKey
       configValue
+      applicationType
       createdAt
       updatedAt
       _version
@@ -253,6 +254,7 @@ export const updateGlobalConfig = /* GraphQL */ `
       id
       configKey
       configValue
+      applicationType
       createdAt
       updatedAt
       _version
@@ -271,6 +273,7 @@ export const deleteGlobalConfig = /* GraphQL */ `
       id
       configKey
       configValue
+      applicationType
       createdAt
       updatedAt
       _version

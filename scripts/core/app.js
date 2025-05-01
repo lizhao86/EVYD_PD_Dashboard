@@ -3,7 +3,13 @@
  * 主应用入口文件
  */
 
-// 引用不再需要import
+import { handleLogin, handleLogout, checkUserSession } from './auth.js';
+import { setupNavigation } from './navigation.js';
+import { loadUIComponents } from '../ui/ui-loader.js';
+import { loadSettings } from '../settings/settings-manager.js';
+import { setupErrorHandling } from '../utils/error-handler.js';
+import { migrateGlobalConfigs } from '../services/storage.js';
+import { useEffect } from 'react';
 
 // 主应用
 const App = {
@@ -12,6 +18,9 @@ const App = {
      */
     init() {
         console.log('初始化主应用...');
+        
+        // 在初始化早期调用迁移函数
+        migrateGlobalConfigs();
         
         // 确保存储服务已初始化
         Storage.init();
@@ -246,23 +255,7 @@ const App = {
         const saveApiEndpointsBtn = document.getElementById('save-global-api-endpoints-button');
         if (saveApiEndpointsBtn) {
             saveApiEndpointsBtn.addEventListener('click', function() {
-                const userStoryEndpoint = document.getElementById('global-userStory-api-endpoint').value;
-                const userManualEndpoint = document.getElementById('global-userManual-api-endpoint').value;
-                const requirementsAnalysisEndpoint = document.getElementById('global-requirementsAnalysis-api-endpoint').value;
-                const uxDesignEndpoint = document.getElementById('global-uxDesign-api-endpoint').value;
-                
-                const result = App.updateApiEndpoints({
-                    userStory: userStoryEndpoint,
-                    userManual: userManualEndpoint,
-                    requirementsAnalysis: requirementsAnalysisEndpoint,
-                    uxDesign: uxDesignEndpoint
-                });
-                
-                if (result.success) {
-                    App.showFormMessage('global-api-endpoints-message', 'API地址更新成功', 'success');
-                } else {
-                    App.showFormMessage('global-api-endpoints-message', result.message, 'error');
-                }
+                App.loadApiEndpointsConfig();
             });
         }
         
@@ -626,39 +619,44 @@ const App = {
     /**
      * 加载API地址配置
      */
-    loadApiEndpointsConfig() {
+    async loadApiEndpointsConfig() {
         console.log('加载全局API端点配置...');
-        
-        // 获取存储的API端点配置
-        const config = this.getGlobalConfig();
-        if (!config.apiEndpoints) {
-            config.apiEndpoints = {
-                userStory: 'https://api.dify.ai/v1',
-                userManual: 'https://api.dify.ai/v1',
-                requirementsAnalysis: 'https://api.dify.ai/v1',
-                uxDesign: 'https://api.dify.ai/v1'
-            };
-            this.saveGlobalConfig(config);
+
+        try {
+            // Asynchronously fetch the global config map
+            const configMap = await getGlobalConfig();
+            console.log("获取到的全局配置:", configMap);
+
+            // Define the expected keys for API endpoints
+            const endpointKeys = ['userStory', 'userManual', 'requirementsAnalysis', 'uxDesign'];
+            let needsDefaults = false;
+
+            // Populate inputs, check if any are missing from the fetched config
+            endpointKeys.forEach(key => {
+                const inputElement = document.getElementById(`global-${key}-api-endpoint`);
+                if (inputElement) {
+                    const configEntry = configMap.get(key);
+                    if (configEntry && configEntry.value) {
+                        inputElement.value = configEntry.value;
+                        console.log(`填充 ${key} 输入框: ${configEntry.value}`);
+                    } else {
+                        console.warn(`未在全局配置中找到 ${key} 的有效配置，将使用默认值。`);
+                        inputElement.value = 'https://api.dify.ai/v1';
+                        needsDefaults = true;
+                    }
+                } else {
+                    console.warn(`找不到ID为 global-${key}-api-endpoint 的输入元素`);
+                }
+            });
+
+            if (needsDefaults) {
+                console.log("某些API端点使用了默认值填充，用户需手动保存以持久化。")
+            }
+
+        } catch (error) {
+            console.error('加载或解析全局API端点配置时出错:', error);
+            App.showFormMessage('global-api-endpoints-message', '加载API地址配置失败: ' + error.message, 'error');
         }
-        
-        // 设置API地址输入字段
-        const userStoryInput = document.getElementById('global-userStory-api-endpoint');
-        const userManualInput = document.getElementById('global-userManual-api-endpoint');
-        const requirementsAnalysisInput = document.getElementById('global-requirementsAnalysis-api-endpoint');
-        const uxDesignInput = document.getElementById('global-uxDesign-api-endpoint');
-        
-        console.log('输入字段存在状态:', {
-            userStoryInput: !!userStoryInput,
-            userManualInput: !!userManualInput,
-            requirementsAnalysisInput: !!requirementsAnalysisInput,
-            uxDesignInput: !!uxDesignInput
-        });
-        
-        // 填充表单
-        if (userStoryInput) userStoryInput.value = config.apiEndpoints.userStory || '';
-        if (userManualInput) userManualInput.value = config.apiEndpoints.userManual || '';
-        if (requirementsAnalysisInput) requirementsAnalysisInput.value = config.apiEndpoints.requirementsAnalysis || '';
-        if (uxDesignInput) uxDesignInput.value = config.apiEndpoints.uxDesign || '';
     },
      
     /**

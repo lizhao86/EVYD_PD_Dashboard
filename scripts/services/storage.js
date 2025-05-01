@@ -399,97 +399,98 @@ export async function deleteUserApiKey(recordId, version) {
 export async function getCurrentUserApiKeys() {
     try {
         const user = await Auth.currentAuthenticatedUser();
-        const ownerId = user.username; // 或者 user.attributes.sub
-
-        // console.log("===> getCurrentUserApiKeys: 开始获取当前用户API密钥");
-        // console.log("===> 当前用户ID:", ownerId);
-        
-        // 获取所有API密钥，不再使用筛选
-        const result = await API.graphql(
-            graphqlOperation(queries.listUserApplicationApiKeys)
-        );
-        
-        let allItems = result.data.listUserApplicationApiKeys.items || [];
-        // console.log("===> 数据库中检索到的API密钥总数:", allItems.length);
-        
-        if (allItems.length === 0) {
-            // console.warn("===> 警告: 数据库中未找到任何API密钥");
+        // 构造 owner 字段的期望值: <sub>::<username>
+        const sub = user.attributes.sub;
+        const username = user.username;
+        if (!sub || !username) {
+            console.error("[storage.js] getCurrentUserApiKeys: 无法获取用户的 sub 或 username 属性。");
             return [];
         }
-        
-        // 打印所有项目的applicationID和API密钥（部分隐藏）
-        allItems.forEach(item => {
-            const maskedKey = item.apiKey ? 
-                item.apiKey.substring(0, 4) + '*'.repeat(item.apiKey.length - 8) + 
-                item.apiKey.substring(item.apiKey.length - 4) : "无API密钥";
-            
-            // console.log(`应用ID: ${item.applicationID}, 拥有者: ${item.owner || "未知"}, API密钥: ${maskedKey}`);
-        });
-        
-        // 放宽筛选条件 - 临时调试：不再严格要求owner完全匹配
-        // 仍然保留筛选逻辑，但日志详细记录原因
-        let filteredItems = allItems;
-        
-        // 按更新时间排序
-        if (filteredItems.length > 0) {
-            filteredItems.sort((a, b) => {
-                const dateA = new Date(a.updatedAt || a.createdAt || 0);
-                const dateB = new Date(b.updatedAt || b.createdAt || 0);
-                return dateB - dateA; // 降序排序
-            });
-            
-            // 返回所有应用的最新API密钥
-            const appKeyMap = new Map();
-            for (const item of filteredItems) {
-                if (item.applicationID && !appKeyMap.has(item.applicationID)) {
-                    appKeyMap.set(item.applicationID, item);
+        const ownerFilterValue = `${sub}::${username}`;
+
+        console.log("[storage.js] getCurrentUserApiKeys: 开始获取API密钥，使用的 owner 过滤值: ", ownerFilterValue);
+
+        const result = await API.graphql(
+            graphqlOperation(queries.listUserApplicationApiKeys, {
+                filter: {
+                    owner: { eq: ownerFilterValue }, // 使用组合值过滤
+                    _deleted: { ne: true }
                 }
-            }
-            
-            // 转换回数组
-            filteredItems = Array.from(appKeyMap.values());
-            // console.log("===> 已获取每个应用的最新API密钥，总数:", filteredItems.length);
+            })
+        );
+
+        let items = result.data.listUserApplicationApiKeys.items || [];
+        console.log("[storage.js] getCurrentUserApiKeys: GraphQL 返回的原始 items: ", JSON.stringify(items, null, 2));
+
+        if (items.length === 0) {
+            console.log("[storage.js] getCurrentUserApiKeys: 未找到该用户的API密钥记录 (owner='${ownerFilterValue}')。");
+            return [];
         }
-        
-        return filteredItems;
+
+        items.sort((a, b) => {
+            const dateA = new Date(a.updatedAt || a.createdAt || 0);
+            const dateB = new Date(b.updatedAt || b.createdAt || 0);
+            return dateB - dateA;
+        });
+
+        const appKeyMap = new Map();
+        for (const item of items) {
+            if (item.applicationID && !appKeyMap.has(item.applicationID)) {
+                appKeyMap.set(item.applicationID, item);
+            }
+        }
+
+        const finalItems = Array.from(appKeyMap.values());
+        console.log("[storage.js] getCurrentUserApiKeys: 最终返回的 finalItems: ", JSON.stringify(finalItems, null, 2));
+
+        return finalItems;
     } catch (error) {
-       // console.error("===> 获取用户API密钥时出错:", error);
-       // console.error("===> 错误详情:", JSON.stringify({
-       //     message: error.message,
-       //     stack: error.stack,
-       //     name: error.name,
-       //     code: error.code
-       // }));
-       return []; // 返回空数组
+       console.error("[storage.js] getCurrentUserApiKeys: 获取用户API密钥时出错:", error);
+       console.error("[storage.js] getCurrentUserApiKeys: 错误详情:", JSON.stringify({
+           message: error.message,
+           stack: error.stack,
+           name: error.name,
+           code: error.code
+       }));
+       return [];
     }
 }
 
 // --- Global Config ---
 
-// REMOVED: const GLOBAL_CONFIG_ID = "GLOBAL_CONFIG"; // No longer fetching a single record
-
 /**
- * 获取所有全局配置项，并以 Map<configKey, configValue> 的形式返回.
- * @returns {Promise<Map<string, string>>} 包含所有全局配置的 Map.
+ * 获取所有全局配置项，并以 Map<configKey, { value: string, type: string }> 的形式返回.
+ * @returns {Promise<Map<string, { value: string, type: string }>>} 包含所有全局配置的 Map.
  */
 export async function getGlobalConfig() {
     const configMap = new Map();
+    let nextToken = null;
+    console.log("[getGlobalConfig] Fetching global configs..."); // Added log
+
     try {
-        // Assuming listGlobalConfigs query exists and returns items with configKey and configValue
-        // The query might need pagination handling for very large numbers of configs, but unlikely here.
-        const result = await API.graphql(graphqlOperation(queries.listGlobalConfigs)); 
-        const items = result.data?.listGlobalConfigs?.items || [];
+        do {
+            // Ensure the query includes applicationType
+            const result = await API.graphql(graphqlOperation(queries.listGlobalConfigs, { nextToken }));
+            const items = result.data?.listGlobalConfigs?.items || [];
+            nextToken = result.data?.listGlobalConfigs?.nextToken;
+            console.log(`[getGlobalConfig] Fetched ${items.length} items. Next token: ${nextToken ? 'yes' : 'no'}`); // Added log
+
+            items.forEach(item => {
+                if (item && item.configKey && !item._deleted) { // Ensure item, key exist and not deleted
+                    // Store both value and type
+                    configMap.set(item.configKey, {
+                        value: item.configValue || '', 
+                        type: item.applicationType || 'chat' // Default to 'chat' if type is missing for some reason
+                    });
+                }
+            });
+        } while (nextToken);
         
-        items.forEach(item => {
-            if (item && item.configKey) { // Ensure item and key exist
-                configMap.set(item.configKey, item.configValue || ''); // Store value or empty string
-            }
-        });
-        // console.log("Fetched global configs and created map:", configMap);
+        console.log("[getGlobalConfig] Finished fetching. Config map:", configMap); // Added log
         return configMap;
     } catch (error) {
-        console.error('Error fetching global configs:', error);
-        return configMap; // Return empty map on error
+        console.error('[getGlobalConfig] Error fetching global configs:', error);
+        return configMap; // Return potentially partial map on error
     }
 }
 
@@ -714,16 +715,73 @@ export async function getCurrentUser() {
     };
 }
 
-// Removed duplicated functions below this line
-// // Add functions for other models as needed...
-// 
-// // Example: Function to create an Application (requires Admin privileges via @auth rule)
-// export async function createApplication(name, description) { ... }
-// 
-// // Example: Function for a user to create their API Key for a specific application
-// export async function createUserApiKey(applicationID, apiKey) { ... }
-// 
-// // Example: Function to get API Keys for the current user
-// export async function getCurrentUserApiKeys() { ... }
-//
-// // Add functions for listApplications, get/create/update GlobalConfig, Conversation etc. as needed 
+/**
+ * 一次性迁移函数，用于为现有的 GlobalConfig 记录添加 applicationType 字段。
+ */
+export async function migrateGlobalConfigs() {
+    console.log("Starting GlobalConfig migration...");
+    let migratedCount = 0;
+    let nextToken = null;
+
+    try {
+        do {
+            // 获取一批 GlobalConfig 记录
+            const listResult = await API.graphql(
+                graphqlOperation(queries.listGlobalConfigs, { nextToken })
+            );
+            
+            const items = listResult.data?.listGlobalConfigs?.items || [];
+            nextToken = listResult.data?.listGlobalConfigs?.nextToken;
+
+            const updates = [];
+
+            for (const item of items) {
+                // 检查 applicationType 是否缺失
+                if (item && !item.applicationType) {
+                    let newType = null;
+                    switch (item.configKey) {
+                        case 'userStory':
+                            newType = 'workflow';
+                            break;
+                        case 'requirementsAnalysis':
+                        case 'userManual':
+                        case 'uxDesign':
+                            newType = 'chat';
+                            break;
+                        default:
+                            console.warn(`Skipping migration for unknown configKey: ${item.configKey}`);
+                            continue; // 跳过未知类型
+                    }
+
+                    if (newType) {
+                        console.log(`Migrating item ${item.id} (${item.configKey}) to type: ${newType}`);
+                        // 准备更新操作
+                        const updateInput = {
+                            id: item.id,
+                            applicationType: newType,
+                            _version: item._version
+                        };
+                        // 将更新操作添加到批处理数组中
+                        updates.push(
+                            API.graphql(
+                                graphqlOperation(mutations.updateGlobalConfig, { input: updateInput })
+                            )
+                        );
+                        migratedCount++;
+                    }
+                }
+            }
+            // 并行执行当前批次的更新操作
+            await Promise.all(updates);
+            console.log(`Processed batch, ${updates.length} updates attempted.`);
+
+        } while (nextToken); // 如果有下一页，继续循环
+
+        console.log(`GlobalConfig migration completed. ${migratedCount} items migrated.`);
+        return true;
+
+    } catch (error) {
+        console.error('Error during GlobalConfig migration:', error);
+        return false;
+    }
+}

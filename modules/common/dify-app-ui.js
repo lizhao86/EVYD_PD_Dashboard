@@ -244,6 +244,25 @@ class DifyAppUI {
     }
 
     /**
+     * Sets the entire content of the raw result area, replacing any existing content.
+     * @param {string} textContent - The full text content to set.
+     */
+    setStreamContent(textContent) {
+        if (!this.elements.resultContent) {
+            console.error("Result content element (#result-content) not found for setting content.");
+             // Fallback: try setting markdown directly if raw is missing
+             if (this.elements.resultMarkdown) {
+                 this.elements.resultMarkdown.innerHTML = textContent;
+                 this.renderMarkdown(); // Render immediately
+             }
+            return;
+        }
+        this.showResultContainer();
+        this.elements.resultContent.innerHTML = textContent; // Replace content
+        this.elements.resultContent.scrollTop = this.elements.resultContent.scrollHeight;
+    }
+
+    /**
      * Renders the content of the resultMarkdown element using the marked library.
      */
     renderMarkdown() {

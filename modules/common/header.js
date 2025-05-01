@@ -1255,7 +1255,8 @@ const Header = {
                     }
                 }
                 
-                const currentValue = globalConfigMap.get(configKey) || ''; // Get value from map
+                const configEntry = globalConfigMap.get(configKey); // Get the { value, type } object
+                const currentValue = configEntry?.value || ''; // Extract the 'value' property, default to empty string
 
                 // 创建基于应用程序的输入字段
                 const configItemDiv = document.createElement('div');
@@ -1282,7 +1283,7 @@ const Header = {
                 input.id = inputId;
                 input.setAttribute('data-app-id', app.id);
                 input.className = 'form-control'; // Ensure this matches your selector
-                input.value = currentValue;
+                input.value = currentValue; // Set the input value to the extracted URL string
                 input.placeholder = `Enter API URL for ${app.name}`;
                 
                 inputDiv.appendChild(input);
@@ -1304,9 +1305,6 @@ const Header = {
             this.hideLoading();
         }
     },
-
-    // REMOVED/COMMENTED OUT: fetchAllGlobalConfigs as it's replaced by getGlobalConfig logic
-    // async fetchAllGlobalConfigs() { ... },
 
     // Handle saving Global API Endpoints (Admin Panel - Revised - DOM DIRECT ACCESS)
     async handleSaveGlobalApiEndpoints() {
@@ -1690,14 +1688,13 @@ const Header = {
      * Assumes this is for the currently logged-in user's settings modal.
      */
     async loadUserApiKeys() {
-        // console.log('开始加载用户 API Keys 到设置模态框...');
+        console.log("[header.js] loadUserApiKeys: 开始加载 API Keys 到设置模态框...");
         const apiKeysSettingsContainer = document.getElementById('api-keys-settings');
         if (!apiKeysSettingsContainer) {
-            console.error("API Keys settings container 'api-keys-settings' not found in modal.");
+            console.error("[header.js] loadUserApiKeys: API Keys settings container 'api-keys-settings' not found.");
             return;
         }
-        
-        // 映射应用ID到设置面板中的输入字段ID
+
         const APP_ID_TO_INPUT_ID_MAP = {
             'userStory': 'setting-userStory-key',
             'userManual': 'setting-userManual-key',
@@ -1705,43 +1702,37 @@ const Header = {
             'uxDesign': 'setting-uxDesign-key'
         };
 
-        // 确保应用和用户密钥已加载
-        if (this.applications.length === 0) {
-            // console.log('加载应用列表...');
-            await this.loadApplications();
-            // console.log(`加载到 ${this.applications.length} 个应用`);
+        // 确保 this.userApiKeys 已被 loadCurrentUserApiKeysInternal 正确填充
+        if (!this.userApiKeys) {
+             console.error("[header.js] loadUserApiKeys: this.userApiKeys is null or undefined.");
+             this.userApiKeys = []; // Ensure it's an array
         }
-        
-        if (this.userApiKeys.length === 0 && this.currentUser) {
-            // console.log('加载用户API密钥...');
-            await this.loadCurrentUserApiKeysInternal();
-            // console.log(`加载到 ${this.userApiKeys.length} 个API密钥记录`);
-        }
-        
-        // console.log('当前已加载的API密钥:', this.userApiKeys);
+        console.log("[header.js] loadUserApiKeys: 当前 this.userApiKeys 内容: ", JSON.stringify(this.userApiKeys, null, 2)); // 打印接收到的密钥
 
-        // 将API密钥填充到现有的输入字段中
         Object.entries(APP_ID_TO_INPUT_ID_MAP).forEach(([appId, inputId]) => {
             const input = document.getElementById(inputId);
             if (!input) {
-                console.warn(`输入字段 ${inputId} 不存在，跳过`);
-                return; // 如果输入字段不存在，跳过
+                console.warn(`[header.js] loadUserApiKeys: Input field ${inputId} not found, skipping.`);
+                return;
             }
-            
-            // 尝试找到该应用的API密钥
-            const userApiKeyRecord = this.userApiKeys.find(key => key.applicationID === appId);
+
+            // 查找对应的记录
+            const userApiKeyRecord = this.userApiKeys.find(key => key && key.applicationID === appId); // Add check for key existence
+            console.log(`[header.js] loadUserApiKeys: 查找 appId '${appId}'... 找到的记录:`, userApiKeyRecord ? JSON.stringify(userApiKeyRecord) : '未找到');
+
             const currentKey = userApiKeyRecord ? userApiKeyRecord.apiKey : '';
             const recordId = userApiKeyRecord ? userApiKeyRecord.id : '';
-            
-            // console.log(`设置应用 ${appId} 的API密钥: ${currentKey ? '已设置' : '未设置'} (记录ID: ${recordId || 'N/A'})`);
-            
-            // 设置输入字段的值和数据属性
+            const currentVersion = userApiKeyRecord ? userApiKeyRecord._version : '';
+
+            console.log(`[header.js] loadUserApiKeys: 设置 input '${inputId}' (appId: ${appId}): key='${currentKey}', recordId='${recordId}', version='${currentVersion}'`);
+
             input.value = currentKey;
             input.setAttribute('data-app-id', appId);
             input.setAttribute('data-record-id', recordId);
+            input.setAttribute('data-version', currentVersion);
         });
-        
-        // console.log('用户 API Keys 加载完成');
+
+        console.log('[header.js] loadUserApiKeys: 用户 API Keys 加载完成。');
     },
 
     // New function to load applications from the backend
@@ -1864,71 +1855,80 @@ const Header = {
         Object.entries(APP_ID_TO_INPUT_ID_MAP).forEach(([applicationID, inputId]) => {
             const input = document.getElementById(inputId);
             if (!input) return; // 如果输入字段不存在，跳过
-            
-            const apiKey = input.value.trim();
-            const recordId = input.getAttribute('data-record-id');
 
-            if (applicationID && apiKey) { // 只有在密钥不为空时保存
-                if (recordId && recordId !== 'null' && recordId !== '') {
-                    // 更新现有记录
-                    // console.log(`Updating existing API key for application ${applicationID}, record ID: ${recordId}`);
-                    const updatePromise = updateUserApiKey(recordId, apiKey)
+            const apiKey = input.value.trim(); // 新输入的 API Key 值
+            // 不再从 data-* 属性读取旧的 recordId 和 version，而是从 this.userApiKeys 查找
+
+            // 在已加载的当前用户密钥中查找该 applicationID 的现有记录
+            const existingRecord = this.userApiKeys.find(key => key.applicationID === applicationID);
+
+            if (existingRecord) {
+                // 找到了现有记录
+                const existingId = existingRecord.id;
+                const existingVersion = existingRecord._version;
+                const existingApiKey = existingRecord.apiKey;
+
+                if (apiKey) {
+                    // 如果输入框有值 (需要更新)
+                    if (apiKey !== existingApiKey) { // 只有当值确实改变时才更新
+                        // console.log(`Updating existing API key for application ${applicationID}, record ID: ${existingId}, version: ${existingVersion}`);
+                        const updatePromise = updateUserApiKey(existingId, apiKey, existingVersion)
+                            .then(result => {
+                                if(result) successCount++;
+                                else errors.push(`Failed to update key for App ID ${applicationID}`);
+                            })
+                            .catch(err => errors.push(`Error updating key for App ID ${applicationID}: ${err.message || 'Unknown error'}`));
+                        savePromises.push(updatePromise);
+                    } else {
+                        // console.log(`API Key for ${applicationID} hasn't changed, skipping update.`);
+                        successCount++; // Consider it a success if no change needed
+                    }
+                } else {
+                    // 如果输入框为空 (需要删除)
+                    // console.log(`Deleting API key for application ${applicationID}, record ID: ${existingId}, version: ${existingVersion}`);
+                    const deletePromise = deleteUserApiKey(existingId, existingVersion)
                         .then(result => {
-                            if(result) {
-                                successCount++;
-                                // console.log(`Successfully updated API key for ${applicationID}`);
-                            }
-                            else errors.push(`Failed to update key for App ID ${applicationID}`);
+                            if(result) successCount++;
+                            else errors.push(`Failed to delete key for App ID ${applicationID}`);
                         })
-                        .catch(err => {
-                            errors.push(`Error updating key for App ID ${applicationID}: ${err.message || 'Unknown error'}`);
-                        });
-                    savePromises.push(updatePromise);
-                } else if (!recordId || recordId === 'null' || recordId === '') {
-                    // 创建新记录
+                        .catch(err => errors.push(`Error deleting key for App ID ${applicationID}: ${err.message || 'Unknown error'}`));
+                    savePromises.push(deletePromise);
+                }
+            } else {
+                // 没有找到现有记录
+                if (apiKey) {
+                    // 如果输入框有值 (需要创建)
                     // console.log(`Creating new API key for application ${applicationID}`);
                     const createPromise = createUserApiKey(applicationID, apiKey)
                         .then(result => {
-                            if(result) {
-                                successCount++;
-                                // console.log(`Successfully created API key for ${applicationID}`);
-                            }
+                            if(result) successCount++;
                             else errors.push(`Failed to create key for App ID ${applicationID}`);
                         })
-                        .catch(err => {
-                            errors.push(`Error creating key for App ID ${applicationID}: ${err.message || 'Unknown error'}`);
-                        });
+                        .catch(err => errors.push(`Error creating key for App ID ${applicationID}: ${err.message || 'Unknown error'}`));
                     savePromises.push(createPromise);
+                } else {
+                    // 如果输入框为空，且没有现有记录，则什么也不做
+                    // console.log(`No existing record and no new key provided for ${applicationID}, skipping.`);
+                    successCount++; // No action needed is also a success in this context
                 }
-            } else if (applicationID && !apiKey && recordId && recordId !== 'null' && recordId !== '') {
-                // 删除清空的密钥
-                // console.log(`Deleting API key for application ${applicationID}, record ID: ${recordId}`);
-                const deletePromise = deleteUserApiKey(recordId)
-                    .then(result => {
-                        if(result) {
-                            successCount++;
-                            // console.log(`Successfully deleted API key for ${applicationID}`);
-                        }
-                        else errors.push(`Failed to delete key for App ID ${applicationID}`);
-                    })
-                    .catch(err => {
-                        errors.push(`Error deleting key for App ID ${applicationID}: ${err.message || 'Unknown error'}`);
-                    });
-                savePromises.push(deletePromise);
             }
         });
 
         await Promise.all(savePromises);
         this.hideLoading();
 
-        // 刷新UI中的密钥
+        // 刷新UI中的密钥 (确保 loadCurrentUserApiKeysInternal 在 loadUserApiKeys 之前调用)
         await this.loadCurrentUserApiKeysInternal(); // 获取更新后的密钥
         await this.loadUserApiKeys(); // 重新加载UI选项卡
 
-        if (errors.length === 0) {
+        if (errors.length === 0 && successCount === Object.keys(APP_ID_TO_INPUT_ID_MAP).length) {
             showFormMessage(messageElement, t('settings.apiKeysSavedSuccess'), 'success');
         } else {
-            showFormMessage(messageElement, `${t('settings.apiKeysSavedPartialError', { count: successCount })}\n${errors.join('\n')}`, 'error');
+            const baseMessage = t('settings.apiKeysSavedPartialError', { 
+                count: successCount, 
+                total: Object.keys(APP_ID_TO_INPUT_ID_MAP).length 
+            });
+            showFormMessage(messageElement, `${baseMessage}\n${errors.join('\n')}`, 'error');
         }
     },
 

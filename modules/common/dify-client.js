@@ -255,6 +255,7 @@ function processBuffer(buffer, callbacks, finalMetadata, isFirstChunk, isFinalPr
                                     // Store it in finalMetadata, potentially overwriting previous node outputs
                                     // Assuming the last node with text output might contain the final result
                                     finalMetadata.nodeOutputText = potentialText;
+                                    // DO NOT call onMessage here; rely on text_chunk events for streaming display
                                 }
                             }
 
