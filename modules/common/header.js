@@ -854,12 +854,47 @@ const Header = {
 
             // Save API Keys button (From User Settings Modal)
             if (event.target.matches('#submit-api-keys-change')) {
-                await this.handleSaveApiKeys(); // Ensure this calls the NEW function below
+                event.preventDefault(); // 添加这一行，防止默认行为
+                
+                // 立即提供视觉反馈
+                const button = event.target;
+                const originalText = button.textContent || "保存 API 密钥";
+                const originalDisabled = button.disabled;
+                
+                try {
+                    // 禁用按钮并修改文本
+                    button.disabled = true;
+                    button.textContent = "保存中...";
+                    button.style.opacity = "0.7";
+                    
+                    // 在消息区域显示正在处理的消息
+                    const messageElement = document.getElementById('api-keys-settings-message');
+                    if (messageElement) {
+                        messageElement.textContent = "正在处理您的请求...";
+                        messageElement.className = "form-message info";
+                    }
+                    
+                    await this.handleSaveApiKeys(); // 调用保存函数
+                } catch (error) {
+                    console.error("处理API密钥保存时出错:", error);
+                    const messageElement = document.getElementById('api-keys-settings-message');
+                    if (messageElement) {
+                        messageElement.textContent = `保存失败: ${error.message || "未知错误"}`;
+                        messageElement.className = "form-message error";
+                    }
+                } finally {
+                    // 恢复按钮状态
+                    setTimeout(() => {
+                        button.disabled = originalDisabled;
+                        button.textContent = originalText;
+                        button.style.opacity = "";
+                    }, 1000); // 延迟1秒恢复按钮状态，确保用户能看到反馈
+                }
             }
 
         });
         
-        // Handle modal closing when clicking outside (Trigger form reset)
+        // Handle modal closinang when clicking outside (Trigger form reset)
          window.addEventListener('click', (event) => {
             if (event.target.classList.contains('modal')) {
                 event.target.style.display = 'none';
@@ -1018,9 +1053,7 @@ const Header = {
         if (!adminPanelButton.hasAttribute('data-event-bound')) {
             adminPanelButton.addEventListener('click', async (e) => {
                 e.preventDefault();
-                console.log("===> 点击了管理员面板按钮");
                 const isAdminUser = this.userSettings && this.userSettings.role === 'admin';
-                console.log("===> 用户是否为管理员:", isAdminUser, "用户设置:", this.userSettings);
                 
                 if (isAdminUser) {
                     // 确保加载应用程序数据
@@ -1032,10 +1065,8 @@ const Header = {
                     adminModal.style.display = 'block';
                     
                     // 加载用户列表以确保数据最新
-                    console.log("===> 打开管理面板，准备加载用户列表");
                     await this.loadUsersList();
                 } else {
-                    console.log("===> 用户不是管理员，显示提示信息");
                     alert(t('alert.adminRequired'));
                 }
             });
@@ -1054,7 +1085,6 @@ const Header = {
             if (!tab.hasAttribute('data-event-bound')) {
                 tab.addEventListener('click', async () => {
                     const tabType = tab.getAttribute('data-admin-tab');
-                    console.log("===> 点击了管理面板选项卡:", tabType);
     
                     adminTabs.forEach(t => t.classList.remove('active'));
                     tab.classList.add('active');
@@ -1066,14 +1096,12 @@ const Header = {
                     // 根据选项卡类型激活相应内容并加载数据
                     if (tabType === 'users') {
                         document.getElementById('users-management')?.classList.add('active');
-                        console.log("===> 切换到用户管理选项卡，加载用户列表");
                         await this.loadUsersList(); // 加载用户列表
                     } else if (tabType === 'api-keys') {
                         document.getElementById('api-keys-management')?.classList.add('active');
                         // this.loadApiKeysConfig(); // 如果实现的话
                     } else if (tabType === 'api-endpoints') {
                         document.getElementById('api-endpoints-management')?.classList.add('active');
-                        console.log("===> 切换到API端点配置选项卡，加载端点配置");
                         await this.loadApiEndpointsConfig(); // 加载API端点配置
                     }
                     
@@ -1310,12 +1338,10 @@ const Header = {
     async handleSaveGlobalApiEndpoints() {
         // 防止重复调用：使用处理中状态标记
         if (this.isSavingApiEndpoints) {
-            console.log("===> API端点保存操作正在进行中，跳过重复请求");
             return;
         }
         
         this.isSavingApiEndpoints = true;
-        console.log("===> 开始保存API端点配置");
         
         // DIRECT DOM ACCESS: Get all input elements inside the api-endpoints-management content
         const apiEndpointsContent = document.getElementById('api-endpoints-management');
@@ -1415,7 +1441,7 @@ const Header = {
         };
 
         // --- DEBUGGING: Check the object being passed to saveGlobalConfig --- 
-        console.log("[DEBUG] configToSave object being passed to storage:", configToSave);
+        // Remove debug log
         // --- END DEBUGGING ---
 
         this.showLoading(t('common.saving') || "保存中...");
@@ -1451,7 +1477,6 @@ const Header = {
             }
         } finally {
             this.hideLoading();
-            console.log("===> API端点保存操作完成");
             this.isSavingApiEndpoints = false;
         }
     },
@@ -1688,7 +1713,7 @@ const Header = {
      * Assumes this is for the currently logged-in user's settings modal.
      */
     async loadUserApiKeys() {
-        console.log("[header.js] loadUserApiKeys: 开始加载 API Keys 到设置模态框...");
+        // console.log("[header.js] loadUserApiKeys: 开始加载 API Keys 到设置模态框...");
         const apiKeysSettingsContainer = document.getElementById('api-keys-settings');
         if (!apiKeysSettingsContainer) {
             console.error("[header.js] loadUserApiKeys: API Keys settings container 'api-keys-settings' not found.");
@@ -1707,7 +1732,7 @@ const Header = {
              console.error("[header.js] loadUserApiKeys: this.userApiKeys is null or undefined.");
              this.userApiKeys = []; // Ensure it's an array
         }
-        console.log("[header.js] loadUserApiKeys: 当前 this.userApiKeys 内容: ", JSON.stringify(this.userApiKeys, null, 2)); // 打印接收到的密钥
+        // console.log("[header.js] loadUserApiKeys: 当前 this.userApiKeys 内容: ", JSON.stringify(this.userApiKeys, null, 2)); // 打印接收到的密钥
 
         Object.entries(APP_ID_TO_INPUT_ID_MAP).forEach(([appId, inputId]) => {
             const input = document.getElementById(inputId);
@@ -1718,13 +1743,13 @@ const Header = {
 
             // 查找对应的记录
             const userApiKeyRecord = this.userApiKeys.find(key => key && key.applicationID === appId); // Add check for key existence
-            console.log(`[header.js] loadUserApiKeys: 查找 appId '${appId}'... 找到的记录:`, userApiKeyRecord ? JSON.stringify(userApiKeyRecord) : '未找到');
+            // console.log(`[header.js] loadUserApiKeys: 查找 appId '${appId}'... 找到的记录:`, userApiKeyRecord ? JSON.stringify(userApiKeyRecord) : '未找到');
 
             const currentKey = userApiKeyRecord ? userApiKeyRecord.apiKey : '';
             const recordId = userApiKeyRecord ? userApiKeyRecord.id : '';
             const currentVersion = userApiKeyRecord ? userApiKeyRecord._version : '';
 
-            console.log(`[header.js] loadUserApiKeys: 设置 input '${inputId}' (appId: ${appId}): key='${currentKey}', recordId='${recordId}', version='${currentVersion}'`);
+            // console.log(`[header.js] loadUserApiKeys: 设置 input '${inputId}' (appId: ${appId}): key='${currentKey}', recordId='${recordId}', version='${currentVersion}'`);
 
             input.value = currentKey;
             input.setAttribute('data-app-id', appId);
@@ -1732,7 +1757,7 @@ const Header = {
             input.setAttribute('data-version', currentVersion);
         });
 
-        console.log('[header.js] loadUserApiKeys: 用户 API Keys 加载完成。');
+        // console.log('[header.js] loadUserApiKeys: 用户 API Keys 加载完成。');
     },
 
     // New function to load applications from the backend
@@ -1834,101 +1859,180 @@ const Header = {
 
     // Handle saving API Keys from the user settings modal (Updated for new schema)
     async handleSaveApiKeys() {
-        // console.log('保存用户 API Keys...');
         const messageElement = document.getElementById('api-keys-settings-message');
         let successCount = 0;
         let errors = [];
 
-        this.showLoading(t('common.saving'));
-        
-        // 映射应用ID到设置面板中的输入字段ID
-        const APP_ID_TO_INPUT_ID_MAP = {
-            'userStory': 'setting-userStory-key',
-            'userManual': 'setting-userManual-key',
-            'requirementsAnalysis': 'setting-requirementsAnalysis-key',
-            'uxDesign': 'setting-uxDesign-key'
-        };
+        try {
+            // 确保这些函数被正确导入
+            if (typeof createUserApiKey !== 'function' || 
+                typeof updateUserApiKey !== 'function' || 
+                typeof deleteUserApiKey !== 'function') {
+                console.error("API Key 操作函数未正确导入: ", {
+                    createUserApiKey: typeof createUserApiKey,
+                    updateUserApiKey: typeof updateUserApiKey,
+                    deleteUserApiKey: typeof deleteUserApiKey
+                });
+                throw new Error("API Key 操作功能不可用，请刷新页面重试");
+            }
 
-        const savePromises = [];
-        
-        // 遍历每个输入字段
-        Object.entries(APP_ID_TO_INPUT_ID_MAP).forEach(([applicationID, inputId]) => {
-            const input = document.getElementById(inputId);
-            if (!input) return; // 如果输入字段不存在，跳过
+            this.showLoading(t('common.saving'));
+            
+            // 映射应用ID到设置面板中的输入字段ID
+            const APP_ID_TO_INPUT_ID_MAP = {
+                'userStory': 'setting-userStory-key',
+                'userManual': 'setting-userManual-key',
+                'requirementsAnalysis': 'setting-requirementsAnalysis-key',
+                'uxDesign': 'setting-uxDesign-key'
+            };
 
-            const apiKey = input.value.trim(); // 新输入的 API Key 值
-            // 不再从 data-* 属性读取旧的 recordId 和 version，而是从 this.userApiKeys 查找
-
-            // 在已加载的当前用户密钥中查找该 applicationID 的现有记录
-            const existingRecord = this.userApiKeys.find(key => key.applicationID === applicationID);
-
-            if (existingRecord) {
-                // 找到了现有记录
-                const existingId = existingRecord.id;
-                const existingVersion = existingRecord._version;
-                const existingApiKey = existingRecord.apiKey;
-
-                if (apiKey) {
-                    // 如果输入框有值 (需要更新)
-                    if (apiKey !== existingApiKey) { // 只有当值确实改变时才更新
-                        // console.log(`Updating existing API key for application ${applicationID}, record ID: ${existingId}, version: ${existingVersion}`);
-                        const updatePromise = updateUserApiKey(existingId, apiKey, existingVersion)
-                            .then(result => {
-                                if(result) successCount++;
-                                else errors.push(`Failed to update key for App ID ${applicationID}`);
-                            })
-                            .catch(err => errors.push(`Error updating key for App ID ${applicationID}: ${err.message || 'Unknown error'}`));
-                        savePromises.push(updatePromise);
-                    } else {
-                        // console.log(`API Key for ${applicationID} hasn't changed, skipping update.`);
-                        successCount++; // Consider it a success if no change needed
-                    }
-                } else {
-                    // 如果输入框为空 (需要删除)
-                    // console.log(`Deleting API key for application ${applicationID}, record ID: ${existingId}, version: ${existingVersion}`);
-                    const deletePromise = deleteUserApiKey(existingId, existingVersion)
-                        .then(result => {
-                            if(result) successCount++;
-                            else errors.push(`Failed to delete key for App ID ${applicationID}`);
-                        })
-                        .catch(err => errors.push(`Error deleting key for App ID ${applicationID}: ${err.message || 'Unknown error'}`));
-                    savePromises.push(deletePromise);
-                }
-            } else {
-                // 没有找到现有记录
-                if (apiKey) {
-                    // 如果输入框有值 (需要创建)
-                    // console.log(`Creating new API key for application ${applicationID}`);
-                    const createPromise = createUserApiKey(applicationID, apiKey)
-                        .then(result => {
-                            if(result) successCount++;
-                            else errors.push(`Failed to create key for App ID ${applicationID}`);
-                        })
-                        .catch(err => errors.push(`Error creating key for App ID ${applicationID}: ${err.message || 'Unknown error'}`));
-                    savePromises.push(createPromise);
-                } else {
-                    // 如果输入框为空，且没有现有记录，则什么也不做
-                    // console.log(`No existing record and no new key provided for ${applicationID}, skipping.`);
-                    successCount++; // No action needed is also a success in this context
+            const savePromises = [];
+            
+            // 检查 this.userApiKeys 是否为有效数组
+            if (!Array.isArray(this.userApiKeys)) {
+                console.error("this.userApiKeys 不是有效数组:", this.userApiKeys);
+                await this.loadCurrentUserApiKeysInternal();
+                if (!Array.isArray(this.userApiKeys)) {
+                    throw new Error("无法加载现有 API Key 数据");
                 }
             }
-        });
+            
+            // 遍历每个输入字段
+            Object.entries(APP_ID_TO_INPUT_ID_MAP).forEach(([applicationID, inputId]) => {
+                const input = document.getElementById(inputId);
+                if (!input) {
+                    console.warn(`Input field ${inputId} not found, skipping.`);
+                    return;
+                }
 
-        await Promise.all(savePromises);
-        this.hideLoading();
+                const apiKey = input.value.trim(); // 新输入的 API Key 值
 
-        // 刷新UI中的密钥 (确保 loadCurrentUserApiKeysInternal 在 loadUserApiKeys 之前调用)
-        await this.loadCurrentUserApiKeysInternal(); // 获取更新后的密钥
-        await this.loadUserApiKeys(); // 重新加载UI选项卡
+                // 在已加载的当前用户密钥中查找该 applicationID 的现有记录
+                const existingRecord = this.userApiKeys.find(key => key.applicationID === applicationID);
 
-        if (errors.length === 0 && successCount === Object.keys(APP_ID_TO_INPUT_ID_MAP).length) {
-            showFormMessage(messageElement, t('settings.apiKeysSavedSuccess'), 'success');
+                if (existingRecord) {
+                    // 找到了现有记录
+                    const existingId = existingRecord.id;
+                    const existingVersion = existingRecord._version;
+                    const existingApiKey = existingRecord.apiKey;
+
+                    if (apiKey) {
+                        // 如果输入框有值 (需要更新)
+                        if (apiKey !== existingApiKey) { // 只有当值确实改变时才更新
+                            try {
+                                const updatePromise = updateUserApiKey(existingId, apiKey, existingVersion)
+                                    .then(result => {
+                                        if(result) {
+                                            successCount++;
+                                        }
+                                        else {
+                                            console.error(`Failed to update key for ${applicationID}, result:`, result);
+                                            errors.push(`Failed to update key for App ID ${applicationID}`);
+                                        }
+                                    })
+                                    .catch(err => {
+                                        console.error(`Error updating key for ${applicationID}:`, err);
+                                        errors.push(`Error updating key for App ID ${applicationID}: ${err.message || 'Unknown error'}`);
+                                    });
+                                savePromises.push(updatePromise);
+                            } catch (err) {
+                                console.error(`Exception during updateUserApiKey for ${applicationID}:`, err);
+                                errors.push(`Exception for ${applicationID}: ${err.message}`);
+                            }
+                        } else {
+                            successCount++; // Consider it a success if no change needed
+                        }
+                    } else {
+                        // 如果输入框为空 (需要删除)
+                        try {
+                            const deletePromise = deleteUserApiKey(existingId, existingVersion)
+                                .then(result => {
+                                    if(result) {
+                                        successCount++;
+                                    }
+                                    else {
+                                        console.error(`Failed to delete key for ${applicationID}, result:`, result);
+                                        errors.push(`Failed to delete key for App ID ${applicationID}`);
+                                    }
+                                })
+                                .catch(err => {
+                                    console.error(`Error deleting key for ${applicationID}:`, err);
+                                    errors.push(`Error deleting key for App ID ${applicationID}: ${err.message || 'Unknown error'}`);
+                                });
+                            savePromises.push(deletePromise);
+                        } catch (err) {
+                            console.error(`Exception during deleteUserApiKey for ${applicationID}:`, err);
+                            errors.push(`Exception for ${applicationID}: ${err.message}`);
+                        }
+                    }
+                } else {
+                    // 没有找到现有记录
+                    if (apiKey) {
+                        // 如果输入框有值 (需要创建)
+                        try {
+                            const createPromise = createUserApiKey(applicationID, apiKey)
+                                .then(result => {
+                                    if(result) {
+                                        successCount++;
+                                    }
+                                    else {
+                                        console.error(`Failed to create key for ${applicationID}, result:`, result);
+                                        errors.push(`Failed to create key for App ID ${applicationID}`);
+                                    }
+                                })
+                                .catch(err => {
+                                    console.error(`Error creating key for ${applicationID}:`, err);
+                                    errors.push(`Error creating key for App ID ${applicationID}: ${err.message || 'Unknown error'}`);
+                                });
+                            savePromises.push(createPromise);
+                        } catch (err) {
+                            console.error(`Exception during createUserApiKey for ${applicationID}:`, err);
+                            errors.push(`Exception for ${applicationID}: ${err.message}`);
+                        }
+                    } else {
+                        // 如果输入框为空，且没有现有记录，则什么也不做
+                        successCount++; // No action needed is also a success in this context
+                    }
+                }
+            });
+
+            await Promise.all(savePromises);
+        } catch (error) {
+            console.error("API Keys saving general error:", error);
+            errors.push("General error: " + error.message);
+        } finally {
+            this.hideLoading();
+        }
+
+        try {
+            // 刷新UI中的密钥 (确保 loadCurrentUserApiKeysInternal 在 loadUserApiKeys 之前调用)
+            await this.loadCurrentUserApiKeysInternal(); // 获取更新后的密钥
+            await this.loadUserApiKeys(); // 重新加载UI选项卡
+        } catch (refreshError) {
+            console.error("Error refreshing API key data:", refreshError);
+            errors.push("Failed to refresh API key display: " + refreshError.message);
+        }
+
+        if (errors.length === 0 && successCount > 0) {
+            if (messageElement) {
+                messageElement.textContent = t('settings.apiKeysSavedSuccess') || '保存 API 密钥成功！';
+                messageElement.className = 'form-message success';
+            } else {
+                console.error("Message element not found for success message");
+            }
         } else {
             const baseMessage = t('settings.apiKeysSavedPartialError', { 
                 count: successCount, 
                 total: Object.keys(APP_ID_TO_INPUT_ID_MAP).length 
-            });
-            showFormMessage(messageElement, `${baseMessage}\n${errors.join('\n')}`, 'error');
+            }) || `成功处理 ${successCount} 个 API 密钥，但有 ${errors.length} 个错误。`;
+            
+            console.error("API Key saving errors:", errors);
+            if (messageElement) {
+                messageElement.textContent = `${baseMessage}\n${errors.join('\n')}`;
+                messageElement.className = 'form-message error';
+            } else {
+                console.error("Message element not found for error message");
+            }
         }
     },
 
@@ -2164,30 +2268,22 @@ const Header = {
      * 加载用户列表到管理员面板
      */
     async loadUsersList() {
-        console.log("===> 开始加载用户列表");
         const usersTableBody = document.getElementById('users-table-body');
         if (!usersTableBody) {
             console.error("用户表格主体元素找不到，DOM元素ID 'users-table-body' 不存在");
             return;
         }
         
-        console.log("===> 找到用户表格元素，显示加载中...");
         this.showLoading(t('common.loading') || '加载中...');
         
         try {
-            console.log("===> 尝试获取当前认证用户信息");
             // 获取当前登录用户信息 - 显示至少一个用户（自己）
             const currentUser = await Auth.currentAuthenticatedUser();
-            console.log("===> Auth.currentAuthenticatedUser() 返回结果类型:", typeof currentUser);
             
             if (!currentUser) {
-                console.error("===> 无法获取当前认证用户，Auth.currentAuthenticatedUser() 返回空值");
                 usersTableBody.innerHTML = '<tr><td colspan="5">加载用户信息失败</td></tr>';
                 return;
             }
-            
-            // 打印详细的用户信息，帮助调试
-            console.log("===> 当前用户对象键:", Object.keys(currentUser));
             
             // 打印安全的用户信息（不包含敏感数据）
             const safeUserInfo = {
@@ -2213,42 +2309,20 @@ const Header = {
                 groups: currentUser.signInUserSession?.accessToken?.payload?.['cognito:groups'] || "无群组信息"
             };
             
-            console.log("===> 成功获取当前用户信息（安全版本）:", JSON.stringify(safeUserInfo, null, 2));
-            
-            // 尝试获取Cognito会话信息
             try {
-                console.log("===> 尝试获取Cognito会话信息");
                 const session = await Auth.currentSession();
-                console.log("===> Cognito会话状态:", {
-                    isValid: session.isValid() || "无法确定",
-                    accessTokenExpiration: new Date(session.getAccessToken().getExpiration() * 1000).toLocaleString(),
-                    hasAccessToken: !!session.getAccessToken(),
-                    hasIdToken: !!session.getIdToken(),
-                    accessTokenScopes: session.getAccessToken().getJwtToken().split('.')[1] ? 
-                        JSON.parse(atob(session.getAccessToken().getJwtToken().split('.')[1])).scope || "无范围" : 
-                        "无法解析"
-                });
             } catch (sessionError) {
                 console.error("===> 获取Cognito会话信息失败:", sessionError);
             }
             
             // 获取当前用户设置，确认用户角色
-            // console.log("===> 尝试获取用户设置");
             let userSettings = this.userSettings;
             if (!userSettings) {
-                console.log("===> this.userSettings不存在，从数据库获取用户设置");
                 try {
                     userSettings = await getCurrentUserSettings();
-                    console.log("===> getCurrentUserSettings() 返回结果:", JSON.stringify(userSettings));
                 } catch (settingsError) {
                     console.error("===> 获取用户设置时出错:", settingsError);
-                    console.log("===> 错误详情:", JSON.stringify({
-                        message: settingsError.message,
-                        name: settingsError.name
-                    }));
                 }
-            } else {
-                console.log("===> 使用缓存的用户设置:", JSON.stringify(userSettings));
             }
             
             // 检查用户是否为管理员
@@ -2260,44 +2334,27 @@ const Header = {
                 usersTableBody.innerHTML = `<tr><td colspan="5">${errorMsg}</td></tr>`;
                 this.hideLoading();
                 return;
-            } else {
-                console.log(`===> 确认用户具有管理员角色: ${userSettings.role}`);
             }
             
             // 检查用户组权限 
-            console.log("===> 检查用户Cognito组权限");
             try {
-                // 输出session检查过程的详细日志
-                console.log("===> 开始执行checkAdminGroup函数");
                 const session = await Auth.currentSession();
-                console.log("===> 获取到会话对象，尝试获取访问令牌");
                 const accessToken = session.getAccessToken();
-                console.log("===> 获取到访问令牌，尝试获取payload");
                 const payload = accessToken.payload;
-                console.log("===> 访问令牌的payload:", payload);
-                console.log("===> 检查cognito:groups属性:", payload['cognito:groups']);
                 
                 const isUserAdmin = await checkAdminGroup();
-                console.log("===> 用户是否在Cognito管理员组:", isUserAdmin);
-                console.log("===> 权限状态: 数据库角色=" + (userSettings?.role || "未知") + ", Cognito管理员组=" + isUserAdmin);
                 
                 if (!isUserAdmin && userSettings?.role === 'admin') {
                     console.warn("===> 权限不一致: 用户未在Cognito Admin组中，但数据库角色设置为admin");
                 }
             } catch (error) {
                 console.error("===> 检查管理员组时出错:", error);
-                console.log("===> 错误详情:", JSON.stringify({
-                    message: error.message, 
-                    name: error.name
-                }));
             }
             
             const userId = currentUser.username;
             const username = currentUser.username;
             const role = userSettings?.role || 'user';
             const createdDate = new Date(currentUser.createdAt || Date.now()).toLocaleDateString();
-            
-            console.log(`===> 准备创建用户行，用户ID: ${userId}, 用户名: ${username}, 角色: ${role}, 创建日期: ${createdDate}`);
             
             // 创建用户行
             const userRow = document.createElement('tr');
@@ -2314,29 +2371,13 @@ const Header = {
             `;
             
             // 清空表格并添加新行
-            console.log("===> 清空表格并添加新行");
             usersTableBody.innerHTML = '';
             usersTableBody.appendChild(userRow);
             
-            console.log("===> 用户表格已更新，目前只显示当前用户");
-            // 注意：此处只显示当前用户
-            // 完整实现需要调用 AWS Cognito API 列出所有用户
-            // 但由于权限限制，这通常需要在后端实现
-            
-            // TODO: 若要显示更多用户，需请求后端API
-            console.log("===> 注意: 当前仅显示当前登录用户。要显示所有用户需后端支持。");
-            
         } catch (error) {
             console.error("===> 加载用户列表失败:", error);
-            console.error("错误详情:", JSON.stringify({
-                message: error.message,
-                stack: error.stack,
-                name: error.name,
-                code: error.code
-            }));
             usersTableBody.innerHTML = `<tr><td colspan="5">加载用户列表失败: ${error.message || '未知错误'}</td></tr>`;
         } finally {
-            console.log("===> 完成用户列表加载，隐藏加载提示");
             this.hideLoading();
         }
     },

@@ -66,13 +66,13 @@ class BaseDifyApp {
 
             // Check if configuration loading was successful
             if (!configResult) {
-                console.error(`[${this.constructor.name}] API 配置加载失败，终止初始化。`);
+                // console.error(`[${this.constructor.name}] API 配置加载失败，终止初始化。`);
                 // Error message should have been shown by _loadApiConfig
                 return; 
             }
 
             // --- Assign configuration values HERE in init --- 
-            console.log(`[${this.constructor.name}] 在 init 函数中进行赋值...`);
+            // console.log(`[${this.constructor.name}] 在 init 函数中进行赋值...`);
             this.state.apiEndpoint = configResult.endpoint; // Assign string URL
             this.state.apiKey = configResult.key;       // Assign string Key
             
@@ -80,15 +80,15 @@ class BaseDifyApp {
             if (configResult.type === 'chat' || configResult.type === 'workflow') {
                 this.difyMode = configResult.type;
             } else {
-                console.warn(`[${this.constructor.name}] 从配置获取的应用类型 '${configResult.type}' 无效，将默认使用 '${this.difyMode}'`);
+                // console.warn(`[${this.constructor.name}] 从配置获取的应用类型 '${configResult.type}' 无效，将默认使用 '${this.difyMode}'`);
                 // Keep the default this.difyMode if type is invalid
             }
             
             // --- Log types and values AFTER assignment in init ---
-            console.log(`[${this.constructor.name}] init 函数赋值后:`);
-            console.log(`  this.state.apiEndpoint (类型: ${typeof this.state.apiEndpoint}):`, this.state.apiEndpoint);
-            console.log(`  this.state.apiKey (类型: ${typeof this.state.apiKey}):`, this.state.apiKey ? this.state.apiKey.substring(0, 10) + '...' : '');
-            console.log(`  this.difyMode (类型: ${typeof this.difyMode}):`, this.difyMode);
+            // console.log(`[${this.constructor.name}] init 函数赋值后:`);
+            // console.log(`  this.state.apiEndpoint (类型: ${typeof this.state.apiEndpoint}):`, this.state.apiEndpoint);
+            // console.log(`  this.state.apiKey (类型: ${typeof this.state.apiKey}):`, this.state.apiKey ? this.state.apiKey.substring(0, 10) + '...' : '');
+            // console.log(`  this.difyMode (类型: ${typeof this.difyMode}):`, this.difyMode);
             // --- End logging ---
 
             // Fetch dynamic app info from Dify /info endpoint and display it
@@ -97,12 +97,12 @@ class BaseDifyApp {
                 if (appInfoData) {
                     this.ui.displayAppInfo(appInfoData); // Use the returned data to update UI
                 } else {
-                     console.warn(`[${this.constructor.name}] _fetchAppInformation did not return valid data.`);
+                     // console.warn(`[${this.constructor.name}] _fetchAppInformation did not return valid data.`);
                      // Optionally show a default or error state in UI if fetch succeeded but returned no data
                      this.ui.displayAppInfo(); // Display default placeholders
                  }
             } catch (error) {
-                 console.error(`[${this.constructor.name}] Error during _fetchAppInformation or UI display:`, error);
+                 // console.error(`[${this.constructor.name}] Error during _fetchAppInformation or UI display:`, error);
                  // Show error in the UI. _fetchAppInformation might have already shown one, 
                  // but this catches errors in displayAppInfo too.
                  this.ui.showError(t(`${this.difyApiKeyName}.fetchInfoError`, {
@@ -150,7 +150,7 @@ class BaseDifyApp {
 
     /** Loads API key and endpoint from storage. Returns configuration object or null. */
     async _loadApiConfig() {
-        console.log(`[${this.constructor.name}] 开始加载 ${this.difyApiKeyName} 应用的API配置`);
+        // console.log(`[${this.constructor.name}] 开始加载 ${this.difyApiKeyName} 应用的API配置`);
         let endpointLoaded = false;
         let keyLoaded = false;
 
@@ -160,7 +160,7 @@ class BaseDifyApp {
 
         // --- 1. 获取全局配置 (API Endpoint URL 和 Type) ---
         try {
-            console.log(`[${this.constructor.name}] 正在获取全局配置...`);
+            // console.log(`[${this.constructor.name}] 正在获取全局配置...`);
             const globalConfigMap = await getGlobalConfig();
 
             if (!globalConfigMap || globalConfigMap.size === 0) {
@@ -168,7 +168,7 @@ class BaseDifyApp {
             }
 
             const appConfig = globalConfigMap.get(this.difyApiKeyName);
-            console.log(`[${this.constructor.name}] 查找到的 ${this.difyApiKeyName} 配置:`, appConfig);
+            // console.log(`[${this.constructor.name}] 查找到的 ${this.difyApiKeyName} 配置:`, appConfig);
 
             if (!appConfig) {
                 throw new Error(`未在全局配置中找到 ${this.difyApiKeyName} 的配置条目`);
@@ -184,13 +184,13 @@ class BaseDifyApp {
             apiEndpointUrl = appConfig.value;
             apiType = appConfig.type;
 
-            console.log(`[${this.constructor.name}] 临时变量 apiEndpointUrl (类型: ${typeof apiEndpointUrl}): ${apiEndpointUrl}`);
-            console.log(`[${this.constructor.name}] 临时变量 apiType (类型: ${typeof apiType}): ${apiType}`);
+            // console.log(`[${this.constructor.name}] 临时变量 apiEndpointUrl (类型: ${typeof apiEndpointUrl}): ${apiEndpointUrl}`);
+            // console.log(`[${this.constructor.name}] 临时变量 apiType (类型: ${typeof apiType}): ${apiType}`);
 
             endpointLoaded = true;
 
         } catch (error) {
-            console.error(`[${this.constructor.name}] 获取或处理全局配置时出错:`, error);
+            // console.error(`[${this.constructor.name}] 获取或处理全局配置时出错:`, error);
             this.ui?.showError(t(`${this.difyApiKeyName}.globalConfigError`, {
                 default: `获取全局配置时出错: ${error.message}`,
                 error: error.message
@@ -200,9 +200,9 @@ class BaseDifyApp {
 
         // --- 2. 获取用户 API 密钥 --- 
         try {
-            console.log(`[${this.constructor.name}] 正在获取用户API密钥...`);
+            // console.log(`[${this.constructor.name}] 正在获取用户API密钥...`);
             const userApiKeys = await getCurrentUserApiKeys();
-            console.log(`[${this.constructor.name}] 获取到 ${userApiKeys.length} 个API密钥记录`);
+            // console.log(`[${this.constructor.name}] 获取到 ${userApiKeys.length} 个API密钥记录`);
 
             if (!Array.isArray(userApiKeys)) {
                  throw new Error("获取到的 API 密钥不是有效数组");
@@ -211,7 +211,7 @@ class BaseDifyApp {
             const apiKeyRecord = userApiKeys.find(key => 
                 key && key.applicationID === this.difyApiKeyName
             );
-             console.log(`[${this.constructor.name}] 查找到的 ${this.difyApiKeyName} API 密钥记录:`, apiKeyRecord);
+             // console.log(`[${this.constructor.name}] 查找到的 ${this.difyApiKeyName} API 密钥记录:`, apiKeyRecord);
 
             if (!apiKeyRecord) {
                  throw new Error(`未找到 ${this.difyApiKeyName} 的 API 密钥记录`);
@@ -222,12 +222,12 @@ class BaseDifyApp {
             
             // Store in temporary variable first
             apiKeyString = apiKeyRecord.apiKey;
-            console.log(`[${this.constructor.name}] 临时变量 apiKeyString (类型: ${typeof apiKeyString}): ${apiKeyString ? apiKeyString.substring(0, 10) + '...' : ''}`); // Log safely
+            // console.log(`[${this.constructor.name}] 临时变量 apiKeyString (类型: ${typeof apiKeyString}): ${apiKeyString ? apiKeyString.substring(0, 10) + '...' : ''}`); // Log safely
 
             keyLoaded = true;
 
         } catch (error) {
-            console.error(`[${this.constructor.name}] 获取或处理用户 API 密钥时出错:`, error);
+            // console.error(`[${this.constructor.name}] 获取或处理用户 API 密钥时出错:`, error);
             this.ui?.showError(t(`${this.difyApiKeyName}.apiKeyError`, {
                 default: `获取API密钥时出错: ${error.message}`,
                 error: error.message
@@ -237,7 +237,7 @@ class BaseDifyApp {
 
         // --- 3. 验证并返回结果对象 --- 
         if (endpointLoaded && keyLoaded) {
-             console.log(`[${this.constructor.name}] API配置加载完成，返回配置对象。`);
+             // console.log(`[${this.constructor.name}] API配置加载完成，返回配置对象。`);
              // Return the fetched data as an object
              return {
                  endpoint: apiEndpointUrl,
@@ -245,7 +245,7 @@ class BaseDifyApp {
                  type: apiType
              };
         } else {
-            console.error(`[${this.constructor.name}] API 配置加载未能完成。endpointLoaded=${endpointLoaded}, keyLoaded=${keyLoaded}`);
+            // console.error(`[${this.constructor.name}] API 配置加载未能完成。endpointLoaded=${endpointLoaded}, keyLoaded=${keyLoaded}`);
             return null; // Return null if loading failed
         }
     }
@@ -253,7 +253,7 @@ class BaseDifyApp {
     /** Fetches and displays application information from Dify /info endpoint. */
     async _fetchAppInformation() {
         if (typeof this.state.apiEndpoint !== 'string' || !this.state.apiEndpoint) {
-            console.error(`[_fetchAppInformation] PREVENTING FETCH: apiEndpoint is not a valid string. Value:`, this.state.apiEndpoint);
+            // console.error(`[_fetchAppInformation] PREVENTING FETCH: apiEndpoint is not a valid string. Value:`, this.state.apiEndpoint);
             this.ui?.showError(t(`${this.difyApiKeyName}.apiEndpointInvalid`, {
                 default: `API 地址无效 (${this.state.apiEndpoint})，无法获取应用信息。请检查配置。`,
                 endpoint: String(this.state.apiEndpoint)
@@ -261,7 +261,7 @@ class BaseDifyApp {
             return;
         }
         if (typeof this.state.apiKey !== 'string' || !this.state.apiKey) {
-             console.error(`[_fetchAppInformation] PREVENTING FETCH: apiKey is not a valid string. Value:`, this.state.apiKey);
+             // console.error(`[_fetchAppInformation] PREVENTING FETCH: apiKey is not a valid string. Value:`, this.state.apiKey);
              this.ui?.showError(t(`${this.difyApiKeyName}.apiKeyInvalid`, {
                  default: `API 密钥无效，无法获取应用信息。请检查配置。`
              }));
@@ -269,7 +269,7 @@ class BaseDifyApp {
         }
 
         const infoUrl = `${this.state.apiEndpoint}/info`;
-        console.log(`[${this.constructor.name}] Fetching Dify app info from: ${infoUrl}`); // 添加日志
+        // console.log(`[${this.constructor.name}] Fetching Dify app info from: ${infoUrl}`); // 添加日志
 
         try {
             const response = await fetch(infoUrl, {
@@ -281,30 +281,30 @@ class BaseDifyApp {
             });
 
             if (!response.ok) {
-                console.error(`[${this.constructor.name}] Error fetching Dify app info. Status: ${response.status}`);
+                // console.error(`[${this.constructor.name}] Error fetching Dify app info. Status: ${response.status}`);
                 // 尝试读取错误响应体
                 let errorBody = '';
                 try {
                     errorBody = await response.text(); // 读取文本而不是JSON
-                    console.error(`[${this.constructor.name}] Error response body:`, errorBody);
+                    // console.error(`[${this.constructor.name}] Error response body:`, errorBody);
                 } catch (bodyError) {
-                    console.error(`[${this.constructor.name}] Could not read error response body:`, bodyError);
+                    // console.error(`[${this.constructor.name}] Could not read error response body:`, bodyError);
                 }
                 throw new Error(`HTTP error! status: ${response.status}, body: ${errorBody.substring(0, 100)}...`); // 截断过长的body
             }
 
             // 尝试解析 JSON
             const data = await response.json();
-            console.log(`[${this.constructor.name}] 成功获取 Dify 应用信息:`, data);
+            // console.log(`[${this.constructor.name}] 成功获取 Dify 应用信息:`, data);
             this.difyAppInfo = data; // 保存获取到的信息
             return data;
 
         } catch (error) {
-            console.error(`[${this.constructor.name}] Error fetching Dify app info:`, error);
+            // console.error(`[${this.constructor.name}] Error fetching Dify app info:`, error);
 
             // 检查是否为 SyntaxError，并尝试打印原始文本
             if (error instanceof SyntaxError && error.message.includes("Unexpected token '<'")) {
-                console.warn(`[${this.constructor.name}] Response was not valid JSON. Attempting to read as text...`);
+                // console.warn(`[${this.constructor.name}] Response was not valid JSON. Attempting to read as text...`);
                 // 尝试重新发起请求并读取文本 (注意：这会额外请求一次，但有助于调试)
                 // 或者，如果能从原始 error 中获取 response 对象，会更高效，但 fetch API 的标准错误不直接包含它
                 try {
@@ -313,11 +313,11 @@ class BaseDifyApp {
                         headers: { 'Authorization': `Bearer ${this.state.apiKey}` }
                     });
                     const responseText = await textResponse.text();
-                    console.error(`[${this.constructor.name}] Received non-JSON response (HTML?):`, responseText);
+                    // console.error(`[${this.constructor.name}] Received non-JSON response (HTML?):`, responseText);
                     // 抛出更具体的错误，说明收到了非JSON
                     throw new Error(`Received non-JSON response from ${infoUrl}. Body starts with: ${responseText.substring(0, 100)}...`);
                 } catch (textFetchError) {
-                    console.error(`[${this.constructor.name}] Failed to re-fetch or read response as text:`, textFetchError);
+                    // console.error(`[${this.constructor.name}] Failed to re-fetch or read response as text:`, textFetchError);
                     // 重新抛出原始错误
                     throw error;
                 }
@@ -384,7 +384,7 @@ class BaseDifyApp {
      */
     async handleGenerate() {
         if (!this.ui || !this.state.apiKey || !this.state.apiEndpoint || !this.state.currentUser) {
-            console.error("Cannot generate: App not fully initialized or missing API config."); // Enhanced log
+            // console.error("Cannot generate: App not fully initialized or missing API config."); // Enhanced log
             this.ui?.showError(t(`${this.difyApiKeyName}.initError`, { default: '应用未完全初始化或缺少配置，无法生成。' })); // Enhanced message
             return;
         }
@@ -406,7 +406,7 @@ class BaseDifyApp {
                 apiKey: this.state.apiKey,
                 mode: this.difyMode // 使用动态设置的模式
             });
-            console.log(`[${this.constructor.name}] DifyClient created with mode: ${this.difyMode} and endpoint: ${this.state.apiEndpoint}`);
+            // console.log(`[${this.constructor.name}] DifyClient created with mode: ${this.difyMode} and endpoint: ${this.state.apiEndpoint}`);
 
             const payload = this._buildPayload(inputs);
             const baseCallbacks = this._getBaseCallbacks();
@@ -437,7 +437,7 @@ class BaseDifyApp {
             await this.difyClient.generateStream(payload, finalCallbacks);
 
         } catch (initError) {
-            console.error(`[${this.constructor.name}] Error setting up or running generation:`, initError);
+            // console.error(`[${this.constructor.name}] Error setting up or running generation:`, initError);
             this.ui.showGenerationCompleted(); // Ensure button reset
             this.ui.showErrorInResult(t(`${this.difyApiKeyName}.generationSetupError`, { default: '启动生成时出错:'}) + ` ${initError.message}`); // Show error in result area
             this.difyClient = null;
@@ -576,7 +576,7 @@ class BaseDifyApp {
         // If in workflow mode and nodeOutputText exists (from node_finished event),
         // use it to overwrite any previously streamed content.
         if (this.difyMode === 'workflow' && metadata.nodeOutputText && typeof this.ui.setStreamContent === 'function') {
-            console.log(`[${this.constructor.name}] Workflow finished. Overwriting content with nodeOutputText.`);
+            // console.log(`[${this.constructor.name}] Workflow finished. Overwriting content with nodeOutputText.`);
             this.ui.setStreamContent(metadata.nodeOutputText); // Use the new UI method
         }
         // --- END ADDED LOGIC ---

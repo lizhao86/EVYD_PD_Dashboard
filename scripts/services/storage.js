@@ -408,7 +408,7 @@ export async function getCurrentUserApiKeys() {
         }
         const ownerFilterValue = `${sub}::${username}`;
 
-        console.log("[storage.js] getCurrentUserApiKeys: 开始获取API密钥，使用的 owner 过滤值: ", ownerFilterValue);
+        // console.log("[storage.js] getCurrentUserApiKeys: 开始获取API密钥，使用的 owner 过滤值: ", ownerFilterValue);
 
         const result = await API.graphql(
             graphqlOperation(queries.listUserApplicationApiKeys, {
@@ -420,7 +420,7 @@ export async function getCurrentUserApiKeys() {
         );
 
         let items = result.data.listUserApplicationApiKeys.items || [];
-        console.log("[storage.js] getCurrentUserApiKeys: GraphQL 返回的原始 items: ", JSON.stringify(items, null, 2));
+        // console.log("[storage.js] getCurrentUserApiKeys: GraphQL 返回的原始 items: ", JSON.stringify(items, null, 2));
 
         if (items.length === 0) {
             console.log("[storage.js] getCurrentUserApiKeys: 未找到该用户的API密钥记录 (owner='${ownerFilterValue}')。");
@@ -441,7 +441,7 @@ export async function getCurrentUserApiKeys() {
         }
 
         const finalItems = Array.from(appKeyMap.values());
-        console.log("[storage.js] getCurrentUserApiKeys: 最终返回的 finalItems: ", JSON.stringify(finalItems, null, 2));
+        // console.log("[storage.js] getCurrentUserApiKeys: 最终返回的 finalItems: ", JSON.stringify(finalItems, null, 2));
 
         return finalItems;
     } catch (error) {
@@ -465,7 +465,7 @@ export async function getCurrentUserApiKeys() {
 export async function getGlobalConfig() {
     const configMap = new Map();
     let nextToken = null;
-    console.log("[getGlobalConfig] Fetching global configs..."); // Added log
+    // console.log("[getGlobalConfig] Fetching global configs..."); // Added log
 
     try {
         do {
@@ -473,7 +473,7 @@ export async function getGlobalConfig() {
             const result = await API.graphql(graphqlOperation(queries.listGlobalConfigs, { nextToken }));
             const items = result.data?.listGlobalConfigs?.items || [];
             nextToken = result.data?.listGlobalConfigs?.nextToken;
-            console.log(`[getGlobalConfig] Fetched ${items.length} items. Next token: ${nextToken ? 'yes' : 'no'}`); // Added log
+            // console.log(`[getGlobalConfig] Fetched ${items.length} items. Next token: ${nextToken ? 'yes' : 'no'}`); // Added log
 
             items.forEach(item => {
                 if (item && item.configKey && !item._deleted) { // Ensure item, key exist and not deleted
@@ -486,7 +486,7 @@ export async function getGlobalConfig() {
             });
         } while (nextToken);
         
-        console.log("[getGlobalConfig] Finished fetching. Config map:", configMap); // Added log
+        // console.log("[getGlobalConfig] Finished fetching. Config map:", configMap); // Added log
         return configMap;
     } catch (error) {
         console.error('[getGlobalConfig] Error fetching global configs:', error);
@@ -510,7 +510,7 @@ export async function saveGlobalConfig(config) {
 
     // API端点保存处理
     if (config.apiEndpoints && typeof config.apiEndpoints === 'object') {
-        console.log("Saving global config entries:", config.apiEndpoints);
+        // console.log("Saving global config entries:", config.apiEndpoints);
         
         // 预加载所有现有配置，以减少API调用次数
         // 这样我们可以先检查是否需要更新，不需要时避免API调用
