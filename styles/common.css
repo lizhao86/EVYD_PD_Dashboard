@@ -1282,7 +1282,7 @@ a, a:visited, a:active, a:focus {
 /* 应用页面容器样式 */
 .app-container {
     padding: 2rem 0;
-    max-width: 900px;
+    max-width: 1200px;
 }
 
 /* 应用页面头部样式 */
