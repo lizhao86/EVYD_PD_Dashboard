@@ -29,409 +29,18 @@
 
     <!-- 样式文件 -->
     <link rel="stylesheet" href="/styles/common.css">
-    <link rel="stylesheet" href="/styles/user-manual-new.css">
+    <!-- 使用 User Manual New 的特定样式 -->
+    <link rel="stylesheet" href="/styles/user-manual-new.css"> 
     <link rel="stylesheet" href="/styles/markdown.css">
     <!-- 字体 (与 Homepage.html 保持一致) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- 移除原始冲突的内联样式 -->
+    <!-- 
     <style>
-        html[lang="en"] body, html[lang="en"] * { font-family: Verdana, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important; }
-        html[lang="zh-CN"] body, html[lang="zh-TW"] body, html[lang="zh-CN"] *, html[lang="zh-TW"] * { font-family: "Microsoft YaHei", "微软雅黑", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important; }
-        
-        /* 容器修改 */
-        body {
-            overflow-x: hidden;
-        }
-        
-        .container {
-            max-width: 100%;
-            padding: 0;
-        }
-        
-        .main-content {
-            width: 100%;
-            max-width: 100%;
-            padding: 0 20px;
-        }
-        
-        .app-header {
-            padding: 0 20px;
-            margin-bottom: 20px;
-        }
-        
-        /* 应用信息容器 */
-        .app-info, 
-        .app-info-loading, 
-        .app-info-error {
-            width: 100%;
-            max-width: 100%;
-            padding: 20px;
-            margin: 0 0 20px 0;
-        }
-        
-        /* Dify风格样式覆盖 */
-        .chat-container {
-            display: flex;
-            height: calc(100vh - 170px);
-            background-color: #f9fafb;
-            position: relative;
-            overflow: hidden;
-            width: 100vw;
-            margin-left: calc(-50vw + 50%);
-            box-sizing: border-box;
-        }
-        
-        .sidebar {
-            width: 260px;
-            background-color: #f1f3f5;
-            border-right: 1px solid #e5e7eb;
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.3s ease, width 0.3s ease;
-            position: relative;
-            flex-shrink: 0;
-            z-index: 10;
-            overflow: hidden;
-        }
-        
-        .sidebar.collapsed {
-            width: 0;
-            transform: translateX(-100%);
-        }
-        
-        .toggle-sidebar {
-            position: absolute;
-            top: 15px;
-            right: -12px;
-            width: 24px;
-            height: 24px;
-            background-color: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 20;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
-        
-        .toggle-sidebar svg {
-            transition: transform 0.3s ease;
-        }
-        
-        .sidebar.collapsed + .main-chat-area .toggle-sidebar svg {
-            transform: rotate(180deg);
-        }
-        
-        .chat-history {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            margin-top: 60px;
-        }
-        
-        .chat-history-item {
-            padding: 10px 12px;
-            margin-bottom: 8px;
-            border-radius: 8px;
-            cursor: pointer;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-size: 14px;
-            color: #374151;
-        }
-        
-        .chat-history-item:hover {
-            background-color: #e5e7eb;
-        }
-        
-        .chat-history-item.active {
-            background-color: #e5e7eb;
-            font-weight: 500;
-        }
-        
-        .new-chat-btn {
-            position: absolute;
-            top: 16px;
-            left: 16px;
-            right: 16px;
-            padding: 10px 12px;
-            background-color: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-weight: 500;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            z-index: 15;
-            transition: all 0.3s ease;
-        }
-        
-        .sidebar.collapsed + .main-chat-area .new-chat-floating-btn {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        
-        .new-chat-floating-btn {
-            position: absolute;
-            top: 16px;
-            left: 16px;
-            width: 40px;
-            height: 40px;
-            background-color: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-            z-index: 15;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-        
-        .new-chat-btn:hover,
-        .new-chat-floating-btn:hover {
-            background-color: #f9fafb;
-        }
-        
-        .new-chat-btn svg {
-            margin-right: 8px;
-        }
-        
-        .main-chat-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            background-color: #fff;
-            position: relative;
-            transition: margin-left 0.3s ease;
-        }
-        
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            margin-top: 50px;
-        }
-        
-        .message {
-            max-width: 85%;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: flex-start;
-        }
-        
-        .user-message {
-            align-self: flex-end;
-            flex-direction: row-reverse;
-        }
-        
-        .bot-message {
-            align-self: flex-start;
-        }
-        
-        .message-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            margin: 0 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        
-        .user-message .message-avatar {
-            background-color: #f0f0f0;
-        }
-        
-        .bot-message .message-avatar {
-            background-color: #e9f0ff;
-        }
-        
-        .message-content {
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-        
-        .user-message .message-content {
-            background-color: #0077ff;
-            color: white;
-            border-radius: 12px 12px 0 12px;
-        }
-        
-        .bot-message .message-content {
-            background-color: #f3f4f6;
-            color: #111827;
-            border-radius: 12px 12px 12px 0;
-        }
-        
-        .chat-input-area {
-            padding: 16px;
-            border-top: 1px solid #e5e7eb;
-            background-color: #fff;
-        }
-        
-        .input-container {
-            display: flex;
-            position: relative;
-            border: 1px solid #d1d5db;
-            border-radius: 12px;
-            padding: 8px 16px;
-            background-color: #fff;
-        }
-        
-        .input-container:focus-within {
-            border-color: #0077ff;
-            box-shadow: 0 0 0 2px rgba(0, 119, 255, 0.2);
-        }
-        
-        #message-input {
-            flex: 1;
-            border: none;
-            outline: none;
-            padding: 8px 0;
-            resize: none;
-            max-height: 150px;
-            font-size: 14px;
-            background-color: transparent;
-        }
-        
-        #send-button {
-            background-color: #0077ff;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            margin-left: 8px;
-            flex-shrink: 0;
-        }
-        
-        #send-button:hover {
-            background-color: #0066cc;
-        }
-        
-        #send-button:disabled {
-            background-color: #d1d5db;
-            cursor: not-allowed;
-        }
-        
-        #stop-button {
-            background-color: #f3f4f6;
-            color: #111827;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            padding: 8px 12px;
-            font-size: 14px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            margin-left: 8px;
-        }
-        
-        #stop-button svg {
-            margin-right: 4px;
-        }
-        
-        .loading-indicator {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-        }
-        
-        .spinner {
-            width: 18px;
-            height: 18px;
-            border: 2px solid rgba(0, 119, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: #0077ff;
-            animation: spin 1s linear infinite;
-            margin-right: 8px;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .suggested-questions {
-            padding: 16px;
-            border-top: 1px solid #e5e7eb;
-        }
-        
-        .question-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 8px;
-        }
-        
-        .question-button {
-            background-color: #f3f4f6;
-            border: 1px solid #e5e7eb;
-            border-radius: 16px;
-            padding: 6px 12px;
-            font-size: 14px;
-            cursor: pointer;
-            color: #374151;
-            transition: background-color 0.2s;
-        }
-        
-        .question-button:hover {
-            background-color: #e5e7eb;
-        }
-        
-        .chat-history-header {
-            padding: 16px;
-            font-weight: 500;
-            color: #4b5563;
-            font-size: 14px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .history-item-icon {
-            margin-right: 8px;
-            opacity: 0.7;
-        }
-        
-        @media (max-width: 768px) {
-            .sidebar {
-                position: absolute;
-                height: 100%;
-                transform: translateX(-100%);
-            }
-            
-            .sidebar.collapsed {
-                transform: translateX(-100%);
-            }
-            
-            .sidebar:not(.collapsed) {
-                transform: translateX(0);
-            }
-            
-            .new-chat-floating-btn {
-                opacity: 1;
-                pointer-events: auto;
-            }
-        }
+        ...
     </style>
+    -->
 
     <!-- 应用入口脚本 -->
     <script type="module" src="/scripts/pages/user-manual-new.js"></script>
@@ -441,7 +50,7 @@
     <div id="header-container"></div>
 
     <main class="container main-content">
-        <!-- 返回按钮 -->
+        <!-- 返回按钮 和 页面标题 (保留) -->
         <div class="app-header">
             <div class="back-button">
                 <a href="/">
@@ -454,7 +63,7 @@
             <h2 data-translate="userManualNew.title">AI User Manual 生成器 (聊天模式)</h2>
         </div>
 
-        <!-- 应用信息区域 (BaseDifyApp 需要这部分) -->
+        <!-- 应用信息区域 (保留, BaseDifyApp 需要) -->
         <div class="app-info" id="app-info">
             <div class="app-info-header">
                 <h3 id="app-name">产品 ChatBot - 撰写 User Manual</h3>
@@ -465,13 +74,13 @@
             <p id="app-description">为您的产品生成清晰简洁的用户手册，自动创建操作指南和常见问题解答</p>
         </div>
 
-        <!-- 应用加载状态 (BaseDifyApp 需要这部分) -->
+        <!-- 应用加载状态 (保留, BaseDifyApp 需要) -->
         <div class="app-info-loading" id="app-info-loading" style="display: none;">
             <div class="loading-spinner"></div>
             <p data-translate="common.loadingInfo">正在加载应用信息...</p>
         </div>
 
-        <!-- 应用错误状态 (BaseDifyApp 需要这部分) -->
+        <!-- 应用错误状态 (保留, BaseDifyApp 需要) -->
         <div class="app-info-error" id="app-info-error" style="display: none;">
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -482,106 +91,8 @@
             <p id="error-message" data-translate="common.connectionErrorDesc">无法连接到Dify API，请检查API地址和密钥设置。</p>
             <button class="btn-primary" id="retry-button" data-translate="common.retryConnection">重试连接</button>
         </div>
-    </main>
 
-    <!-- 聊天界面 - 全宽度容器 -->
-    <div class="chat-container" id="chat-container">
-        <!-- 侧边栏/聊天历史记录 -->
-        <div class="sidebar" id="sidebar">
-            <div class="new-chat-btn" id="start-new-chat">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-                <span data-translate="userManualNew.newChat">开始新对话</span>
-            </div>
-            
-            <div class="chat-history-header">对话历史记录</div>
-            
-            <div class="chat-history" id="chat-history">
-                <!-- 聊天历史记录将在这里动态生成 -->
-                <div class="chat-history-item active">
-                    <svg class="history-item-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                    </svg>
-                    当前对话
-                </div>
-            </div>
-        </div>
-        
-        <!-- 主聊天区域 -->
-        <div class="main-chat-area" id="main-chat-area">
-            <!-- 折叠/展开侧边栏按钮 -->
-            <div class="toggle-sidebar" id="toggle-sidebar">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M15 18l-6-6 6-6"/>
-                </svg>
-            </div>
-            
-            <!-- 新对话浮动按钮（当侧边栏折叠时显示） -->
-            <div class="new-chat-floating-btn" id="new-chat-floating-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-            </div>
-            
-            <!-- 消息显示区域 -->
-            <div class="chat-messages" id="chat-messages">
-                <!-- 系统欢迎消息 -->
-                <div class="message bot-message">
-                    <div class="message-avatar">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                        </svg>
-                    </div>
-                    <div class="message-content">
-                        <p data-translate="userManualNew.welcomeMessage">👋 你好！我是 User Manual AI 助手。请告诉我你想为哪个产品或功能生成用户手册？如果你有 User Story 和 Acceptance Criteria，请一并提供，这将帮助我生成更好的文档。</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 输入区域 -->
-            <div class="chat-input-area" id="chat-input-area">
-                <div id="chat-input-error" class="input-error" style="display: none;"></div>
-                <div class="input-container">
-                    <textarea id="message-input" placeholder="在此输入你的需求..." rows="1"></textarea>
-                    <button id="send-button" disabled>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="m22 2-11 11"/></svg>
-                    </button>
-                </div>
-                <!-- 停止按钮，初始隐藏 -->
-                <div style="display: none;">
-                    <button id="stop-button" style="display: none;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 9h6v6H9z"/></svg>
-                        <span data-translate="common.button.stopGenerating">停止生成</span>
-                    </button>
-                </div>
-            </div>
-            
-            <!-- 加载或思考状态指示器 -->
-            <div id="loading-indicator" class="loading-indicator" style="display: none;">
-                <div class="spinner"></div>
-                <span data-translate="common.status.processing">处理中...</span>
-            </div>
-            
-            <!-- 底部建议问题区域 -->
-            <div class="suggested-questions" id="suggested-questions">
-                <h4 data-translate="common.tryToAsk" style="margin-bottom: 8px; color: #6b7280; font-size: 14px;">尝试提问</h4>
-                <div class="question-buttons">
-                    <button class="question-button" data-question="什么是用户手册？">什么是用户手册？</button>
-                    <button class="question-button" data-question="如何编写一个好的用户手册？">如何编写一个好的用户手册？</button>
-                    <button class="question-button" data-question="用户手册应该包含哪些部分？">用户手册应该包含哪些部分？</button>
-                </div>
-            </div>
-            
-            <!-- 为base-dify-app.js添加隐藏的generate-button元素 -->
-            <button id="generate-button" style="display: none;" data-action="generate">发送</button>
-        </div>
-    </div>
-
-    <main class="container main-content">
-        <!-- 系统信息容器 (BaseDifyApp 可能需要这个) -->
+        <!-- 保留系统信息和结果容器 -->
         <div class="system-info-container" id="system-info-container" style="display: none;">
             <div class="system-info-header">
                 <h4 data-translate="common.systemInfoTitle">系统信息</h4>
@@ -609,70 +120,118 @@
                 </div>
             </div>
         </div>
-    </main>
+    </main> <!-- 第一个 main 结束 -->
 
-    <!-- 添加JavaScript -->
+    <!-- 移除第二个 <main> 标签 -->
+    <!-- <main class="container main-content"> ... </main> --> 
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // 添加 DOM 兼容层，帮助调试
+            /*
+            console.log('页面加载完成，检查关键DOM元素:');
+            console.log('app-info:', document.getElementById('app-info'));
+            console.log('app-name:', document.getElementById('app-name'));
+            console.log('app-description:', document.getElementById('app-description'));
+            
             // 发送按钮启用/禁用逻辑
             const messageInput = document.getElementById('message-input');
             const sendButton = document.getElementById('send-button');
+            const charCount = document.getElementById('char-count'); // 获取新的字符计数元素
             
-            // 输入框内容变化时，更新发送按钮状态
+            // 输入框内容变化时，更新发送按钮状态和字符计数
+            if (messageInput) {
             messageInput.addEventListener('input', function() {
-                sendButton.disabled = !messageInput.value.trim();
-                
-                // 自动调整输入框高度
-                messageInput.style.height = 'auto';
-                messageInput.style.height = Math.min(messageInput.scrollHeight, 150) + 'px';
-            });
+                    if (sendButton) sendButton.disabled = !messageInput.value.trim();
+                    
+                    // 更新字符计数 (适配新界面)
+                    const count = this.value.length;
+                    if (charCount) {
+                        charCount.textContent = `${count}/4000`;
+                    }
+                    
+                    // 自动调整输入框高度 (适配新界面)
+                    this.style.height = 'auto';
+                    const newHeight = Math.min(this.scrollHeight, 150); // 150px 是 new-chat-interface.css 中的 max-height
+                    this.style.height = newHeight + 'px';
+                });
+            } else {
+                console.error('未找到 message-input 元素');
+            }
             
             // 输入框回车发送（shift+enter 为换行）
+            if (messageInput) {
             messageInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && !e.shiftKey && !sendButton.disabled) {
+                    if (e.key === 'Enter' && !e.shiftKey && sendButton && !sendButton.disabled) {
                     e.preventDefault();
                     sendButton.click();
                 }
             });
+            } 
             
-            // 建议问题点击处理
-            const questionButtons = document.querySelectorAll('.question-button');
-            questionButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const question = this.getAttribute('data-question');
+            // 移除重复的建议问题点击处理
+            /*
+            const questionButtonsContainer = document.getElementById('suggested-questions');
+            if (questionButtonsContainer) {
+                 questionButtonsContainer.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('question-button')) {
+                        const question = e.target.getAttribute('data-question') || e.target.textContent.trim();
+                        if(messageInput) {
                     messageInput.value = question;
-                    messageInput.dispatchEvent(new Event('input')); // 触发输入事件以更新按钮状态
-                    sendButton.click();
+                            messageInput.dispatchEvent(new Event('input')); // 触发输入事件以更新按钮状态和高度
+                            if (sendButton) sendButton.click();
+                        }
+                    }
                 });
-            });
+            } else {
+                console.warn('未找到 suggested-questions 容器');
+            }
+            *\/
             
-            // 侧边栏折叠/展开功能
+            // 侧边栏折叠/展开功能 (适配新旧类名)
             const sidebar = document.getElementById('sidebar');
             const toggleSidebarBtn = document.getElementById('toggle-sidebar');
             const newChatFloatingBtn = document.getElementById('new-chat-floating-btn');
             
+            if (toggleSidebarBtn && sidebar) {
             toggleSidebarBtn.addEventListener('click', function() {
                 sidebar.classList.toggle('collapsed');
                 localStorage.setItem('sidebar-collapsed', sidebar.classList.contains('collapsed'));
             });
+                 console.log('侧边栏切换按钮事件已绑定');
+            } else {
+                console.warn('未找到 sidebar 或 toggle-sidebar 按钮');
+            }
             
             // 检查localStorage中保存的侧边栏状态
-            if (localStorage.getItem('sidebar-collapsed') === 'true') {
+            if (sidebar && localStorage.getItem('sidebar-collapsed') === 'true') {
                 sidebar.classList.add('collapsed');
             }
             
             // 开始新对话按钮 (常规和浮动)
             const startNewChatFunction = function() {
+                console.log('开始新对话...');
                 // 清空聊天消息，仅保留欢迎消息
                 const chatMessages = document.getElementById('chat-messages');
+                if(!chatMessages) {
+                    console.error('未找到 chat-messages 元素');
+                    return;
+                }
                 const welcomeMessage = chatMessages.querySelector('.bot-message:first-child');
                 chatMessages.innerHTML = '';
                 if (welcomeMessage) {
                     chatMessages.appendChild(welcomeMessage.cloneNode(true));
+                    console.log('已保留欢迎消息');
+                } else {
+                    console.log('未找到欢迎消息');
                 }
                 
-                // 聊天历史中添加新的"当前对话"条目
+                // 聊天历史中添加新的"当前对话"条目 (适配新结构)
                 const chatHistory = document.getElementById('chat-history');
+                if (!chatHistory) {
+                     console.error('未找到 chat-history 元素');
+                     return;
+                }
                 const historyItems = chatHistory.querySelectorAll('.chat-history-item');
                 historyItems.forEach(item => item.classList.remove('active'));
                 
@@ -681,7 +240,7 @@
                 
                 // 添加聊天图标
                 const chatIcon = document.createElement('svg');
-                chatIcon.className = 'history-item-icon';
+                chatIcon.className = 'icon history-item-icon'; // 保持旧的 icon 类可能有用
                 chatIcon.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
                 chatIcon.setAttribute('width', '16');
                 chatIcon.setAttribute('height', '16');
@@ -696,9 +255,10 @@
                 newItem.appendChild(chatIcon);
                 newItem.appendChild(document.createTextNode('新对话'));
                 chatHistory.prepend(newItem);
+                console.log('已添加新对话条目');
                 
                 // 展开侧边栏（如果它是折叠的）
-                if (sidebar.classList.contains('collapsed')) {
+                if (sidebar && sidebar.classList.contains('collapsed')) {
                     sidebar.classList.remove('collapsed');
                     localStorage.setItem('sidebar-collapsed', 'false');
                 }
@@ -707,14 +267,22 @@
             const newChatBtn = document.getElementById('start-new-chat');
             if (newChatBtn) {
                 newChatBtn.addEventListener('click', startNewChatFunction);
+                console.log('新对话按钮事件已绑定');
+            } else {
+                console.log('未找到新对话按钮');
             }
             
             if (newChatFloatingBtn) {
                 newChatFloatingBtn.addEventListener('click', startNewChatFunction);
+                console.log('浮动新对话按钮事件已绑定');
+            } else {
+                console.warn('未找到浮动新对话按钮');
             }
             
             // 聊天历史项目点击处理
-            document.getElementById('chat-history').addEventListener('click', function(e) {
+            const chatHistoryElement = document.getElementById('chat-history');
+            if (chatHistoryElement) {
+                chatHistoryElement.addEventListener('click', function(e) {
                 const historyItem = e.target.closest('.chat-history-item');
                 if (historyItem) {
                     const allItems = this.querySelectorAll('.chat-history-item');
@@ -724,6 +292,7 @@
                     // 在实际应用中，这里应该加载相应的聊天记录
                     // 示例中仅做简单的消息替换演示
                     const chatMessages = document.getElementById('chat-messages');
+                        if (!chatMessages) return;
                     const welcomeMessage = chatMessages.querySelector('.bot-message:first-child')?.cloneNode(true);
                     chatMessages.innerHTML = '';
                     
@@ -732,12 +301,17 @@
                     }
                     
                     // 如果是移动设备，点击后自动折叠侧边栏
-                    if (window.innerWidth <= 768) {
+                        if (window.innerWidth <= 768 && sidebar) {
                         sidebar.classList.add('collapsed');
                         localStorage.setItem('sidebar-collapsed', 'true');
                     }
                 }
             });
+                console.log('聊天历史点击事件已绑定');
+            } else {
+                console.log('未找到聊天历史元素');
+            }
+            */
         });
     </script>
 </body>

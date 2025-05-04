@@ -1,29 +1,65 @@
 /* 基础样式 */
 :root {
-    --primary: #0066FF;
-    --primary-rgb: 0, 102, 255;
-    --primary-dark: #0052cc;
-    --primary-light: #3385FF;
+    /* --- Unified Color Palette (Prioritizing EVYD) --- */
+    /* Primary Colors (Using EVYD Value) */
+    --primary: #0077ff;
+    --primary-light: #e6f2ff;
+    --primary-dark: #0066cc;
+    /* Primary RGB (Keep original or recalculate for #0077ff) */
+    --primary-rgb: 0, 119, 255; /* Recalculated for #0077ff */
+
+    /* Secondary Colors (Keep original) */
     --secondary: #00C1FF;
     --secondary-rgb: 0, 193, 255;
     --secondary-dark: #009acd;
     --secondary-light: #33CDFF;
+
+    /* Basic Colors */
     --white: #FFFFFF;
     --black: #000000;
-    --gray-50: #F9FAFB;
-    --gray-100: #F3F4F6;
-    --gray-200: #E5E7EB;
-    --gray-300: #D1D5DB;
-    --gray-400: #9CA3AF;
-    --gray-500: #6B7280;
-    --gray-600: #4B5563;
-    --gray-700: #374151;
-    --gray-800: #1F2937;
-    --gray-900: #111827;
+
+    /* Gray Scale (Using EVYD Values) */
+    --gray-50: #f8f9fa;   /* EVYD gray-100 used as 50 */
+    --gray-100: #f8f9fa;
+    --gray-200: #e9ecef;
+    --gray-300: #dee2e6;
+    --gray-400: #ced4da; /* Interpolated or use existing gray-400 */
+    --gray-500: #adb5bd;
+    --gray-600: #6c757d; /* Interpolated or use existing gray-600 */
+    --gray-700: #495057;
+    --gray-800: #343a40; /* Interpolated or use existing gray-800 */
+    --gray-900: #212529;
+
+    /* Status Colors (Keep original) */
     --success: #10B981;
     --warning: #F59E0B;
     --danger: #EF4444;
     --info: #3B82F6;
+
+    /* Remove or comment out the conflicting/old definitions below */
+    /* --evyd-primary: #0077ff; */
+    /* --evyd-primary-light: #e6f2ff; */
+    /* --evyd-primary-dark: #0066cc; */
+    /* --evyd-gray-100: #f8f9fa; */
+    /* --evyd-gray-200: #e9ecef; */
+    /* --evyd-gray-300: #dee2e6; */
+    /* --evyd-gray-500: #adb5bd; */
+    /* --evyd-gray-700: #495057; */
+    /* --evyd-gray-900: #212529; */
+    
+    /* --primary: #0066FF; */
+    /* --primary-dark: #0052cc; */
+    /* --primary-light: #3385FF; */
+    /* --gray-50: #F9FAFB; */
+    /* --gray-100: #F3F4F6; */
+    /* --gray-200: #E5E7EB; */
+    /* --gray-300: #D1D5DB; */
+    /* --gray-400: #9CA3AF; */
+    /* --gray-500: #6B7280; */
+    /* --gray-600: #4B5563; */
+    /* --gray-700: #374151; */
+    /* --gray-800: #1F2937; */
+    /* --gray-900: #111827; */
 }
 
 /* ===== I18N Loading Styles ===== */
@@ -59,10 +95,19 @@ html.i18n-loading::after {
 }
 
 body {
-    font-family: var(--font-family-base), Verdana, sans-serif;
-    color: var(--gray-800);
+    /* Use unified gray from :root */
+    color: var(--gray-900); 
     background-color: var(--gray-50);
-    line-height: var(--line-height-base);
+    line-height: var(--line-height-base, 1.5); /* Added default line-height */
+    /* Use the font stack from new-chat-interface as default */
+    font-family: "Microsoft YaHei", "微软雅黑", 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    margin: 0; /* Ensure margin is 0 */
+    /* Remove height, display:flex, flex-direction:column - these are layout specific */
+}
+
+/* Add language specific font overrides here, based on new-chat-interface */
+html[lang="en"] body {
+    font-family: 'Inter', Verdana, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
 }
 
 .container {
