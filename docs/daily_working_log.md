@@ -50,3 +50,5 @@
         *   **忽略:** `styles/user-manual.css`, `styles/user-story.css` 中的大部分内容。
         *   **新建/扩展:** 在 `styles/user-manual-new.css` (或新建文件) 中定义聊天界面特定样式 (消息气泡、侧边栏等)，参考 Dify 项目和 `Dify Interface.md` 分析。
     *   **统一性:** 核心 JS 模块命名规范。新的 CSS 需注意与 HTML 和现有 CSS 协调。
+
+*   **12:44 PM:** 修改 `scripts/pages/user-manual-new.js`，移除页面加载时从 `localStorage` 读取侧边栏折叠状态的逻辑，使侧边栏默认展开。保留了点击切换和状态保存功能。

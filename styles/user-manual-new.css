@@ -1,0 +1,492 @@
+/* styles/user-manual-new.css - 聊天界面特定样式 */
+
+/* 确保 main-content 能够容纳 flex 布局 */
+.main-content {
+    display: flex;
+    flex-direction: column; /* 保持原有结构 */
+    flex-grow: 1; /* 允许 main 区域填充剩余空间 */
+    height: calc(100vh - 65px); /* 减去头部高度，需要根据实际头部高度调整 */
+    overflow: hidden; /* 防止内部元素溢出导致滚动条 */
+}
+
+/* 聊天界面容器 */
+.chat-interface-container {
+    display: flex;
+    flex-grow: 1; /* 填充 main-content 的剩余空间 */
+    overflow: hidden; /* 防止子元素溢出 */
+    height: 100%; /* 填充 main-content 高度 */
+    border: 1px solid var(--gray-200);
+    border-radius: 0.75rem; /* 12px */
+    background-color: var(--white);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* 侧边栏 */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    width: 260px; /* Dify 默认宽度 */
+    background-color: var(--gray-50); /* 浅灰色背景 */
+    border-right: 1px solid var(--gray-200);
+    transition: width 0.3s ease, padding 0.3s ease;
+    overflow-y: auto;
+    flex-shrink: 0; /* 防止侧边栏被压缩 */
+}
+
+.sidebar.collapsed {
+    width: 0;
+    padding-left: 0;  /* Ensure padding is removed */
+    padding-right: 0; /* Ensure padding is removed */
+    border-right: none;
+    overflow: hidden;
+}
+
+.sidebar-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    flex-shrink: 0; /* Prevent header from shrinking */
+}
+
+.sidebar.collapsed .sidebar-header {
+    padding: 0; /* Remove padding when collapsed */
+    border-bottom: none;
+    min-height: 0; /* Allow header to shrink */
+    overflow: hidden; /* Hide content when collapsed */
+}
+
+.btn-new-chat {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.6rem 1rem;
+    background-color: var(--primary-light);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    border-radius: 0.5rem; /* 8px */
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    text-align: center; /* 确保文本居中 */
+    white-space: nowrap; /* 防止文字换行 */
+    flex-grow: 1; /* Allow button to take space if needed */
+}
+
+.btn-new-chat svg {
+    margin-right: 0.5rem;
+}
+
+.btn-new-chat:hover {
+    background-color: rgba(0, 119, 255, 0.15); /* 调整 hover 效果 */
+}
+
+.sidebar.collapsed .btn-new-chat {
+    display: none; /* Hide new chat button when collapsed */
+}
+
+/* 聊天历史列表 */
+.chat-history-list {
+    flex-grow: 1;
+    padding: 0.5rem; /* Adjust padding slightly */
+    overflow-y: auto;
+}
+
+.sidebar.collapsed .chat-history-list {
+    display: none; /* Hide history when collapsed */
+}
+
+.chat-history-item {
+    display: flex;
+    align-items: center;
+    padding: 0.6rem 0.75rem;
+    border-radius: 0.5rem; /* 8px */
+    margin-bottom: 0.25rem;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    color: var(--gray-600);
+    font-size: 0.875rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chat-history-item:hover {
+    background-color: var(--gray-100);
+    color: var(--gray-800);
+}
+
+.chat-history-item.active {
+    background-color: var(--primary-light);
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.history-item-icon {
+    margin-right: 0.6rem;
+    flex-shrink: 0; /* 防止图标被压缩 */
+    color: currentColor; /* 让图标颜色随父元素变化 */
+}
+
+.sidebar-footer {
+    padding: 1rem;
+    border-top: 1px solid var(--gray-200);
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    /* 可以添加版本信息等 */
+    flex-shrink: 0; /* Prevent footer from shrinking */
+}
+
+.sidebar.collapsed .sidebar-footer {
+    display: none; /* Hide footer when collapsed */
+}
+
+/* 主聊天区域 */
+.chat-area {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* 确保聊天区域本身不滚动 */
+    background-color: var(--white);
+}
+
+/* 消息列表区域 */
+.chat-messages {
+    flex-grow: 1;
+    overflow-y: auto; /* 允许消息列表滚动 */
+    padding: 1.5rem 2rem; /* 增加内边距 */
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem; /* 消息间距 */
+}
+
+/* 单条消息容器 */
+.message-wrapper {
+    display: flex;
+    gap: 0.75rem; /* 头像和内容间距 */
+    max-width: 90%; /* 限制最大宽度 */
+}
+
+.message-wrapper.user-message {
+    align-self: flex-end; /* 用户消息靠右 */
+    flex-direction: row-reverse; /* 头像在右边 */
+}
+
+.message-wrapper.bot-message {
+    align-self: flex-start; /* 机器人消息靠左 */
+}
+
+/* 消息头像 */
+.message-avatar {
+    width: 32px; /* Dify 头像尺寸 */
+    height: 32px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    background-color: var(--gray-200); /* 默认背景 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem; /* 备用 Emoji 尺寸 */
+}
+
+.message-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.bot-avatar {
+    /* 可选：为机器人头像添加特定背景 */
+    /* background-color: var(--primary-light); */
+}
+
+.user-avatar {
+     /* background-color: var(--secondary-light); */
+}
+
+/* 消息内容 + 操作区域 */
+.message-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    /* 根据消息来源调整对齐 */
+}
+
+.message-wrapper.user-message .message-content-wrapper {
+    align-items: flex-end;
+}
+
+.message-wrapper.bot-message .message-content-wrapper {
+    align-items: flex-start;
+}
+
+/* 消息内容气泡 */
+.message-content {
+    position: relative; /* 用于气泡尖角定位 */
+    padding: 0.75rem 1rem; /* 12px 16px */
+    border-radius: 0.75rem; /* 12px */
+    font-size: 0.9rem; /* 14.4px 接近 Dify */
+    line-height: 1.5;
+    max-width: 100%; /* 防止内容溢出父容器 */
+    word-wrap: break-word; /* 强制长单词换行 */
+    overflow-wrap: break-word; /* 强制长单词换行 */
+}
+
+/* 机器人消息气泡样式 */
+.message-wrapper.bot-message .message-content {
+    background-color: var(--gray-100); /* 机器人浅灰色 */
+    color: var(--gray-800);
+    border-top-left-radius: 0; /* 左上角直角 */
+}
+/* 机器人气泡尖角 */
+.message-wrapper.bot-message .message-content::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: -8px; /* 调整位置 */
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 10px 10px 0; /* 调整大小和方向 */
+    border-color: transparent var(--gray-100) transparent transparent;
+}
+
+/* 用户消息气泡样式 */
+.message-wrapper.user-message .message-content {
+    background-color: var(--primary); /* 用户主色调 */
+    color: var(--white);
+    border-top-right-radius: 0; /* 右上角直角 */
+}
+/* 用户气泡尖角 */
+.message-wrapper.user-message .message-content::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: -8px; /* 调整位置 */
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 0 10px 10px; /* 调整大小和方向 */
+    border-color: transparent transparent transparent var(--primary);
+}
+
+/* 消息操作按钮（反馈等） */
+.message-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    opacity: 0.7; /* 默认稍透明 */
+    transition: opacity 0.2s;
+}
+.message-wrapper:hover .message-actions {
+    opacity: 1; /* 悬停时完全显示 */
+}
+
+.feedback-btn {
+    padding: 0.2rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.8rem; /* 调整图标大小 */
+    color: var(--gray-500);
+    opacity: 0.7;
+}
+.feedback-btn:hover {
+    color: var(--gray-700);
+    opacity: 1;
+}
+
+/* 输入区域 */
+.chat-input-area {
+    padding: 1rem 2rem; /* 上下16px，左右32px */
+    background-color: transparent; /* 让背景由 main 或 body 控制 */
+    border-top: 1px solid var(--gray-200);
+    /* 移除模糊效果
+    background: linear-gradient(180deg, rgba(255,255,255,0.01), var(--gray-100));
+    backdrop-filter: blur(4px);
+    */
+}
+
+.input-wrapper {
+    display: flex;
+    align-items: flex-end; /* 底部对齐 */
+    background-color: var(--white);
+    border: 1px solid var(--gray-300);
+    border-radius: 0.75rem; /* 12px */
+    padding: 0.5rem 0.75rem; /* 调整内边距 */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-wrapper:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 119, 255, 0.1);
+}
+
+#message-input {
+    flex-grow: 1;
+    border: none;
+    outline: none;
+    resize: none;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    background-color: transparent;
+    color: var(--gray-800);
+    max-height: 150px; /* 限制最大高度 */
+    overflow-y: auto; /* 高度超出时滚动 */
+    padding: 0.4rem 0; /* 调整垂直内边距 */
+}
+
+#message-input::placeholder {
+    color: var(--gray-400);
+}
+
+.input-controls {
+    display: flex;
+    flex-direction: column; /* 垂直排列 */
+    align-items: flex-end; /* 右对齐 */
+    margin-left: 0.5rem; /* 与输入框间距 */
+    flex-shrink: 0;
+}
+
+.char-count {
+    font-size: 0.7rem;
+    color: var(--gray-400);
+    margin-bottom: 0.2rem; /* 与按钮间距 */
+}
+.char-count.warning {
+    color: var(--danger);
+}
+
+.btn-send {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 0.5rem; /* 8px */
+    background-color: var(--primary);
+    color: var(--white);
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-send:hover {
+    background-color: var(--primary-dark);
+}
+
+.btn-send:disabled {
+    background-color: var(--gray-300);
+    cursor: not-allowed;
+}
+
+/* --- Standalone Toggle Button Styles --- */
+.standalone-toggle-btn {
+    /* Position it next to the sidebar */
+    margin: 0.5rem; /* Add some margin */
+    align-self: flex-start; /* Align to top */
+    background-color: var(--gray-100); /* Give it some background */
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    padding: 0.5rem;
+    z-index: 5; /* Ensure it's clickable */
+    transition: background-color 0.2s, transform 0.3s ease;
+    flex-shrink: 0;
+}
+
+.standalone-toggle-btn:hover {
+    background-color: var(--gray-200);
+}
+
+/* Change icon when sidebar is collapsed */
+.sidebar.collapsed + .standalone-toggle-btn svg, /* If button is AFTER sidebar */
+.standalone-toggle-btn + .sidebar.collapsed svg { /* If button is BEFORE sidebar */
+   /* If using SVG directly, this won't work easily.
+      We need JS to toggle the icon or use different classes.
+      Let's add JS for icon toggle later. For now, it just stays. */
+}
+
+/* Change button position/rotation slightly on collapse for visual cue */
+.sidebar.collapsed ~ .standalone-toggle-btn, /* If button is AFTER sidebar */
+.standalone-toggle-btn ~ .sidebar.collapsed + #chat-area .standalone-toggle-btn { /* Needs refinement based on actual structure */
+    /* transform: translateX(-5px); Optional visual shift */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .sidebar {
+        position: absolute; /* Take sidebar out of flow on mobile */
+        left: 0;
+        top: 0;
+        bottom: 0;
+        height: 100%; /* Make it full height */
+        z-index: 10; /* Ensure it's above chat area when open */
+        box-shadow: 2px 0 5px rgba(0,0,0,0.1); /* Add shadow */
+         transform: translateX(0); /* Start visible */
+         transition: transform 0.3s ease, width 0.3s ease; /* Add transform transition */
+    }
+
+    .sidebar.collapsed {
+        transform: translateX(-100%); /* Slide out */
+        width: 260px; /* Keep width when sliding, but hide via transform */
+        /* Remove padding overrides, let the main style handle padding */
+        border: none;
+        box-shadow: none;
+    }
+     /* When collapsed, internal elements should still be display:flex/block for layout when sliding */
+     .sidebar.collapsed > * {
+         /* No need for display:none anymore with transform */
+     }
+      .sidebar.collapsed .sidebar-header {
+           /* Restore header styles needed for layout */
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            min-height: auto; /* Reset min-height */
+            overflow: visible; /* Allow content to be seen during slide */
+      }
+     .sidebar.collapsed .btn-new-chat,
+     .sidebar.collapsed .chat-history-list,
+     .sidebar.collapsed .sidebar-footer {
+         /* Ensure these are visible during slide transition */
+          display: block; /* Or flex depending on original style */
+          overflow: visible;
+     }
+
+    .standalone-toggle-btn {
+        /* Adjust button position for mobile absolute sidebar */
+        position: absolute;
+        top: 0.75rem;
+        left: 0.75rem;
+        z-index: 15; /* Above sidebar */
+        background-color: rgba(255, 255, 255, 0.8); /* Slightly transparent */
+        backdrop-filter: blur(2px);
+        transition: left 0.3s ease; /* Animate button position */
+    }
+
+    /* When sidebar is open on mobile, move button */
+    /* Use sibling selector since button is now before sidebar */
+     .standalone-toggle-btn + .sidebar:not(.collapsed) {
+         /* This selector helps move the button when the *following* sidebar is NOT collapsed */
+     }
+    .standalone-toggle-btn {
+         transition: left 0.3s ease;
+    }
+    .chat-interface-container:has(#sidebar:not(.collapsed)) .standalone-toggle-btn {
+          left: calc(260px + 0.75rem); /* Move button next to open sidebar */
+    }
+     
+    .chat-messages {
+        padding: 1rem;
+    }
+    .chat-input-area {
+        padding: 0.75rem 1rem;
+    }
+    .message-wrapper {
+        max-width: 95%;
+    }
+} 
