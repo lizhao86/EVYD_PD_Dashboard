@@ -63,16 +63,14 @@ class UserManualChatApp extends BaseDifyApp {
             return null;
         }
         const payload = {
-            inputs: {
-                query: inputs.query
-            },
+            query: inputs.query,
             user: this.state.currentUser.username || 'unknown-user',
             response_mode: 'streaming',
         };
         if (this.state.currentConversationId) { 
             payload.conversation_id = this.state.currentConversationId; 
         }
-         console.log(`[UserManualChatApp] Payload built:`, payload);
+         console.log(`[UserManualChatApp] Payload built (Chat Mode):`, { ...payload, query: payload.query.substring(0, 50) + '...' });
         return payload;
     }
 
@@ -367,21 +365,27 @@ function initializeInputArea(chatAppInstance) { // Accepts app instance
                 return;
             }
 
-            // 1. Display user message IMMEDIATELY
+            // ---> 3. Call handleGenerate FIRST <--- 
+            // It will read the current value from messageInput via _gatherAndValidateInputs
+            console.log(`[DEBUG] Calling chatApp.handleGenerate() for text: "${messageText.substring(0,30)}..."`);
+            const generatePromise = chatAppInstance.handleGenerate(); // Start generation but don't await yet
+
+            // ---> 4. Display user message and clear input AFTER starting generation <--- 
+            // This provides immediate UI feedback.
             displayMessage(messageText, 'user');
-
-            // 2. Clear input and update state BEFORE starting generation
             messageInput.value = '';
-            updateInputState();
-            messageInput.focus(); // Keep focus on input
+            updateInputState(); // This will now correctly disable the button and reset count
+            messageInput.focus();
+            console.log('[DEBUG] Input cleared and state updated after initiating send.');
 
-            // 3. Call the handleGenerate method of the app instance
-            // console.log('[DEBUG] Calling chatApp.handleGenerate()');
+            // 5. Optionally await the promise if subsequent actions depend on it,
+            //    or just let it run in the background. Handle errors via callbacks.
             try {
-                await chatAppInstance.handleGenerate();
+                await generatePromise;
+                 console.log('[DEBUG] handleGenerate promise resolved.');
             } catch (e) {
-                 console.error("Error caught during handleGenerate call:", e);
-                  // UI should be reset by the error handler in chatAppInstance
+                // Errors should be handled by the onError callback defined in _getBaseCallbacks
+                console.error("Error awaited from handleGenerate call (should have been caught by callback):", e);
             }
         });
          console.log('[DEBUG] Send button click listener attached.');
