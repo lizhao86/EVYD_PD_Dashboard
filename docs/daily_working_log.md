@@ -27,3 +27,26 @@
     *   将聊天界面容器宽度从 Dify 原有的 768px 调整为 900px，以适应项目需求。
     *   进一步增加最大宽度至 1200px，提供更宽敞的显示空间。
     *   同步更新 `common.css` 中的 `app-container` 类宽度，确保整体一致性。
+
+## 2025-05-04
+
+*   **11:37 AM:** 完成对复刻 Dify 聊天界面方案的分析。
+    *   **目标:** 在现有 `user-manual-new.html` 页面中复刻 `langgenius/webapp-conversation` (Dify 参考项目) 的前端聊天界面和交互。
+    *   **Dify 参考界面分析:**
+        *   **布局:** 标准聊天布局，包含可折叠的侧边栏 (会话列表、新建按钮) 和主聊天区域 (消息流、输入框)。
+        *   **技术:** Next.js, React, TypeScript, Tailwind CSS, CSS Modules。
+        *   **特点:** 组件化、流式响应、Markdown 支持、响应式设计。
+    *   **`user-manual-new` 现状分析:**
+        *   **HTML:** 包含基础页面框架和通用头部，但**缺少**核心聊天 UI 结构。存在大量与 Dify 界面相似但**被注释掉**的旧代码。
+        *   **JS:** 当前脚本 (`scripts/pages/user-manual-new.js`) 只进行基础初始化 (Amplify, i18n, Header, 用户检查)，特定于聊天应用的逻辑 (如 `UserManualNewApp` 初始化) **被注释掉或缺失**。
+    *   **重写策略:**
+        *   **HTML:** **删除** `user-manual-new.html` 中被注释的旧聊天 UI 代码块。基于 Dify 参考界面和 `Dify Interface.md` 分析，**重新构建**侧边栏、消息列表、输入区的 HTML 结构。
+        *   **JS:** **补充** `user-manual-new.js` (或新建模块) 以处理聊天消息交互、侧边栏管理等逻辑。忽略或移除旧的注释掉的 JS 逻辑。
+    *   **JS 模块复用计划:**
+        *   **高度复用:** `modules/common/header.js` (导航、用户认证、设置), `modules/common/dify-client.js` (Dify API 通信), `modules/common/base-dify-app.js` (基础应用逻辑、配置加载、状态)。
+        *   **需扩展:** `modules/common/dify-app-ui.js` 需要添加处理聊天消息渲染、侧边栏交互的方法，但通用 UI 功能 (按钮状态、Markdown 渲染等) 可复用。
+    *   **CSS 策略:**
+        *   **基础:** 依赖 `styles/variables.css` 和 `styles/common.css`。
+        *   **忽略:** `styles/user-manual.css`, `styles/user-story.css` 中的大部分内容。
+        *   **新建/扩展:** 在 `styles/user-manual-new.css` (或新建文件) 中定义聊天界面特定样式 (消息气泡、侧边栏等)，参考 Dify 项目和 `Dify Interface.md` 分析。
+    *   **统一性:** 核心 JS 模块命名规范。新的 CSS 需注意与 HTML 和现有 CSS 协调。

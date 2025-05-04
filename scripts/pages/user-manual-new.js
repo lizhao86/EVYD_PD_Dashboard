@@ -58,28 +58,3 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 });
-
-// 移除建议问题按钮点击事件函数
-/*
-function setupSuggestedQuestions() {
-    const questionButtons = document.querySelectorAll('.question-button');
-    const messageInput = document.getElementById('message-input');
-    const sendButton = document.getElementById('send-button');
-    
-    if (!questionButtons.length || !messageInput || !sendButton) {
-        console.warn('Suggested question buttons or input elements not found');
-        return;
-    }
-    
-    questionButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            // 设置输入框的值为按钮的文本内容
-            messageInput.value = button.textContent.trim();
-            messageInput.focus();
-            
-            // 模拟点击发送按钮
-            sendButton.click();
-        });
-    });
-} 
-*/ 
