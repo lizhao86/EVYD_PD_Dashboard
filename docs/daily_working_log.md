@@ -52,3 +52,5 @@
     *   **统一性:** 核心 JS 模块命名规范。新的 CSS 需注意与 HTML 和现有 CSS 协调。
 
 *   **12:44 PM:** 修改 `scripts/pages/user-manual-new.js`，移除页面加载时从 `localStorage` 读取侧边栏折叠状态的逻辑，使侧边栏默认展开。保留了点击切换和状态保存功能。
+
+*   **02:26 PM:** 修改 `scripts/i18n.js` 的 `init` 方法，注释掉了对 `checkAuth()` 的调用及其相关逻辑，解决了 i18n 初始化错误地依赖于 Auth 状态的问题。

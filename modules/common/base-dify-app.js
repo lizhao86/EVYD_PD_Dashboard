@@ -34,6 +34,7 @@ class BaseDifyApp {
     // --- Instances ---
     ui = null;
     difyClient = null;
+    difyAppInfo = null; // Add property to store fetched info
 
     constructor() {
         // Basic initialization of UI/API client could happen here if needed,
@@ -48,91 +49,66 @@ class BaseDifyApp {
     async init() {
         try {
             await Header.init();
-
             if (!Header.currentUser) {
                 this._handleNotLoggedIn();
                 return;
             }
             this.state.currentUser = Header.currentUser;
 
-            // Initialize basic UI elements defined in DifyAppUI
-            this.ui.initUserInterface({ 
-                inputElementId: this.mainInputElementId, 
-                inputErrorElementId: this.inputErrorElementId 
-            });
-
-            // Load API configuration by calling _loadApiConfig
-            const configResult = await this._loadApiConfig();
-
-            // Check if configuration loading was successful
-            if (!configResult) {
-                // console.error(`[${this.constructor.name}] API 配置加载失败，终止初始化。`);
-                // Error message should have been shown by _loadApiConfig
-                return; 
-            }
-
-            // --- Assign configuration values HERE in init --- 
-            // console.log(`[${this.constructor.name}] 在 init 函数中进行赋值...`);
-            this.state.apiEndpoint = configResult.endpoint; // Assign string URL
-            this.state.apiKey = configResult.key;       // Assign string Key
-            
-            // Validate and assign type to difyMode
-            if (configResult.type === 'chat' || configResult.type === 'workflow') {
-                this.difyMode = configResult.type;
+            if (this.ui) {
+                console.log(`[BaseDifyApp ${this.constructor.name}] Calling ui.initUserInterface...`);
+                this.ui.initUserInterface({
+                    inputElementId: this.mainInputElementId,
+                    inputErrorElementId: this.inputErrorElementId
+                });
+                console.log(`[BaseDifyApp ${this.constructor.name}] ui.initUserInterface completed.`);
             } else {
-                // console.warn(`[${this.constructor.name}] 从配置获取的应用类型 '${configResult.type}' 无效，将默认使用 '${this.difyMode}'`);
-                // Keep the default this.difyMode if type is invalid
+                console.error(`[${this.constructor.name}] UI object not initialized before BaseDifyApp.init`);
             }
-            
-            // --- Log types and values AFTER assignment in init ---
-            // console.log(`[${this.constructor.name}] init 函数赋值后:`);
-            // console.log(`  this.state.apiEndpoint (类型: ${typeof this.state.apiEndpoint}):`, this.state.apiEndpoint);
-            // console.log(`  this.state.apiKey (类型: ${typeof this.state.apiKey}):`, this.state.apiKey ? this.state.apiKey.substring(0, 10) + '...' : '');
-            // console.log(`  this.difyMode (类型: ${typeof this.difyMode}):`, this.difyMode);
-            // --- End logging ---
 
-            // Fetch dynamic app info from Dify /info endpoint and display it
+            const configResult = await this._loadApiConfig();
+            if (!configResult) { return; }
+            this.state.apiEndpoint = configResult.endpoint;
+            this.state.apiKey = configResult.key;
+            this.difyMode = (configResult.type === 'chat' || configResult.type === 'workflow') ? configResult.type : this.difyMode;
+
             try {
-                const appInfoData = await this._fetchAppInformation(); // Call AFTER assignment
-                if (appInfoData) {
-                    this.ui.displayAppInfo(appInfoData); // Use the returned data to update UI
+                this.difyAppInfo = await this._fetchAppInformation();
+                if (!this.difyAppInfo) {
+                     console.warn(`[${this.constructor.name}] _fetchAppInformation did not return valid data.`);
+                }
+                if (this.ui) {
+                    console.log(`[BaseDifyApp ${this.constructor.name}] Calling ui.displayAppInfo...`);
+                    this.ui.displayAppInfo(this.difyAppInfo);
+                     console.log(`[BaseDifyApp ${this.constructor.name}] ui.displayAppInfo completed.`);
                 } else {
-                     // console.warn(`[${this.constructor.name}] _fetchAppInformation did not return valid data.`);
-                     // Optionally show a default or error state in UI if fetch succeeded but returned no data
-                     this.ui.displayAppInfo(); // Display default placeholders
-                 }
+                     console.error(`[${this.constructor.name}] UI object not available to display app info.`);
+                }
             } catch (error) {
-                 // console.error(`[${this.constructor.name}] Error during _fetchAppInformation or UI display:`, error);
-                 // Show error in the UI. _fetchAppInformation might have already shown one, 
-                 // but this catches errors in displayAppInfo too.
-                 this.ui.showError(t(`${this.difyApiKeyName}.fetchInfoError`, {
+                 console.error(`[${this.constructor.name}] Error during _fetchAppInformation or display:`, error);
+                 this.ui?.showError(t(`${this.difyApiKeyName}.fetchInfoError`, {
                      default: `获取或显示应用信息时出错: ${error.message}`,
                      error: error.message
                  }));
-                 // Display default title even on error
-                 this.ui.displayAppInfo({ title: t(`${this.difyApiKeyName}.title`, { default: 'AI Application' }) });
+                 this.difyAppInfo = null;
+                  this.ui?.displayAppInfo(); 
             }
 
-            // Bind common and potentially specific events
             this.bindEvents();
-            this._bindSpecificEvents(); // Allow subclasses to add more bindings
+            this._bindSpecificEvents();
 
-            // Initial UI state update for main input
-            const mainInput = document.getElementById(this.mainInputElementId);
-            if (mainInput) {
-                this.ui.handleInput(mainInput.value);
+            if (this.ui) {
+                const mainInput = document.getElementById(this.mainInputElementId);
+                 if (mainInput) {
+                     this.ui.handleInput(mainInput.value);
+                 } else {
+                      console.warn(`[${this.constructor.name}] Main input element #${this.mainInputElementId} not found for initial handling.`);
+                 }
             }
-            
+
         } catch (error) {
-            // console.error(`Error initializing ${this.constructor.name}:`, error);
-            const initErrorMsg = t(`${this.difyApiKeyName}.initError`, { default: '初始化应用时出错，请刷新页面重试。' });
-             if (this.ui && typeof this.ui.showError === 'function') {
-                 this.ui.showError(initErrorMsg);
-             }
-        } finally {
-             // Ensure content is visible after potential i18n loading hide
-             document.documentElement.classList.remove('i18n-loading'); 
-             document.body.style.display = 'block';
+             console.error(`Error initializing ${this.constructor.name}:`, error);
+             this.ui?.showError(t(`${this.difyApiKeyName}.initError`, { default: '初始化应用时出错，请刷新页面重试。' }));
         }
     }
 
@@ -383,65 +359,114 @@ class BaseDifyApp {
      * Orchestrates input validation, API client setup, payload building, and stream handling.
      */
     async handleGenerate() {
+        console.log(`[BaseDifyApp ${this.constructor.name}] handleGenerate called.`); // Log 1
+
         if (!this.ui || !this.state.apiKey || !this.state.apiEndpoint || !this.state.currentUser) {
-            // console.error("Cannot generate: App not fully initialized or missing API config."); // Enhanced log
-            this.ui?.showError(t(`${this.difyApiKeyName}.initError`, { default: '应用未完全初始化或缺少配置，无法生成。' })); // Enhanced message
+            console.error(`[BaseDifyApp ${this.constructor.name}] Cannot generate: App not fully initialized or missing config. State:`, this.state);
+            this.ui?.showError(t(`${this.difyApiKeyName}.initError`, { default: '应用未完全初始化或缺少配置，无法生成。' }));
             return;
         }
 
-        const inputs = this._gatherAndValidateInputs();
+        console.log(`[BaseDifyApp ${this.constructor.name}] Calling _gatherAndValidateInputs...`); // Log 3
+        const inputs = this._gatherAndValidateInputs(); // Always gather inputs from DOM via subclass method
+        console.log(`[BaseDifyApp ${this.constructor.name}] _gatherAndValidateInputs returned:`, inputs); // Log 4
         if (!inputs) {
+             console.log(`[BaseDifyApp ${this.constructor.name}] Validation failed or no inputs, exiting handleGenerate.`); // Log 5
+            this.ui?.showGenerationCompleted(); // Reset button if validation fails
+            this.state.isGenerating = false;
             return; // Stop if validation fails
         }
 
-        this.ui.setRequestingState(); // Use requesting state initially
+        console.log(`[BaseDifyApp ${this.constructor.name}] Setting requesting state...`); // Log 6
+        this.ui.setRequestingState();
         this.ui.clearResultArea();
         this.ui.showResultContainer();
         this.state.startTime = Date.now();
+        this.state.isGenerating = true;
+
+        let finalCallbacks = null;
 
         try {
-            // 使用从 _loadApiConfig 获取并设置的 apiEndpoint 和 difyMode
+            console.log(`[BaseDifyApp ${this.constructor.name}] Creating DifyClient... Mode: ${this.difyMode}, Endpoint: ${this.state.apiEndpoint}`); // Log 7
             this.difyClient = new DifyClient({
-                baseUrl: this.state.apiEndpoint, 
+                baseUrl: this.state.apiEndpoint,
                 apiKey: this.state.apiKey,
-                mode: this.difyMode // 使用动态设置的模式
+                mode: this.difyMode
             });
-            // console.log(`[${this.constructor.name}] DifyClient created with mode: ${this.difyMode} and endpoint: ${this.state.apiEndpoint}`);
+            console.log(`[BaseDifyApp ${this.constructor.name}] DifyClient created.`); // Log 8
 
-            const payload = this._buildPayload(inputs);
+            console.log(`[BaseDifyApp ${this.constructor.name}] Building payload...`); // Log 9
+            const payload = this._buildPayload(inputs); // Use gathered inputs
+             if (!payload) {
+                 console.error(`[BaseDifyApp ${this.constructor.name}] Payload is null, aborting generateStream call.`); // Log 10
+                 throw new Error("Failed to build payload.");
+             }
+             console.log(`[BaseDifyApp ${this.constructor.name}] Payload built.`); // Log 11
+
+            console.log(`[BaseDifyApp ${this.constructor.name}] Getting callbacks...`); // Log 12
             const baseCallbacks = this._getBaseCallbacks();
-            const specificCallbacks = this._getSpecificCallbacks(); 
-            const finalCallbacks = { ...baseCallbacks, ...specificCallbacks };
+            const specificCallbacks = this._getSpecificCallbacks();
+            finalCallbacks = { ...baseCallbacks, ...specificCallbacks };
+            console.log(`[BaseDifyApp ${this.constructor.name}] Callbacks prepared.`); // Log 13
 
-            // Add a callback to switch to generating state once stream starts (e.g., on first message or workflow started)
+            let generatingStateSet = false;
             const originalOnMessage = finalCallbacks.onMessage;
             const originalOnWorkflowStarted = finalCallbacks.onWorkflowStarted;
-            let generatingStateSet = false;
+            const originalOnNodeStarted = finalCallbacks.onNodeStarted; 
+            const originalOnThought = finalCallbacks.onThought;
 
-            finalCallbacks.onMessage = (content, isFirstChunk) => {
+            const setGeneratingUI = () => {
                 if (!generatingStateSet) {
+                    console.log(`[BaseDifyApp ${this.constructor.name}] Setting generating UI state.`); // <-- Log 14
                     this.ui.setGeneratingState();
                     generatingStateSet = true;
                 }
-                 if (originalOnMessage) originalOnMessage(content, isFirstChunk);
             };
-             // Also trigger generating state when workflow starts (if applicable)
+
+            finalCallbacks.onMessage = (content, isFirstChunk) => {
+                setGeneratingUI(); // Set generating state on first message
+                console.log(`[BaseDifyApp Callback] onMessage called. isFirstChunk: ${isFirstChunk}`); // <-- Log 15
+                if (originalOnMessage) originalOnMessage(content, isFirstChunk);
+            };
+             // Add logging for other key callbacks too
+             finalCallbacks.onComplete = (metadata) => {
+                 console.log(`[BaseDifyApp Callback] onComplete called.`); // <-- Log 18
+                 if (baseCallbacks.onComplete) baseCallbacks.onComplete(metadata); // Call original base if needed
+             };
+              finalCallbacks.onError = (error) => {
+                 console.error(`[BaseDifyApp Callback] onError called with:`, error); // <-- Log 19 (Log the error)
+                 if (baseCallbacks.onError) baseCallbacks.onError(error); // Call original base if needed
+             };
              finalCallbacks.onWorkflowStarted = (data) => {
-                 if (!generatingStateSet) {
-                     this.ui.setGeneratingState();
-                     generatingStateSet = true;
-                 }
-                  if (originalOnWorkflowStarted) originalOnWorkflowStarted(data);
-            };
+                 setGeneratingUI(); // Set generating state on workflow start
+                 console.log(`[BaseDifyApp Callback] onWorkflowStarted called.`); // <-- Log 16
+                 if (originalOnWorkflowStarted) originalOnWorkflowStarted(data);
+             };
+              finalCallbacks.onNodeStarted = (data) => { // Add handler for node start
+                 setGeneratingUI(); // Also set generating state on first node start
+                 console.log(`[BaseDifyApp Callback] onNodeStarted called.`); // <-- Log 17
+                 if (originalOnNodeStarted) originalOnNodeStarted(data);
+              };
+              finalCallbacks.onThought = (data) => {
+                  console.log(`[BaseDifyApp Callback] onThought called.`); // <-- Log 17.5
+                  if (originalOnThought) originalOnThought(data);
+              };
 
+            console.log(`[BaseDifyApp ${this.constructor.name}] Calling difyClient.generateStream...`); // Log 20
             await this.difyClient.generateStream(payload, finalCallbacks);
+            console.log(`[BaseDifyApp ${this.constructor.name}] generateStream promise resolved (or finished).`); // Log 21
 
-        } catch (initError) {
-            // console.error(`[${this.constructor.name}] Error setting up or running generation:`, initError);
-            this.ui.showGenerationCompleted(); // Ensure button reset
-            this.ui.showErrorInResult(t(`${this.difyApiKeyName}.generationSetupError`, { default: '启动生成时出错:'}) + ` ${initError.message}`); // Show error in result area
-            this.difyClient = null;
-            this.state.isGenerating = false; // Ensure state is reset
+        } catch (error) {
+            console.error(`[BaseDifyApp ${this.constructor.name}] Error in handleGenerate try block:`, error);
+            if (finalCallbacks && finalCallbacks.onError) {
+                  finalCallbacks.onError(error);
+             } else {
+                 console.error(`[BaseDifyApp ${this.constructor.name}] Fallback error handling in catch block.`);
+                 this.ui?.showGenerationCompleted();
+                 this.ui?.showErrorInResult(t(`${this.difyApiKeyName}.generationSetupError`, { default: '启动生成时出错:'}) + ` ${error.message}`);
+                 this.difyClient = null;
+                 this.state.isGenerating = false;
+             }
         }
     }
 

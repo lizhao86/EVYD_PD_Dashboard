@@ -4,7 +4,7 @@
  */
 
 import { getCurrentUserSettings, saveCurrentUserSetting } from '/scripts/services/storage.js';
-import { checkAuth } from '/modules/auth/auth.js'; // Needed to check login status
+// import { checkAuth } from '/modules/auth/auth.js'; // Keep the import for now, just comment out the call
 import { Auth } from 'aws-amplify'; // Added for Auth module
 
 // 国际化工具
@@ -31,79 +31,56 @@ const I18n = {
      * 初始化国际化模块 (async)
      */
     async init() {
-        // console.log('I18n.init() 开始初始化...');
-        
         if (this.isInitialized) {
-            // console.log('I18n 已经初始化，跳过');
+            // console.log('I18n already initialized, skipping.');
             return this.currentLang;
         }
-        
-        // 1. 不再在此处添加加载类，假设已由<head>中的内联脚本添加
-        // document.documentElement.classList.add('i18n-loading'); 
-        
-        // 2. 优先从 localStorage 获取语言
+        // console.log('I18n.init() started.');
+
+        // --- FORCE BYPASS OF AUTH CHECK ---
+        // We will *only* rely on localStorage and browser defaults for the initial language.
+        // Commenting out the entire section that *might* interact with auth or user settings.
+
         const storedLang = localStorage.getItem('language');
-        let initialLang = storedLang || 'zh-CN'; // 默认简体中文
-        
-        // 3. 验证初始语言是否支持
+        let initialLang = storedLang || navigator.language.split('-')[0] || 'zh-CN'; // Default to browser or zh-CN
+
         if (!this.supportedLanguages[initialLang]) {
-            // console.warn(`本地存储语言 '${initialLang}' 无效, 重置为 zh-CN`);
+            // console.warn(`Initial language '${initialLang}' not supported, falling back to zh-CN.`);
             initialLang = 'zh-CN';
-            localStorage.setItem('language', initialLang); // 修正本地存储
+            localStorage.setItem('language', initialLang); // Correct localStorage if needed
         }
-        
-        // 4. 立即设置初始语言，但不加载翻译或应用
+
         this.currentLang = initialLang;
         document.documentElement.lang = this.currentLang;
-        // console.log(`初始语言确定为 (来自本地存储或默认): ${this.currentLang}`);
+        // console.log(`I18n language set to: ${this.currentLang} (from localStorage/browser/default)`);
 
-        // 5. 异步检查用户设置和认证
+        /* --- START OF COMMENTED OUT SECTION ---
+        // 5. 异步检查用户设置和认证 (THIS ENTIRE BLOCK IS BYPASSED)
         let preferredLang = null;
         try {
-            const authInfo = await checkAuth();
-            if (authInfo && authInfo.user) {
-                this.currentUser = authInfo.user;
-                try {
-                    this.userSettings = await getCurrentUserSettings();
-                    if (this.userSettings && this.userSettings.language) {
-                        preferredLang = this.userSettings.language;
-                        // console.log(`从用户设置中获取到首选语言: ${preferredLang}`);
-                        
-                        // 验证云端语言是否支持
-                        if (!this.supportedLanguages[preferredLang]) {
-                            // console.warn(`用户云端设置语言 '${preferredLang}' 无效，将忽略`);
-                            preferredLang = null; // 忽略无效的云端设置
-                        }
-                    } else {
-                        // console.log('用户已登录但无云端语言设置');
-                    }
-                } catch (settingsError) {
-                     // console.error("获取用户设置时出错:", settingsError);
-                     // 即使获取设置失败，也继续使用localStorage的语言
-                }
-            }
+            // const authInfo = await checkAuth(); // <-- DEFINITELY COMMENTED OUT
+            // ... (rest of the logic trying to get user settings/locale) ...
         } catch (error) {
-            // console.error("检查用户认证时出错:", error);
-        }
-        
-        // 6. 确定最终语言 (用户设置优先)
-        const finalLang = preferredLang || this.currentLang;
-        // console.log(`最终语言确定为: ${finalLang}`);
-        
-        // 7. 如果最终语言与初始语言不同，更新状态
-        if (finalLang !== this.currentLang) {
-            // console.log(`语言从 ${this.currentLang} 更新为 ${finalLang} (基于用户设置)`);
-            this.currentLang = finalLang;
-            document.documentElement.lang = this.currentLang;
-            // 同时更新localStorage，保持一致性
-            localStorage.setItem('language', this.currentLang);
-            // console.log(`更新本地存储的语言为: ${this.currentLang}`);
+             console.warn("Auth check or user settings fetch during i18n init failed (expected if bypassing).", error);
         }
 
-        // 8. 加载最终确定的语言的翻译
-        // console.log(`开始加载最终语言 ${this.currentLang} 的翻译...`);
-        await this.loadTranslations(); // loadTranslations 内部会调用 applyTranslations 并移除加载类
-        
+        // 6. 确定最终语言 (THIS IS BYPASSED - we use initialLang directly)
+        // const finalLang = preferredLang || this.currentLang;
+        // console.log(`最终语言确定为: ${finalLang}`);
+
+        // 7. 如果最终语言与初始语言不同，更新状态 (THIS IS BYPASSED)
+        // if (finalLang !== this.currentLang) {
+        //     this.currentLang = finalLang;
+        //     document.documentElement.lang = this.currentLang;
+        //     localStorage.setItem('language', this.currentLang);
+        // }
+        --- END OF COMMENTED OUT SECTION --- */
+
+
+        // 8. 加载最终确定的语言的翻译 (Now always uses initialLang)
+        // console.log(`Loading translations for: ${this.currentLang}`);
+        await this.loadTranslations(); // This loads translations based on this.currentLang
+
         // 根据当前语言设置文档方向 (如果需要RTL支持)
         if (this.currentLang === 'ar' || this.currentLang === 'he') {
             document.documentElement.dir = 'rtl';
@@ -113,7 +90,7 @@ const I18n = {
         
         this.isInitialized = true;
         this.isAutoRefreshBlocked = false; // 初始化完成后允许自动刷新
-        // console.log('I18n 初始化完成');
+        // console.log('I18n initialization complete.');
         
         // 更新语言选择器显示
         this.updateLanguageDisplay();
@@ -364,22 +341,22 @@ const I18n = {
         // 检查用户登录状态
         let isLoggedIn = false;
         let userId = null;
-        try {
-            // 使用checkAuth()函数重新确认登录状态，避免依赖可能过期的this.currentUser
-            const authInfo = await checkAuth();
-            isLoggedIn = !!(authInfo && authInfo.user);
-            if (isLoggedIn && authInfo.user) {
-                userId = authInfo.user.username || authInfo.user.attributes?.sub;
-            }
-            
-            // 如果authInfo有效但this.currentUser为空，更新当前用户信息
-            if (isLoggedIn && !this.currentUser) {
-                this.currentUser = authInfo.user;
-            }
-        } catch (authError) {
-            // console.error('检查认证状态时出错:', authError);
-            isLoggedIn = false;
-        }
+        // try {
+        //     // 使用checkAuth()函数重新确认登录状态，避免依赖可能过期的this.currentUser
+        //     const authInfo = await checkAuth();
+        //     isLoggedIn = !!(authInfo && authInfo.user);
+        //     if (isLoggedIn && authInfo.user) {
+        //         userId = authInfo.user.username || authInfo.user.attributes?.sub;
+        //     }
+        //     
+        //     // 如果authInfo有效但this.currentUser为空，更新当前用户信息
+        //     if (isLoggedIn && !this.currentUser) {
+        //         this.currentUser = authInfo.user;
+        //     }
+        // } catch (authError) {
+        //     // console.error('检查认证状态时出错:', authError);
+        //     isLoggedIn = false;
+        // }
         
         if (!isLoggedIn) {
             return true; // 即使用户未登录，本地保存也是"成功"的
