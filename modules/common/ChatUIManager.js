@@ -177,12 +177,14 @@ class ChatUIManager {
         // console.log(`[ChatUIManager] Adding message: role=${role}, messageId=${messageId}, status=${status}`);
 
         const messageWrapper = document.createElement('div');
-        messageWrapper.classList.add('message-wrapper', `${role}-message`);
+        const roleClass = role === 'assistant' ? 'bot-message' : `${role}-message`;
+        messageWrapper.classList.add('message-wrapper', roleClass);
         if (messageId) messageWrapper.dataset.messageId = messageId;
         messageWrapper.dataset.status = status;
 
         const avatarWrapper = document.createElement('div');
-        avatarWrapper.classList.add('message-avatar', `${role}-avatar`);
+        const avatarClass = role === 'assistant' ? 'bot-avatar' : `${role}-avatar`;
+        avatarWrapper.classList.add('message-avatar', avatarClass);
         const avatarImg = document.createElement('img');
         // TODO: Make avatar URLs configurable?
         avatarImg.src = role === 'user' ? '/assets/icons/user-avatar.svg' : '/assets/icons/robot-avatar.svg';
@@ -214,10 +216,10 @@ class ChatUIManager {
          }
 
         contentWrapper.appendChild(contentBubble);
-        contentWrapper.appendChild(actionsWrapper); // Append actions container (might be empty)
 
         messageWrapper.appendChild(avatarWrapper);
         messageWrapper.appendChild(contentWrapper);
+        messageWrapper.appendChild(actionsWrapper);
 
         this.elements.chatMessagesContainer.appendChild(messageWrapper);
         this.scrollToBottom();
@@ -307,10 +309,27 @@ class ChatUIManager {
     _addMessageActions(actionsWrapper, messageId, metadata = {}) {
         actionsWrapper.innerHTML = ''; // Clear previous actions
 
+        // --- SVG Icons --- (Using simple examples, replace with preferred icons)
+        const thumbsUpSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M14.5998 8.00033H21C22.1046 8.00033 23 8.89576 23 10.0003V12.1047C23 12.3659 22.9488 12.6246 22.8494 12.8662L19.755 20.3811C19.6007 20.7558 19.2355 21.0003 18.8303 21.0003H2C1.44772 21.0003 1 20.5526 1 20.0003V10.0003C1 9.44804 1.44772 9.00033 2 9.00033H5.48184C5.80677 9.00033 6.11143 8.84246 6.29881 8.57701L11.7522 0.851355C11.8947 0.649486 12.1633 0.581978 12.3843 0.692483L14.1984 1.59951C15.25 2.12534 15.7931 3.31292 15.5031 4.45235L14.5998 8.00033ZM7 10.5878V19.0003H18.1606L21 12.1047V10.0003H14.5998C13.2951 10.0003 12.3398 8.77128 12.6616 7.50691L13.5649 3.95894C13.6229 3.73105 13.5143 3.49353 13.3039 3.38837L12.6428 3.0578L7.93275 9.73038C7.68285 10.0844 7.36341 10.3746 7 10.5878ZM5 11.0003H3V19.0003H5V11.0003Z"></path></svg>';
+        const thumbsDownSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M9.40017 16H3C1.89543 16 1 15.1046 1 14V11.8957C1 11.6344 1.05118 11.3757 1.15064 11.1342L4.24501 3.61925C4.3993 3.24455 4.76447 3 5.16969 3H22C22.5523 3 23 3.44772 23 4V14C23 14.5523 22.5523 15 22 15H18.5182C18.1932 15 17.8886 15.1579 17.7012 15.4233L12.2478 23.149C12.1053 23.3508 11.8367 23.4184 11.6157 23.3078L9.80163 22.4008C8.74998 21.875 8.20687 20.6874 8.49694 19.548L9.40017 16ZM17 13.4125V5H5.83939L3 11.8957V14H9.40017C10.7049 14 11.6602 15.229 11.3384 16.4934L10.4351 20.0414C10.3771 20.2693 10.4857 20.5068 10.6961 20.612L11.3572 20.9425L16.0673 14.27C16.3172 13.9159 16.6366 13.6257 17 13.4125ZM19 13H21V5H19V13Z"></path></svg>';
+        const copySvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+        const regenerateSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M22 12C22 17.5228 17.5229 22 12 22C6.4772 22 2 17.5228 2 12C2 6.47715 6.4772 2 12 2V4C7.5817 4 4 7.58172 4 12C4 16.4183 7.5817 20 12 20C16.4183 20 20 16.4183 20 12C20 9.25022 18.6127 6.82447 16.4998 5.38451L16.5 8H14.5V2L20.5 2V4L18.0008 3.99989C20.4293 5.82434 22 8.72873 22 12Z"></path></svg>';
+
+        // Regenerate Button (Add this first as per Dify screenshot order)
+        const regenerateButton = document.createElement('button');
+        regenerateButton.className = 'btn-icon regenerate-btn';
+        regenerateButton.innerHTML = regenerateSvg;
+        regenerateButton.ariaLabel = this.t('chat.regenerate', { default: 'Regenerate' });
+        regenerateButton.title = this.t('chat.regenerate', { default: 'Regenerate' });
+        regenerateButton.dataset.messageId = messageId;
+        regenerateButton.dataset.action = 'regenerate'; // Add data attribute for event listener
+        actionsWrapper.appendChild(regenerateButton);
+
         // Feedback Buttons
         const likeButton = document.createElement('button');
         likeButton.className = 'btn-icon feedback-btn thumbs-up';
-        likeButton.innerHTML = '👍'; // Use SVG icons for better styling
+        // likeButton.innerHTML = '👍'; // Use SVG icons for better styling
+        likeButton.innerHTML = thumbsUpSvg;
         likeButton.ariaLabel = this.t('chat.like', { default: 'Like' });
         likeButton.title = this.t('chat.like', { default: 'Like' });
         likeButton.dataset.messageId = messageId;
@@ -319,7 +338,8 @@ class ChatUIManager {
 
         const dislikeButton = document.createElement('button');
         dislikeButton.className = 'btn-icon feedback-btn thumbs-down';
-        dislikeButton.innerHTML = '👎';
+        // dislikeButton.innerHTML = '👎';
+        dislikeButton.innerHTML = thumbsDownSvg;
         dislikeButton.ariaLabel = this.t('chat.dislike', { default: 'Dislike' });
         dislikeButton.title = this.t('chat.dislike', { default: 'Dislike' });
         dislikeButton.dataset.messageId = messageId;
@@ -329,7 +349,8 @@ class ChatUIManager {
         // Copy Button
         const copyButton = document.createElement('button');
         copyButton.className = 'btn-icon copy-message-btn';
-         copyButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>'; // Example SVG
+         // copyButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>'; // Example SVG
+         copyButton.innerHTML = copySvg;
         copyButton.ariaLabel = this.t('chat.copy', { default: 'Copy' });
         copyButton.title = this.t('chat.copy', { default: 'Copy' });
         copyButton.addEventListener('click', (e) => {

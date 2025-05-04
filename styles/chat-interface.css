@@ -168,6 +168,7 @@
     display: flex;
     gap: 0.75rem; /* 头像和内容间距 */
     max-width: 90%; /* 限制最大宽度 */
+    position: relative; /* 添加这行，为 message-actions 定位提供基准 */
 }
 
 .message-wrapper.user-message {
@@ -226,18 +227,19 @@
 /* 消息内容气泡 */
 .message-content {
     position: relative; /* 用于气泡尖角定位 */
-    padding: 0.75rem 1rem; /* 12px 16px */
+    padding: 0.85rem 1.1rem; /* 增加内边距 */
     border-radius: 0.75rem; /* 12px */
     font-size: 0.9rem; /* 14.4px 接近 Dify */
     line-height: 1.5;
     max-width: 100%; /* 防止内容溢出父容器 */
     word-wrap: break-word; /* 强制长单词换行 */
     overflow-wrap: break-word; /* 强制长单词换行 */
+    min-height: 32px; /* 确保气泡至少和头像一样高 */
 }
 
 /* 机器人消息气泡样式 */
 .message-wrapper.bot-message .message-content {
-    background-color: var(--gray-100); /* 机器人浅灰色 */
+    background-color: var(--gray-200); /* 机器人浅灰色 -> 改为更深的 --gray-200 */
     color: var(--gray-800);
     border-top-left-radius: 0; /* 左上角直角 */
 }
@@ -251,7 +253,7 @@
     height: 0;
     border-style: solid;
     border-width: 0 10px 10px 0; /* 调整大小和方向 */
-    border-color: transparent var(--gray-100) transparent transparent;
+    border-color: transparent var(--gray-200) transparent transparent; /* 更新尖角颜色 */
 }
 
 /* 用户消息气泡样式 */
@@ -275,29 +277,74 @@
 
 /* 消息操作按钮（反馈等） */
 .message-actions {
+    /* 确保 position: absolute 存在 */
+    position: absolute;
+    /* 确保 display: flex 存在 */
     display: flex;
+    /* 确保 bottom 存在 */
+    bottom: 6px;
     gap: 0.5rem;
-    margin-top: 0.5rem;
-    opacity: 0.7; /* 默认稍透明 */
-    transition: opacity 0.2s;
+    background-color: rgba(255, 255, 255, 0.9); 
+    padding: 3px 5px;
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1); 
+    opacity: 0; 
+    visibility: hidden; 
+    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+    z-index: 1; 
+    /* 移除通用的 left/right 定位 */
 }
+
+/* 用户消息的操作按钮靠左下角显示 - 移除此规则或注释掉，因为用户消息不需要 */
+/*
+.message-wrapper.user-message .message-actions {
+    right: auto; 
+    left: 10px;   
+}
+*/
+
+/* 机器人消息的操作按钮靠右下角显示 */
+.message-wrapper.bot-message .message-actions {
+    /* 确保这些定位规则存在 */
+    left: auto;   /* 取消左侧定位 */
+    right: 10px;  /* 定位到右侧 */
+    bottom: -25px; /* 移除或注释掉正值 */
+    position: absolute; /* 再次确认 position */
+}
+
 .message-wrapper:hover .message-actions {
-    opacity: 1; /* 悬停时完全显示 */
+    opacity: 1; 
+    visibility: visible; 
 }
 
 .feedback-btn {
-    padding: 0.2rem;
+    padding: 2px; /* 减小内边距 */
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 0.8rem; /* 调整图标大小 */
-    color: var(--gray-500);
-    opacity: 0.7;
+    color: var(--gray-600); /* 使用中性灰色 */
+    opacity: 0.8; /* 默认轻微透明 */
+    transition: color 0.2s, opacity 0.2s;
+    display: flex; /* 用于对齐 SVG */
+    align-items: center;
+    justify-content: center;
+    font-size: inherit; /* 移除固定字体大小 */
 }
+.feedback-btn svg {
+    width: 16px; /* 控制SVG图标大小 */
+    height: 16px;
+}
+
 .feedback-btn:hover {
-    color: var(--gray-700);
-    opacity: 1;
+    opacity: 1; /* 悬停时完全不透明 */
+    color: var(--primary); /* 悬停时使用主色 */
 }
+
+/* 可选：为特定按钮设置不同的悬停颜色 */
+.feedback-btn.copy-btn:hover { color: var(--info, #3B82F6); }
+.feedback-btn.like-btn:hover { color: var(--success, #10B981); }
+.feedback-btn.dislike-btn:hover { color: var(--danger, #EF4444); }
+.feedback-btn.retry-btn:hover { color: var(--warning, #F59E0B); }
 
 /* 输入区域 */
 .chat-input-area {

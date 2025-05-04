@@ -2,16 +2,16 @@ From: <Saved by Blink>
 Snapshot-Content-Location: https://dify.4x6maker.com/chat/hXtmg0OD20dKXdFf
 Subject: =?utf-8?Q?=E4=BA=A7=E5=93=81=20ChatBot=20-=20=E6=92=B0=E5=86=99=20User=20?=
  =?utf-8?Q?Manual=20-=20Powered=20by=20Dify?=
-Date: Sun, 4 May 2025 11:07:03 +0800
+Date: Sun, 4 May 2025 23:07:03 +0800
 MIME-Version: 1.0
 Content-Type: multipart/related;
 	type="text/html";
-	boundary="----MultipartBoundary--qlqrZw0V4ZwRqEr33dvKvznQu6zR6k9SktV7wukQP1----"
+	boundary="----MultipartBoundary--dcNIYxbzI2QCCu6f23jX8VFxiKePvDUX1b0LAw1pxF----"
 
 
-------MultipartBoundary--qlqrZw0V4ZwRqEr33dvKvznQu6zR6k9SktV7wukQP1----
+------MultipartBoundary--dcNIYxbzI2QCCu6f23jX8VFxiKePvDUX1b0LAw1pxF----
 Content-Type: text/html
-Content-ID: <frame-4EC16DC3EDABC1A1BC6473FAD6FB8DAE@mhtml.blink>
+Content-ID: <frame-73B7AB4FA71BF0E66096419E10449C34@mhtml.blink>
 Content-Transfer-Encoding: quoted-printable
 Content-Location: https://dify.4x6maker.com/chat/hXtmg0OD20dKXdFf
 
@@ -22,9 +22,9 @@ Content-Location: https://dify.4x6maker.com/chat/hXtmg0OD20dKXdFf
 yle=3D"display: flex; position: absolute; top: 0px; left: 0px;"></div></div=
 ></template></plasmo-csui><head><meta http-equiv=3D"Content-Type" content=
 =3D"text/html; charset=3DUTF-8"><link rel=3D"stylesheet" type=3D"text/css" =
-href=3D"cid:css-fb1dcb72-7bd5-4c2a-a57a-976f81444e8a@mhtml.blink" /><link r=
-el=3D"stylesheet" type=3D"text/css" href=3D"cid:css-5f3c2c8d-2deb-4932-b0c8=
--d119c640d9dd@mhtml.blink" /><meta name=3D"viewport" content=3D"width=3Ddev=
+href=3D"cid:css-adb608ff-d9ea-4e79-8d72-781c206b2477@mhtml.blink" /><link r=
+el=3D"stylesheet" type=3D"text/css" href=3D"cid:css-5c4698c5-f2f9-47d6-adfd=
+-7c08a7eb5cc9@mhtml.blink" /><meta name=3D"viewport" content=3D"width=3Ddev=
 ice-width, initial-scale=3D1, maximum-scale=3D1, viewport-fit=3Dcover, user=
 -scalable=3Dno"><link rel=3D"stylesheet" href=3D"https://dify.4x6maker.com/=
 _next/static/css/312c3a30cd1a3f18.css" data-precedence=3D"next"><link rel=
@@ -94,210 +94,373 @@ V9.23943L21 7.23943V19.9968C21 20.5491 20.5523 20.9968 20 20.9968H4C3.44772=
 9 11.2897L20.4853 2.09729Z"></path></svg>Start New chat</button></div><div =
 class=3D"h-0 grow space-y-2 overflow-y-auto px-3 pt-4"><div class=3D"space-=
 y-0.5"><div class=3D"system-sm-medium group flex cursor-pointer rounded-lg =
-p-1 pl-3 text-components-menu-item-text hover:bg-state-base-hover"><div cla=
-ss=3D"grow truncate p-1 pl-0" title=3D"New conversation">New conversation</=
-div></div><div class=3D"system-sm-medium group flex cursor-pointer rounded-=
-lg p-1 pl-3 bg-state-accent-active text-text-accent hover:bg-state-accent-a=
-ctive"><div class=3D"grow truncate p-1 pl-0" title=3D"Receiving another gre=
-eting=E2=98=BA=EF=B8=8F">Receiving another greeting=E2=98=BA=EF=B8=8F</div>=
-<div class=3D"shrink-0"><div class=3D"inline-block" data-state=3D"closed"><=
-button type=3D"button" class=3D"action-btn action-btn-m opacity-0 action-bt=
-n-active"><svg viewBox=3D"0 0 24 24" xmlns=3D"http://www.w3.org/2000/svg" w=
-idth=3D"24" height=3D"24" fill=3D"currentColor" class=3D"remixicon h-4 w-4"=
-><path d=3D"M5 10C3.9 10 3 10.9 3 12C3 13.1 3.9 14 5 14C6.1 14 7 13.1 7 12C=
-7 10.9 6.1 10 5 10ZM19 10C17.9 10 17 10.9 17 12C17 13.1 17.9 14 19 14C20.1 =
-14 21 13.1 21 12C21 10.9 20.1 10 19 10ZM12 10C10.9 10 10 10.9 10 12C10 13.1=
- 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10Z"></path></svg><=
-/button></div></div></div><div class=3D"system-sm-medium group flex cursor-=
-pointer rounded-lg p-1 pl-3 text-components-menu-item-text hover:bg-state-b=
-ase-hover"><div class=3D"grow truncate p-1 pl-0" title=3D"Greeting myself=
-=E2=98=BA=EF=B8=8F">Greeting myself=E2=98=BA=EF=B8=8F</div><div class=3D"sh=
-rink-0"><div class=3D"inline-block" data-state=3D"closed"><button type=3D"b=
-utton" class=3D"action-btn action-btn-m opacity-0"><svg viewBox=3D"0 0 24 2=
-4" xmlns=3D"http://www.w3.org/2000/svg" width=3D"24" height=3D"24" fill=3D"=
-currentColor" class=3D"remixicon h-4 w-4"><path d=3D"M5 10C3.9 10 3 10.9 3 =
-12C3 13.1 3.9 14 5 14C6.1 14 7 13.1 7 12C7 10.9 6.1 10 5 10ZM19 10C17.9 10 =
-17 10.9 17 12C17 13.1 17.9 14 19 14C20.1 14 21 13.1 21 12C21 10.9 20.1 10 1=
-9 10ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 =
-12C14 10.9 13.1 10 12 10Z"></path></svg></button></div></div></div></div></=
-div><div class=3D"flex shrink-0 items-center justify-between p-3"><div clas=
-s=3D"inline-block" data-state=3D"closed"><div><button type=3D"button" class=
-=3D"action-btn action-btn-l"><svg viewBox=3D"0 0 24 24" xmlns=3D"http://www=
-.w3.org/2000/svg" width=3D"24" height=3D"24" fill=3D"currentColor" class=3D=
-"remixicon h-[18px] w-[18px]"><path d=3D"M5 7C5 6.17157 5.67157 5.5 6.5 5.5=
-C7.32843 5.5 8 6.17157 8 7C8 7.82843 7.32843 8.5 6.5 8.5C5.67157 8.5 5 7.82=
-843 5 7ZM6.5 3.5C4.567 3.5 3 5.067 3 7C3 8.933 4.567 10.5 6.5 10.5C8.433 10=
-.5 10 8.933 10 7C10 5.067 8.433 3.5 6.5 3.5ZM12 8H20V6H12V8ZM16 17C16 16.17=
-16 16.6716 15.5 17.5 15.5C18.3284 15.5 19 16.1716 19 17C19 17.8284 18.3284 =
-18.5 17.5 18.5C16.6716 18.5 16 17.8284 16 17ZM17.5 13.5C15.567 13.5 14 15.0=
-67 14 17C14 18.933 15.567 20.5 17.5 20.5C19.433 20.5 21 18.933 21 17C21 15.=
-067 19.433 13.5 17.5 13.5ZM4 16V18H12V16H4Z"></path></svg></button></div></=
-div><div class=3D"shrink-0"><div class=3D"flex shrink-0 items-center gap-1.=
-5 px-2"><div class=3D"system-2xs-medium-uppercase text-text-tertiary">Power=
-ed by</div><img class=3D"block w-[22.651px] h-[24.5px] !h-5" alt=3D"logo" s=
-rc=3D"https://dify.4x6maker.com/logo/logo.png"></div></div></div></div></di=
-v><div class=3D"relative grow p-2"><div class=3D"flex h-full flex-col overf=
-low-hidden border-[0,5px] border-components-panel-border-subtle bg-chatbot-=
-bg rounded-2xl"><div class=3D"flex h-14 shrink-0 items-center justify-betwe=
-en p-3"><div class=3D"flex items-center gap-1 transition-all duration-200 e=
-ase-in-out user-select-none opacity-0"><button type=3D"button" class=3D"act=
-ion-btn action-btn-l cursor-default"><svg viewBox=3D"0 0 24 24" xmlns=3D"ht=
-tp://www.w3.org/2000/svg" width=3D"24" height=3D"24" fill=3D"currentColor" =
-class=3D"remixicon h-[18px] w-[18px]"><path d=3D"M21 3C21.5523 3 22 3.44772=
- 22 4V20C22 20.5523 21.5523 21 21 21H3C2.44772 21 2 20.5523 2 20V4C2 3.4477=
-2 2.44772 3 3 3H21ZM20 5H4V19H20V5ZM18 7V17H16V7H18Z"></path></svg></button=
-><div class=3D"mr-1 shrink-0"><span class=3D"flex items-center justify-cent=
-er relative rounded-lg grow-0 shrink-0 overflow-hidden w-10 h-10 text-[24px=
-]" style=3D"background: rgb(255, 234, 213);"><em-emoji id=3D"=F0=9F=A4=96">=
-<span class=3D"emoji-mart-emoji" data-emoji-set=3D"native"><span style=3D"f=
-ont-family: EmojiMart, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&qu=
-ot;, &quot;Segoe UI&quot;, &quot;Apple Color Emoji&quot;, &quot;Twemoji Moz=
-illa&quot;, &quot;Noto Color Emoji&quot;, &quot;Android Emoji&quot;;">=F0=
-=9F=A4=96</span></span></em-emoji></span></div><div class=3D"flex items-cen=
-ter px-1"><div class=3D"h-[14px] w-px bg-divider-regular"></div></div></div=
-><div class=3D"flex items-center gap-1"><button type=3D"button" class=3D"ac=
-tion-btn action-btn-l" data-state=3D"closed"><svg viewBox=3D"0 0 24 24" xml=
-ns=3D"http://www.w3.org/2000/svg" width=3D"24" height=3D"24" fill=3D"curren=
-tColor" class=3D"remixicon h-[18px] w-[18px]"><path d=3D"M22 12C22 17.5228 =
-17.5229 22 12 22C6.4772 22 2 17.5228 2 12C2 6.47715 6.4772 2 12 2V4C7.5817 =
-4 4 7.58172 4 12C4 16.4183 7.5817 20 12 20C16.4183 20 20 16.4183 20 12C20 9=
-.25022 18.6127 6.82447 16.4998 5.38451L16.5 8H14.5V2L20.5 2V4L18.0008 3.999=
-89C20.4293 5.82434 22 8.72873 22 12Z"></path></svg></button></div></div><di=
-v class=3D"h-full overflow-hidden bg-chatbot-bg"><div class=3D"relative h-f=
-ull"><div class=3D"relative h-full overflow-y-auto overflow-x-hidden" style=
-=3D"padding-bottom: 68.1875px;"><div class=3D"px-8 mx-auto pt-6 w-full max-=
-w-[768px] false"><div class=3D"mb-2 flex justify-end pl-14 last:mb-0"><div =
-class=3D"group relative mr-4 max-w-full"><div class=3D"rounded-2xl bg-[#D1E=
-9FF]/50 px-4 py-3 text-sm text-gray-900" style=3D"background-color: rgb(225=
-, 239, 254);"><div class=3D"markdown-body !text-text-primary"><p>hello agai=
-n</p></div></div><div class=3D"mt-1 h-[18px]"></div></div><div class=3D"h-1=
-0 w-10 shrink-0"><div class=3D"h-full w-full rounded-full border-[0.5px] bo=
-rder-black/5"><svg width=3D"512" height=3D"512" viewBox=3D"0 0 512 512" fil=
-l=3D"none" xmlns=3D"http://www.w3.org/2000/svg" class=3D"h-full w-full" dat=
-a-icon=3D"User" aria-hidden=3D"true"><g clip-path=3D"url(#clip0_5968_39205)=
-"><rect width=3D"512" height=3D"512" rx=3D"256" fill=3D"#B2DDFF"></rect><ci=
-rcle opacity=3D"0.68" cx=3D"256" cy=3D"196" r=3D"84" fill=3D"white"></circl=
-e><ellipse opacity=3D"0.68" cx=3D"256" cy=3D"583.5" rx=3D"266" ry=3D"274.5"=
- fill=3D"white"></ellipse></g><defs><clipPath id=3D"clip0_5968_39205"><rect=
- width=3D"512" height=3D"512" rx=3D"256" fill=3D"white"></rect></clipPath><=
-/defs></svg></div></div></div><div class=3D"mb-2 flex last:mb-0"><div class=
-=3D"relative h-10 w-10 shrink-0"><div class=3D"flex items-center justify-ce=
-nter w-full h-full rounded-full border-[0.5px] border-black/5 text-xl" styl=
-e=3D"background: rgb(213, 245, 246);"><em-emoji id=3D"=F0=9F=A4=96"><span c=
-lass=3D"emoji-mart-emoji" data-emoji-set=3D"native"><span style=3D"font-fam=
-ily: EmojiMart, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;, &q=
-uot;Segoe UI&quot;, &quot;Apple Color Emoji&quot;, &quot;Twemoji Mozilla&qu=
-ot;, &quot;Noto Color Emoji&quot;, &quot;Android Emoji&quot;;">=F0=9F=A4=96=
-</span></span></em-emoji></div></div><div class=3D"chat-answer-container gr=
-oup ml-4 w-0 grow pb-4"><div class=3D"group relative pr-10"><div class=3D"b=
-ody-lg-regular relative inline-block max-w-full rounded-2xl bg-chat-bubble-=
-bg px-4 py-3 text-text-primary"><div class=3D"absolute flex justify-end gap=
--1 -bottom-4 right-2" style=3D""><div class=3D"ml-1 hidden items-center gap=
--0.5 rounded-[10px] border-[0.5px] border-components-actionbar-border bg-co=
-mponents-actionbar-bg p-0.5 shadow-md backdrop-blur-sm group-hover:flex"><b=
-utton type=3D"button" class=3D"action-btn action-btn-m"><svg viewBox=3D"0 0=
- 24 24" xmlns=3D"http://www.w3.org/2000/svg" width=3D"24" height=3D"24" fil=
-l=3D"currentColor" class=3D"remixicon h-4 w-4"><path d=3D"M7 4V2H17V4H20.00=
-66C20.5552 4 21 4.44495 21 4.9934V21.0066C21 21.5552 20.5551 22 20.0066 22H=
-3.9934C3.44476 22 3 21.5551 3 21.0066V4.9934C3 4.44476 3.44495 4 3.9934 4H7=
-ZM7 6H5V20H19V6H17V8H7V6ZM9 4V6H15V4H9Z"></path></svg></button><button type=
-=3D"button" class=3D"action-btn action-btn-m"><svg viewBox=3D"0 0 24 24" xm=
-lns=3D"http://www.w3.org/2000/svg" width=3D"24" height=3D"24" fill=3D"curre=
-ntColor" class=3D"remixicon h-4 w-4"><path d=3D"M22 12C22 17.5228 17.5229 2=
-2 12 22C6.4772 22 2 17.5228 2 12C2 6.47715 6.4772 2 12 2V4C7.5817 4 4 7.581=
-72 4 12C4 16.4183 7.5817 20 12 20C16.4183 20 20 16.4183 20 12C20 9.25022 18=
-.6127 6.82447 16.4998 5.38451L16.5 8H14.5V2L20.5 2V4L18.0008 3.99989C20.429=
-3 5.82434 22 8.72873 22 12Z"></path></svg></button></div><div class=3D"ml-1=
- hidden items-center gap-0.5 rounded-[10px] border-[0.5px] border-component=
-s-actionbar-border bg-components-actionbar-bg p-0.5 shadow-md backdrop-blur=
--sm group-hover:flex"><button type=3D"button" class=3D"action-btn action-bt=
-n-m"><svg viewBox=3D"0 0 24 24" xmlns=3D"http://www.w3.org/2000/svg" width=
-=3D"24" height=3D"24" fill=3D"currentColor" class=3D"remixicon h-4 w-4"><pa=
-th d=3D"M14.5998 8.00033H21C22.1046 8.00033 23 8.89576 23 10.0003V12.1047C2=
-3 12.3659 22.9488 12.6246 22.8494 12.8662L19.755 20.3811C19.6007 20.7558 19=
-.2355 21.0003 18.8303 21.0003H2C1.44772 21.0003 1 20.5526 1 20.0003V10.0003=
-C1 9.44804 1.44772 9.00033 2 9.00033H5.48184C5.80677 9.00033 6.11143 8.8424=
-6 6.29881 8.57701L11.7522 0.851355C11.8947 0.649486 12.1633 0.581978 12.384=
-3 0.692483L14.1984 1.59951C15.25 2.12534 15.7931 3.31292 15.5031 4.45235L14=
-.5998 8.00033ZM7 10.5878V19.0003H18.1606L21 12.1047V10.0003H14.5998C13.2951=
- 10.0003 12.3398 8.77128 12.6616 7.50691L13.5649 3.95894C13.6229 3.73105 13=
-.5143 3.49353 13.3039 3.38837L12.6428 3.0578L7.93275 9.73038C7.68285 10.084=
-4 7.36341 10.3746 7 10.5878ZM5 11.0003H3V19.0003H5V11.0003Z"></path></svg><=
-/button><button type=3D"button" class=3D"action-btn action-btn-m"><svg view=
-Box=3D"0 0 24 24" xmlns=3D"http://www.w3.org/2000/svg" width=3D"24" height=
-=3D"24" fill=3D"currentColor" class=3D"remixicon h-4 w-4"><path d=3D"M9.400=
-17 16H3C1.89543 16 1 15.1046 1 14V11.8957C1 11.6344 1.05118 11.3757 1.15064=
- 11.1342L4.24501 3.61925C4.3993 3.24455 4.76447 3 5.16969 3H22C22.5523 3 23=
- 3.44772 23 4V14C23 14.5523 22.5523 15 22 15H18.5182C18.1932 15 17.8886 15.=
-1579 17.7012 15.4233L12.2478 23.149C12.1053 23.3508 11.8367 23.4184 11.6157=
- 23.3078L9.80163 22.4008C8.74998 21.875 8.20687 20.6874 8.49694 19.548L9.40=
-017 16ZM17 13.4125V5H5.83939L3 11.8957V14H9.40017C10.7049 14 11.6602 15.229=
- 11.3384 16.4934L10.4351 20.0414C10.3771 20.2693 10.4857 20.5068 10.6961 20=
-.612L11.3572 20.9425L16.0673 14.27C16.3172 13.9159 16.6366 13.6257 17 13.41=
-25ZM19 13H21V5H19V13Z"></path></svg></button></div></div><div></div><div cl=
-ass=3D"markdown-body !text-text-primary"><p>Hello! =F0=9F=98=8A How can I a=
-ssist you today? Please share the User Story and Acceptance Criteria if you=
-'d like me to create a User Manual section.</p></div></div></div><div class=
-=3D"system-xs-regular mt-1 flex items-center text-text-quaternary opacity-0=
- group-hover:opacity-100"></div></div></div></div></div><div class=3D"absol=
-ute bottom-0 flex justify-center bg-chat-input-mask pb-4" style=3D"width: 2=
-126px;"><div class=3D"relative mx-auto w-full max-w-[768px] px-4" style=3D"=
-width: 768px;"><div class=3D"relative z-10 rounded-xl border border-compone=
-nts-chat-input-border bg-components-panel-bg-blur pb-[9px] shadow-md"><div =
-class=3D"relative max-h-[158px] overflow-y-auto overflow-x-hidden px-[9px] =
-pt-[9px]"><div class=3D"flex flex-wrap gap-2"></div><div class=3D"flex item=
-s-center justify-between"><div class=3D"relative flex w-full grow items-cen=
-ter"><div class=3D"body-lg-regular pointer-events-none invisible absolute h=
--auto w-auto whitespace-pre p-1 leading-6"></div><textarea class=3D"body-lg=
--regular w-full resize-none bg-transparent p-1 leading-6 text-text-tertiary=
- outline-none" placeholder=3D"Talk to Bot" style=3D"height: 32px !important=
-;" data-listener-added_65eae50b=3D"true"></textarea></div><div class=3D"fle=
-x shrink-0 items-center justify-end"><div class=3D"flex items-center pl-1">=
-<div class=3D"flex items-center space-x-1"></div><button type=3D"button" cl=
-ass=3D"btn disabled:btn-disabled btn-primary btn-medium ml-3 w-8 px-0" styl=
-e=3D"background-color: rgb(28, 100, 242);"><svg viewBox=3D"0 0 24 24" xmlns=
+p-1 pl-3 bg-state-accent-active text-text-accent hover:bg-state-accent-acti=
+ve"><div class=3D"grow truncate p-1 pl-0" title=3D"discussing Duo Challenge=
+ participation rules">discussing Duo Challenge participation rules</div><di=
+v class=3D"shrink-0"><div class=3D"inline-block" data-state=3D"closed"><but=
+ton type=3D"button" class=3D"action-btn action-btn-m opacity-0 action-btn-a=
+ctive"><svg viewBox=3D"0 0 24 24" xmlns=3D"http://www.w3.org/2000/svg" widt=
+h=3D"24" height=3D"24" fill=3D"currentColor" class=3D"remixicon h-4 w-4"><p=
+ath d=3D"M5 10C3.9 10 3 10.9 3 12C3 13.1 3.9 14 5 14C6.1 14 7 13.1 7 12C7 1=
+0.9 6.1 10 5 10ZM19 10C17.9 10 17 10.9 17 12C17 13.1 17.9 14 19 14C20.1 14 =
+21 13.1 21 12C21 10.9 20.1 10 19 10ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10=
+.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10Z"></path></svg></bu=
+tton></div></div></div><div class=3D"system-sm-medium group flex cursor-poi=
+nter rounded-lg p-1 pl-3 text-components-menu-item-text hover:bg-state-base=
+-hover"><div class=3D"grow truncate p-1 pl-0" title=3D"=E9=97=AE=E5=80=99=
+=E6=88=91=E8=87=AA=E5=B7=B1=E2=98=BA=EF=B8=8F">=E9=97=AE=E5=80=99=E6=88=91=
+=E8=87=AA=E5=B7=B1=E2=98=BA=EF=B8=8F</div><div class=3D"shrink-0"><div clas=
+s=3D"inline-block" data-state=3D"closed"><button type=3D"button" class=3D"a=
+ction-btn action-btn-m opacity-0"><svg viewBox=3D"0 0 24 24" xmlns=3D"http:=
+//www.w3.org/2000/svg" width=3D"24" height=3D"24" fill=3D"currentColor" cla=
+ss=3D"remixicon h-4 w-4"><path d=3D"M5 10C3.9 10 3 10.9 3 12C3 13.1 3.9 14 =
+5 14C6.1 14 7 13.1 7 12C7 10.9 6.1 10 5 10ZM19 10C17.9 10 17 10.9 17 12C17 =
+13.1 17.9 14 19 14C20.1 14 21 13.1 21 12C21 10.9 20.1 10 19 10ZM12 10C10.9 =
+10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 1=
+0 12 10Z"></path></svg></button></div></div></div><div class=3D"system-sm-m=
+edium group flex cursor-pointer rounded-lg p-1 pl-3 text-components-menu-it=
+em-text hover:bg-state-base-hover"><div class=3D"grow truncate p-1 pl-0" ti=
+tle=3D"Greeting myself=E2=98=BA=EF=B8=8F">Greeting myself=E2=98=BA=EF=B8=8F=
+</div><div class=3D"shrink-0"><div class=3D"inline-block" data-state=3D"clo=
+sed"><button type=3D"button" class=3D"action-btn action-btn-m opacity-0"><s=
+vg viewBox=3D"0 0 24 24" xmlns=3D"http://www.w3.org/2000/svg" width=3D"24" =
+height=3D"24" fill=3D"currentColor" class=3D"remixicon h-4 w-4"><path d=3D"=
+M5 10C3.9 10 3 10.9 3 12C3 13.1 3.9 14 5 14C6.1 14 7 13.1 7 12C7 10.9 6.1 1=
+0 5 10ZM19 10C17.9 10 17 10.9 17 12C17 13.1 17.9 14 19 14C20.1 14 21 13.1 2=
+1 12C21 10.9 20.1 10 19 10ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 =
+14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10Z"></path></svg></button></di=
+v></div></div><div class=3D"system-sm-medium group flex cursor-pointer roun=
+ded-lg p-1 pl-3 text-components-menu-item-text hover:bg-state-base-hover"><=
+div class=3D"grow truncate p-1 pl-0" title=3D"Receiving another greeting=E2=
+=98=BA=EF=B8=8F">Receiving another greeting=E2=98=BA=EF=B8=8F</div><div cla=
+ss=3D"shrink-0"><div class=3D"inline-block" data-state=3D"closed"><button t=
+ype=3D"button" class=3D"action-btn action-btn-m opacity-0"><svg viewBox=3D"=
+0 0 24 24" xmlns=3D"http://www.w3.org/2000/svg" width=3D"24" height=3D"24" =
+fill=3D"currentColor" class=3D"remixicon h-4 w-4"><path d=3D"M5 10C3.9 10 3=
+ 10.9 3 12C3 13.1 3.9 14 5 14C6.1 14 7 13.1 7 12C7 10.9 6.1 10 5 10ZM19 10C=
+17.9 10 17 10.9 17 12C17 13.1 17.9 14 19 14C20.1 14 21 13.1 21 12C21 10.9 2=
+0.1 10 19 10ZM12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 =
+13.1 14 12C14 10.9 13.1 10 12 10Z"></path></svg></button></div></div></div>=
+<div class=3D"system-sm-medium group flex cursor-pointer rounded-lg p-1 pl-=
+3 text-components-menu-item-text hover:bg-state-base-hover"><div class=3D"g=
+row truncate p-1 pl-0" title=3D"Greeting myself=E2=98=BA=EF=B8=8F">Greeting=
+ myself=E2=98=BA=EF=B8=8F</div><div class=3D"shrink-0"><div class=3D"inline=
+-block" data-state=3D"closed"><button type=3D"button" class=3D"action-btn a=
+ction-btn-m opacity-0"><svg viewBox=3D"0 0 24 24" xmlns=3D"http://www.w3.or=
+g/2000/svg" width=3D"24" height=3D"24" fill=3D"currentColor" class=3D"remix=
+icon h-4 w-4"><path d=3D"M5 10C3.9 10 3 10.9 3 12C3 13.1 3.9 14 5 14C6.1 14=
+ 7 13.1 7 12C7 10.9 6.1 10 5 10ZM19 10C17.9 10 17 10.9 17 12C17 13.1 17.9 1=
+4 19 14C20.1 14 21 13.1 21 12C21 10.9 20.1 10 19 10ZM12 10C10.9 10 10 10.9 =
+10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10Z"><=
+/path></svg></button></div></div></div></div></div><div class=3D"flex shrin=
+k-0 items-center justify-between p-3"><div class=3D"inline-block" data-stat=
+e=3D"closed"><div><button type=3D"button" class=3D"action-btn action-btn-l"=
+><svg viewBox=3D"0 0 24 24" xmlns=3D"http://www.w3.org/2000/svg" width=3D"2=
+4" height=3D"24" fill=3D"currentColor" class=3D"remixicon h-[18px] w-[18px]=
+"><path d=3D"M5 7C5 6.17157 5.67157 5.5 6.5 5.5C7.32843 5.5 8 6.17157 8 7C8=
+ 7.82843 7.32843 8.5 6.5 8.5C5.67157 8.5 5 7.82843 5 7ZM6.5 3.5C4.567 3.5 3=
+ 5.067 3 7C3 8.933 4.567 10.5 6.5 10.5C8.433 10.5 10 8.933 10 7C10 5.067 8.=
+433 3.5 6.5 3.5ZM12 8H20V6H12V8ZM16 17C16 16.1716 16.6716 15.5 17.5 15.5C18=
+.3284 15.5 19 16.1716 19 17C19 17.8284 18.3284 18.5 17.5 18.5C16.6716 18.5 =
+16 17.8284 16 17ZM17.5 13.5C15.567 13.5 14 15.067 14 17C14 18.933 15.567 20=
+.5 17.5 20.5C19.433 20.5 21 18.933 21 17C21 15.067 19.433 13.5 17.5 13.5ZM4=
+ 16V18H12V16H4Z"></path></svg></button></div></div><div class=3D"shrink-0">=
+<div class=3D"flex shrink-0 items-center gap-1.5 px-2"><div class=3D"system=
+-2xs-medium-uppercase text-text-tertiary">Powered by</div><img class=3D"blo=
+ck w-[22.651px] h-[24.5px] !h-5" alt=3D"logo" src=3D"https://dify.4x6maker.=
+com/logo/logo.png"></div></div></div></div></div><div class=3D"relative gro=
+w p-2"><div class=3D"flex h-full flex-col overflow-hidden border-[0,5px] bo=
+rder-components-panel-border-subtle bg-chatbot-bg rounded-2xl"><div class=
+=3D"flex h-14 shrink-0 items-center justify-between p-3"><div class=3D"flex=
+ items-center gap-1 transition-all duration-200 ease-in-out user-select-non=
+e opacity-0"><button type=3D"button" class=3D"action-btn action-btn-l curso=
+r-default"><svg viewBox=3D"0 0 24 24" xmlns=3D"http://www.w3.org/2000/svg" =
+width=3D"24" height=3D"24" fill=3D"currentColor" class=3D"remixicon h-[18px=
+] w-[18px]"><path d=3D"M21 3C21.5523 3 22 3.44772 22 4V20C22 20.5523 21.552=
+3 21 21 21H3C2.44772 21 2 20.5523 2 20V4C2 3.44772 2.44772 3 3 3H21ZM20 5H4=
+V19H20V5ZM18 7V17H16V7H18Z"></path></svg></button><div class=3D"mr-1 shrink=
+-0"><span class=3D"flex items-center justify-center relative rounded-lg gro=
+w-0 shrink-0 overflow-hidden w-10 h-10 text-[24px]" style=3D"background: rg=
+b(255, 234, 213);"><em-emoji id=3D"=F0=9F=A4=96"><span class=3D"emoji-mart-=
+emoji" data-emoji-set=3D"native"><span style=3D"font-family: EmojiMart, &qu=
+ot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;, &quot;Segoe UI&quot;,=
+ &quot;Apple Color Emoji&quot;, &quot;Twemoji Mozilla&quot;, &quot;Noto Col=
+or Emoji&quot;, &quot;Android Emoji&quot;;">=F0=9F=A4=96</span></span></em-=
+emoji></span></div><div class=3D"flex items-center px-1"><div class=3D"h-[1=
+4px] w-px bg-divider-regular"></div></div></div><div class=3D"flex items-ce=
+nter gap-1"><button type=3D"button" class=3D"action-btn action-btn-l" data-=
+state=3D"closed"><svg viewBox=3D"0 0 24 24" xmlns=3D"http://www.w3.org/2000=
+/svg" width=3D"24" height=3D"24" fill=3D"currentColor" class=3D"remixicon h=
+-[18px] w-[18px]"><path d=3D"M22 12C22 17.5228 17.5229 22 12 22C6.4772 22 2=
+ 17.5228 2 12C2 6.47715 6.4772 2 12 2V4C7.5817 4 4 7.58172 4 12C4 16.4183 7=
+.5817 20 12 20C16.4183 20 20 16.4183 20 12C20 9.25022 18.6127 6.82447 16.49=
+98 5.38451L16.5 8H14.5V2L20.5 2V4L18.0008 3.99989C20.4293 5.82434 22 8.7287=
+3 22 12Z"></path></svg></button></div></div><div class=3D"h-full overflow-h=
+idden bg-chatbot-bg"><div class=3D"relative h-full"><div class=3D"relative =
+h-full overflow-y-auto overflow-x-hidden" style=3D"padding-bottom: 178.047p=
+x;"><div class=3D"px-8 mx-auto pt-6 w-full max-w-[768px] false"><div class=
+=3D"mb-2 flex last:mb-0"><div class=3D"relative h-10 w-10 shrink-0"><div cl=
+ass=3D"flex items-center justify-center w-full h-full rounded-full border-[=
+0.5px] border-black/5 text-xl" style=3D"background: rgb(213, 245, 246);"><e=
+m-emoji id=3D"=F0=9F=A4=96"><span class=3D"emoji-mart-emoji" data-emoji-set=
+=3D"native"><span style=3D"font-family: EmojiMart, &quot;Segoe UI Emoji&quo=
+t;, &quot;Segoe UI Symbol&quot;, &quot;Segoe UI&quot;, &quot;Apple Color Em=
+oji&quot;, &quot;Twemoji Mozilla&quot;, &quot;Noto Color Emoji&quot;, &quot=
+;Android Emoji&quot;;">=F0=9F=A4=96</span></span></em-emoji></div></div><di=
+v class=3D"chat-answer-container group ml-4 w-0 grow pb-4"><div class=3D"gr=
+oup relative pr-10"><div class=3D"body-lg-regular relative inline-block max=
+-w-full rounded-2xl bg-chat-bubble-bg px-4 py-3 text-text-primary"><div cla=
+ss=3D"absolute flex justify-end gap-1 !top-[9px]" style=3D"left: 616px;"></=
+div><div></div><div class=3D"markdown-body !text-text-primary"><p>=E6=88=91=
+=E6=98=AF=E4=B8=80=E5=90=8D=E4=B8=93=E6=B3=A8=E5=8C=BB=E7=96=97=E7=A7=91=E6=
+=8A=80=E7=9A=84=E6=8A=80=E6=9C=AF=E5=86=99=E4=BD=9C=E8=80=85=EF=BC=8C=E5=8F=
+=AF=E4=BB=A5=E6=A0=B9=E6=8D=AE=E4=BD=A0=E7=9A=84=E7=94=A8=E6=88=B7=E6=95=85=
+=E4=BA=8B=EF=BC=8C=E6=92=B0=E5=86=99=E6=B8=85=E6=99=B0=E7=AE=80=E6=B4=81=E7=
+=9A=84=E6=9C=80=E7=BB=88=E7=94=A8=E6=88=B7=E6=93=8D=E4=BD=9C=E6=8C=87=E5=8D=
+=97=E3=80=82</p></div></div></div><div class=3D"system-xs-regular mt-1 flex=
+ items-center text-text-quaternary opacity-0 group-hover:opacity-100"></div=
+></div></div><div class=3D"mb-2 flex justify-end pl-14 last:mb-0"><div clas=
+s=3D"group relative mr-4 max-w-full"><div class=3D"rounded-2xl bg-[#D1E9FF]=
+/50 px-4 py-3 text-sm text-gray-900" style=3D"background-color: rgb(225, 23=
+9, 254);"><div class=3D"markdown-body !text-text-primary"><p>Scenario 1: Jo=
+ining a Challenge Before It Starts</p>
+<p>Given I am a invitee of  a Duo Challenge,</p>
+<p>When</p>
+<p>Then I should be able to join the challenge before the challenge starts,=
+</p>
+<p>And my participation should be confirmed by the system.</p>
+<p>Scenario 2: Ensuring Only Two Participants</p>
+<p>Given I am the second user to join a Duo Challenge,</p>
+<p>When</p>
+<p>Then the system should confirm my participation,</p>
+<p>And no additional users should be allowed to join the challenge.</p>
+<p>Scenario 3: Handling Full Challenge</p>
+<p>Given I try to join a Duo Challenge that already has two participants,</=
+p>
+<p>When I attempt to join the challenge,</p>
+<p>Then the system should notify me that the challenge is full,</p>
+<p>And I should not be able to join the challenge.</p>
+<p>Scenario 4: Viewing Challenge Status</p>
+<p>Given I have joined a Duo Challenge,</p>
+<p>When I view the challenge details,</p>
+<p>Then before the challenge starts, I can see the button status is =E2=80=
+=9CChallenge Joined=E2=80=9C</p>
+<p>And after the challenge starts, I can participate in the challenge norma=
+lly</p>
+<p>And the number of participants (i.e. 2) should be displayed.</p></div></=
+div><div class=3D"mt-1 h-[18px]"></div></div><div class=3D"h-10 w-10 shrink=
+-0"><div class=3D"h-full w-full rounded-full border-[0.5px] border-black/5"=
+><svg width=3D"512" height=3D"512" viewBox=3D"0 0 512 512" fill=3D"none" xm=
+lns=3D"http://www.w3.org/2000/svg" class=3D"h-full w-full" data-icon=3D"Use=
+r" aria-hidden=3D"true"><g clip-path=3D"url(#clip0_5968_39205)"><rect width=
+=3D"512" height=3D"512" rx=3D"256" fill=3D"#B2DDFF"></rect><circle opacity=
+=3D"0.68" cx=3D"256" cy=3D"196" r=3D"84" fill=3D"white"></circle><ellipse o=
+pacity=3D"0.68" cx=3D"256" cy=3D"583.5" rx=3D"266" ry=3D"274.5" fill=3D"whi=
+te"></ellipse></g><defs><clipPath id=3D"clip0_5968_39205"><rect width=3D"51=
+2" height=3D"512" rx=3D"256" fill=3D"white"></rect></clipPath></defs></svg>=
+</div></div></div><div class=3D"mb-2 flex last:mb-0"><div class=3D"relative=
+ h-10 w-10 shrink-0"><div class=3D"flex items-center justify-center w-full =
+h-full rounded-full border-[0.5px] border-black/5 text-xl" style=3D"backgro=
+und: rgb(213, 245, 246);"><em-emoji id=3D"=F0=9F=A4=96"><span class=3D"emoj=
+i-mart-emoji" data-emoji-set=3D"native"><span style=3D"font-family: EmojiMa=
+rt, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;, &quot;Segoe UI=
+&quot;, &quot;Apple Color Emoji&quot;, &quot;Twemoji Mozilla&quot;, &quot;N=
+oto Color Emoji&quot;, &quot;Android Emoji&quot;;">=F0=9F=A4=96</span></spa=
+n></em-emoji></div></div><div class=3D"chat-answer-container group ml-4 w-0=
+ grow pb-4"><div class=3D"group relative pr-10"><div class=3D"body-lg-regul=
+ar relative inline-block max-w-full rounded-2xl bg-chat-bubble-bg px-4 py-3=
+ text-text-primary"><div class=3D"absolute flex justify-end gap-1 -bottom-4=
+ right-2"><div class=3D"ml-1 hidden items-center gap-0.5 rounded-[10px] bor=
+der-[0.5px] border-components-actionbar-border bg-components-actionbar-bg p=
+-0.5 shadow-md backdrop-blur-sm group-hover:flex"><button type=3D"button" c=
+lass=3D"action-btn action-btn-m"><svg viewBox=3D"0 0 24 24" xmlns=3D"http:/=
+/www.w3.org/2000/svg" width=3D"24" height=3D"24" fill=3D"currentColor" clas=
+s=3D"remixicon h-4 w-4"><path d=3D"M7 4V2H17V4H20.0066C20.5552 4 21 4.44495=
+ 21 4.9934V21.0066C21 21.5552 20.5551 22 20.0066 22H3.9934C3.44476 22 3 21.=
+5551 3 21.0066V4.9934C3 4.44476 3.44495 4 3.9934 4H7ZM7 6H5V20H19V6H17V8H7V=
+6ZM9 4V6H15V4H9Z"></path></svg></button><button type=3D"button" class=3D"ac=
+tion-btn action-btn-m"><svg viewBox=3D"0 0 24 24" xmlns=3D"http://www.w3.or=
+g/2000/svg" width=3D"24" height=3D"24" fill=3D"currentColor" class=3D"remix=
+icon h-4 w-4"><path d=3D"M22 12C22 17.5228 17.5229 22 12 22C6.4772 22 2 17.=
+5228 2 12C2 6.47715 6.4772 2 12 2V4C7.5817 4 4 7.58172 4 12C4 16.4183 7.581=
+7 20 12 20C16.4183 20 20 16.4183 20 12C20 9.25022 18.6127 6.82447 16.4998 5=
+.38451L16.5 8H14.5V2L20.5 2V4L18.0008 3.99989C20.4293 5.82434 22 8.72873 22=
+ 12Z"></path></svg></button></div><div class=3D"ml-1 hidden items-center ga=
+p-0.5 rounded-[10px] border-[0.5px] border-components-actionbar-border bg-c=
+omponents-actionbar-bg p-0.5 shadow-md backdrop-blur-sm group-hover:flex"><=
+button type=3D"button" class=3D"action-btn action-btn-m"><svg viewBox=3D"0 =
+0 24 24" xmlns=3D"http://www.w3.org/2000/svg" width=3D"24" height=3D"24" fi=
+ll=3D"currentColor" class=3D"remixicon h-4 w-4"><path d=3D"M14.5998 8.00033=
+H21C22.1046 8.00033 23 8.89576 23 10.0003V12.1047C23 12.3659 22.9488 12.624=
+6 22.8494 12.8662L19.755 20.3811C19.6007 20.7558 19.2355 21.0003 18.8303 21=
+.0003H2C1.44772 21.0003 1 20.5526 1 20.0003V10.0003C1 9.44804 1.44772 9.000=
+33 2 9.00033H5.48184C5.80677 9.00033 6.11143 8.84246 6.29881 8.57701L11.752=
+2 0.851355C11.8947 0.649486 12.1633 0.581978 12.3843 0.692483L14.1984 1.599=
+51C15.25 2.12534 15.7931 3.31292 15.5031 4.45235L14.5998 8.00033ZM7 10.5878=
+V19.0003H18.1606L21 12.1047V10.0003H14.5998C13.2951 10.0003 12.3398 8.77128=
+ 12.6616 7.50691L13.5649 3.95894C13.6229 3.73105 13.5143 3.49353 13.3039 3.=
+38837L12.6428 3.0578L7.93275 9.73038C7.68285 10.0844 7.36341 10.3746 7 10.5=
+878ZM5 11.0003H3V19.0003H5V11.0003Z"></path></svg></button><button type=3D"=
+button" class=3D"action-btn action-btn-m"><svg viewBox=3D"0 0 24 24" xmlns=
 =3D"http://www.w3.org/2000/svg" width=3D"24" height=3D"24" fill=3D"currentC=
-olor" class=3D"remixicon h-4 w-4"><path d=3D"M3 12.9999H9V10.9999H3V1.84558=
-C3 1.56944 3.22386 1.34558 3.5 1.34558C3.58425 1.34558 3.66714 1.36687 3.74=
-096 1.40747L22.2034 11.5618C22.4454 11.6949 22.5337 11.9989 22.4006 12.2409=
-C22.3549 12.324 22.2865 12.3924 22.2034 12.4381L3.74096 22.5924C3.499 22.72=
-55 3.19497 22.6372 3.06189 22.3953C3.02129 22.3214 3 22.2386 3 22.1543V12.9=
-999Z"></path></svg></button></div></div></div></div></div></div></div></div=
-></div></div></div></div></div><readwise-tooltip-container><template shadow=
-mode=3D"open"><div><div class=3D"Toastify"></div></div></template></readwis=
-e-tooltip-container><next-route-announcer style=3D"position: absolute;"><te=
-mplate shadowmode=3D"open"><div aria-live=3D"assertive" id=3D"__next-route-=
-announcer__" role=3D"alert" style=3D"position: absolute; border: 0px; heigh=
-t: 1px; margin: -1px; padding: 0px; width: 1px; clip: rect(0px, 0px, 0px, 0=
-px); overflow: hidden; white-space: nowrap; overflow-wrap: normal;"></div><=
-/template></next-route-announcer><div id=3D"monica-content-root" class=3D"m=
-onica-widget" style=3D"pointer-events: auto;"><template shadowmode=3D"open"=
-><div><div translate=3D"no" class=3D"_monica-theme-d2f2b383 root-container-=
-UmvGjM markdown-font-size-provider-3KSWBx sidebar-ZRQNut" lang=3D"zh_CN"><d=
-iv class=3D"content-root-WCIiJJ"><div class=3D"page-extra-window--rG3TB" st=
-yle=3D"right: 0px; left: 0px;"></div><div class=3D"dialog-root-ZbJNQk"></di=
-v><div class=3D"artifact-widget-root-g65VNZ"></div><div class=3D"reading-su=
-mmary-status-bar-yFqhHz"></div><div class=3D"contextual-toolbar-BjPOM3" dir=
-=3D"ltr" style=3D"text-align: left;"></div><div class=3D"grammar-check-2yjm=
-U8 _monica-theme-d2f2b383"></div><div class=3D"window-root-ERNrXd"></div></=
-div></div></div></template></div><textarea tabindex=3D"-1" aria-hidden=3D"t=
-rue" style=3D"min-height: 0px !important; max-height: none !important; heig=
-ht: 0px !important; visibility: hidden !important; overflow: hidden !import=
-ant; position: absolute !important; z-index: -1000 !important; top: 0px !im=
-portant; right: 0px !important; display: block !important; border-width: 0p=
-x; box-sizing: border-box; font-family: ui-sans-serif, system-ui, sans-seri=
-f, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe U=
-I Symbol&quot;, &quot;Noto Color Emoji&quot;; font-size: 15px; font-style: =
-normal; font-weight: 400; letter-spacing: normal; line-height: 24px; paddin=
-g: 4px; tab-size: 4; text-indent: 0px; text-rendering: auto; text-transform=
-: none; width: 667.812px; word-break: normal; word-spacing: 0px; scrollbar-=
-gutter: auto;"></textarea></body><grammarly-desktop-integration data-gramma=
-rly-shadow-root=3D"true"><template shadowmode=3D"open"><div aria-label=3D"g=
-rammarly-integration" role=3D"group" tabindex=3D"-1" class=3D"grammarly-des=
-ktop-integration" data-content=3D"{&quot;mode&quot;:&quot;full&quot;,&quot;=
-isActive&quot;:true,&quot;isUserDisabled&quot;:false}"></div></template></g=
-rammarly-desktop-integration></html>
-------MultipartBoundary--qlqrZw0V4ZwRqEr33dvKvznQu6zR6k9SktV7wukQP1----
+olor" class=3D"remixicon h-4 w-4"><path d=3D"M9.40017 16H3C1.89543 16 1 15.=
+1046 1 14V11.8957C1 11.6344 1.05118 11.3757 1.15064 11.1342L4.24501 3.61925=
+C4.3993 3.24455 4.76447 3 5.16969 3H22C22.5523 3 23 3.44772 23 4V14C23 14.5=
+523 22.5523 15 22 15H18.5182C18.1932 15 17.8886 15.1579 17.7012 15.4233L12.=
+2478 23.149C12.1053 23.3508 11.8367 23.4184 11.6157 23.3078L9.80163 22.4008=
+C8.74998 21.875 8.20687 20.6874 8.49694 19.548L9.40017 16ZM17 13.4125V5H5.8=
+3939L3 11.8957V14H9.40017C10.7049 14 11.6602 15.229 11.3384 16.4934L10.4351=
+ 20.0414C10.3771 20.2693 10.4857 20.5068 10.6961 20.612L11.3572 20.9425L16.=
+0673 14.27C16.3172 13.9159 16.6366 13.6257 17 13.4125ZM19 13H21V5H19V13Z"><=
+/path></svg></button></div></div><div></div><div class=3D"markdown-body !te=
+xt-text-primary"><h1>Join a Duo Challenge</h1>
+<p><em>This feature allows the user to join a two-person (Duo) challenge be=
+fore it starts and confirm participation.</em></p>
+<h2>Join a Duo Challenge Before It Starts</h2>
+<p><em>The user can accept an invitation and join a Duo Challenge before it=
+ begins.</em></p>
+<ol>
+<li>Click ['View Invitation'] from your challenge notification or email.</l=
+i>
+<li>Review the challenge details, such as name, description, and start time=
+.</li>
+<li>Click ['Join Challenge'] to confirm your participation.</li>
+</ol>
+<h2>Confirm Your Participation</h2>
+<p><em>The user can confirm they have successfully joined the challenge.</e=
+m></p>
+<ol>
+<li>After clicking ['Join Challenge'], look for the confirmation message: =
+=E2=80=9CYou have joined the challenge.=E2=80=9D</li>
+<li>The button label will change to =E2=80=9CChallenge Joined=E2=80=9D.
+<ul>
+<li><em>Tip:</em> You must join before the start time; otherwise, you may n=
+ot be able to enter.</li>
+</ul>
+</li>
+</ol>
+<h2>View Challenge Status</h2>
+<p><em>The user can check their current status and participant count in a D=
+uo Challenge.</em></p>
+<ol>
+<li>Go to the ['My Challenges'] tab.</li>
+<li>Click on the challenge you joined.</li>
+<li>View the challenge status.
+<ul>
+<li>Before the start time: The status should show =E2=80=9CChallenge Joined=
+=E2=80=9D.</li>
+<li>After the challenge starts: You will see participation options active.<=
+/li>
+</ul>
+</li>
+<li>Check the participant count. It should display =E2=80=9C2 participants=
+=E2=80=9D.</li>
+</ol>
+<h2>Troubleshooting / Common Questions</h2>
+<ul>
+<li>
+<p><strong>I can=E2=80=99t join the challenge.</strong></p>
+<ul>
+<li>Make sure the challenge has not already started.</li>
+<li>Check if the challenge already has two participants. Duo challenges all=
+ow only two users.</li>
+</ul>
+</li>
+<li>
+<p><strong>I see a message saying the challenge is full.</strong></p>
+<ul>
+<li>The challenge already has two participants. You cannot join it if it=E2=
+=80=99s full.</li>
+</ul>
+</li>
+<li>
+<p><strong>I joined the challenge, but the button still says =E2=80=98Join =
+Challenge=E2=80=99.</strong></p>
+<ul>
+<li>Refresh the page or log out and back in. If the issue continues, contac=
+t support.</li>
+</ul>
+</li>
+<li>
+<p><strong>Can I leave a challenge after joining?</strong></p>
+<ul>
+<li>Leaving may not be allowed once you join. Check the challenge rules or =
+ask the organizer.</li>
+</ul>
+</li>
+</ul></div></div></div><div class=3D"system-xs-regular mt-1 flex items-cent=
+er text-text-quaternary opacity-0 group-hover:opacity-100"></div></div></di=
+v></div></div><div class=3D"absolute bottom-0 flex justify-center bg-chat-i=
+nput-mask pb-4" style=3D"width: 1598px;"><div class=3D"relative mx-auto w-f=
+ull max-w-[768px] px-4" style=3D"width: 768px;"><div class=3D"mb-2 py-2"><d=
+iv class=3D"mb-2.5 flex items-center justify-between gap-2"><div class=3D"w=
+-full my-2 bg-gradient-to-r from-divider-regular to-background-gradient-mas=
+k-transparent h-px grow rotate-180"></div><div class=3D"system-xs-medium-up=
+percase shrink-0 text-text-tertiary">Try to ask</div><div class=3D"w-full m=
+y-2 bg-gradient-to-r from-divider-regular to-background-gradient-mask-trans=
+parent h-px grow"></div></div><div class=3D"flex flex-wrap justify-center">=
+<button type=3D"button" class=3D"btn disabled:btn-disabled btn-secondary-ac=
+cent btn-small mb-1 mr-1 last:mr-0">Can't join challenge?</button><button t=
+ype=3D"button" class=3D"btn disabled:btn-disabled btn-secondary-accent btn-=
+small mb-1 mr-1 last:mr-0">Challenge is full?</button><button type=3D"butto=
+n" class=3D"btn disabled:btn-disabled btn-secondary-accent btn-small mb-1 m=
+r-1 last:mr-0">Button still says 'Join'?</button></div></div><div class=3D"=
+relative z-10 rounded-xl border border-components-chat-input-border bg-comp=
+onents-panel-bg-blur pb-[9px] shadow-md"><div class=3D"relative max-h-[158p=
+x] overflow-y-auto overflow-x-hidden px-[9px] pt-[9px]"><div class=3D"flex =
+flex-wrap gap-2"></div><div class=3D"flex items-center justify-between"><di=
+v class=3D"relative flex w-full grow items-center"><div class=3D"body-lg-re=
+gular pointer-events-none invisible absolute h-auto w-auto whitespace-pre p=
+-1 leading-6"></div><textarea class=3D"body-lg-regular w-full resize-none b=
+g-transparent p-1 leading-6 text-text-tertiary outline-none" placeholder=3D=
+"Talk to Bot" style=3D"height: 32px !important;" data-listener-added_4dedfa=
+d6=3D"true"></textarea></div></div></div><div class=3D"px-[9px]"><div class=
+=3D"flex shrink-0 items-center justify-end"><div class=3D"flex items-center=
+ pl-1"><div class=3D"flex items-center space-x-1"></div><button type=3D"but=
+ton" class=3D"btn disabled:btn-disabled btn-primary btn-medium ml-3 w-8 px-=
+0" style=3D"background-color: rgb(28, 100, 242);"><svg viewBox=3D"0 0 24 24=
+" xmlns=3D"http://www.w3.org/2000/svg" width=3D"24" height=3D"24" fill=3D"c=
+urrentColor" class=3D"remixicon h-4 w-4"><path d=3D"M3 12.9999H9V10.9999H3V=
+1.84558C3 1.56944 3.22386 1.34558 3.5 1.34558C3.58425 1.34558 3.66714 1.366=
+87 3.74096 1.40747L22.2034 11.5618C22.4454 11.6949 22.5337 11.9989 22.4006 =
+12.2409C22.3549 12.324 22.2865 12.3924 22.2034 12.4381L3.74096 22.5924C3.49=
+9 22.7255 3.19497 22.6372 3.06189 22.3953C3.02129 22.3214 3 22.2386 3 22.15=
+43V12.9999Z"></path></svg></button></div></div></div></div></div></div></di=
+v></div></div></div></div></div><readwise-tooltip-container><template shado=
+wmode=3D"open"><div><div class=3D"Toastify"></div></div></template></readwi=
+se-tooltip-container><next-route-announcer style=3D"position: absolute;"><t=
+emplate shadowmode=3D"open"><div aria-live=3D"assertive" id=3D"__next-route=
+-announcer__" role=3D"alert" style=3D"position: absolute; border: 0px; heig=
+ht: 1px; margin: -1px; padding: 0px; width: 1px; clip: rect(0px, 0px, 0px, =
+0px); overflow: hidden; white-space: nowrap; overflow-wrap: normal;"></div>=
+</template></next-route-announcer><div id=3D"monica-content-root" class=3D"=
+monica-widget" style=3D"pointer-events: auto;"><template shadowmode=3D"open=
+"><div><div translate=3D"no" class=3D"_monica-theme-d2f2b383 root-container=
+-UmvGjM markdown-font-size-provider-3KSWBx sidebar-ZRQNut" lang=3D"zh_CN"><=
+div class=3D"content-root-WCIiJJ"><div class=3D"page-extra-window--rG3TB" s=
+tyle=3D"right: 0px; left: 0px;"></div><div class=3D"dialog-root-ZbJNQk"></d=
+iv><div class=3D"artifact-widget-root-g65VNZ"></div><div class=3D"reading-s=
+ummary-status-bar-yFqhHz"></div><div class=3D"contextual-toolbar-BjPOM3" di=
+r=3D"ltr" style=3D"text-align: left;"></div><div class=3D"grammar-check-2yj=
+mU8 _monica-theme-d2f2b383"></div><div class=3D"window-root-ERNrXd"></div><=
+/div></div></div></template></div><textarea tabindex=3D"-1" aria-hidden=3D"=
+true" style=3D"min-height: 0px !important; max-height: none !important; hei=
+ght: 0px !important; visibility: hidden !important; overflow: hidden !impor=
+tant; position: absolute !important; z-index: -1000 !important; top: 0px !i=
+mportant; right: 0px !important; display: block !important; border-width: 0=
+px; box-sizing: border-box; font-family: ui-sans-serif, system-ui, sans-ser=
+if, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe =
+UI Symbol&quot;, &quot;Noto Color Emoji&quot;; font-size: 15px; font-style:=
+ normal; font-weight: 400; letter-spacing: normal; line-height: 24px; paddi=
+ng: 4px; tab-size: 4; text-indent: 0px; text-rendering: auto; text-transfor=
+m: none; width: 716.901px; word-break: normal; word-spacing: 0px; scrollbar=
+-gutter: auto;"></textarea></body><grammarly-desktop-integration data-gramm=
+arly-shadow-root=3D"true"><template shadowmode=3D"open"><div aria-label=3D"=
+grammarly-integration" role=3D"group" tabindex=3D"-1" class=3D"grammarly-de=
+sktop-integration" data-content=3D"{&quot;mode&quot;:&quot;full&quot;,&quot=
+;isActive&quot;:true,&quot;isUserDisabled&quot;:false}"></div></template></=
+grammarly-desktop-integration></html>
+------MultipartBoundary--dcNIYxbzI2QCCu6f23jX8VFxiKePvDUX1b0LAw1pxF----
 Content-Type: image/png
 Content-Transfer-Encoding: base64
 Content-Location: https://dify.4x6maker.com/logo/logo.png
@@ -413,7 +576,7 @@ dzj01/i+OfFYrpuf7yP1wdf1kRaQJiedm+IW08ldoegTMY/aSODUgD+DP1auREmykc5WfzRhfaGx
 rDSkY0KHgcu+w+5f2vRj/CT+iG2zy9X7X7Ueib9A4jY8eN923oRVNeAggEz+p7F7bf0husewqFLQ
 lFcmecpGBJAL7J8FaHn6fyiBAljXGXQ3AAAAAElFTkSuQmCC
 
-------MultipartBoundary--qlqrZw0V4ZwRqEr33dvKvznQu6zR6k9SktV7wukQP1----
+------MultipartBoundary--dcNIYxbzI2QCCu6f23jX8VFxiKePvDUX1b0LAw1pxF----
 Content-Type: text/css
 Content-Transfer-Encoding: quoted-printable
 Content-Location: https://dify.4x6maker.com/_next/static/css/033a82ae6e3a00c7.css
@@ -430,7 +593,7 @@ Content-Location: https://dify.4x6maker.com/_next/static/css/033a82ae6e3a00c7.cs
 blue-light-500) !important; }
 
 .weightedScoreSliderTrack-1 { background: transparent !important; }
-------MultipartBoundary--qlqrZw0V4ZwRqEr33dvKvznQu6zR6k9SktV7wukQP1----
+------MultipartBoundary--dcNIYxbzI2QCCu6f23jX8VFxiKePvDUX1b0LAw1pxF----
 Content-Type: text/css
 Content-Transfer-Encoding: quoted-printable
 Content-Location: https://dify.4x6maker.com/_next/static/css/6f20ad1915bfe966.css
@@ -442,7 +605,7 @@ Content-Location: https://dify.4x6maker.com/_next/static/css/6f20ad1915bfe966.cs
 .slider-track { background-color: var(--color-components-slider-range); }
 
 .slider-track-1 { background-color: var(--color-components-slider-track); }
-------MultipartBoundary--qlqrZw0V4ZwRqEr33dvKvznQu6zR6k9SktV7wukQP1----
+------MultipartBoundary--dcNIYxbzI2QCCu6f23jX8VFxiKePvDUX1b0LAw1pxF----
 Content-Type: text/css
 Content-Transfer-Encoding: quoted-printable
 Content-Location: https://dify.4x6maker.com/_next/static/css/690e85444235d5c9.css
@@ -1065,7 +1228,7 @@ transparent solid 2px; outline-offset: 2px; }
 
 .style_input__yz40J:focus-visible { --tw-bg-opacity: 1 !important; backgrou=
 nd-color: rgb(255 255 255/var(--tw-bg-opacity)) !important; }
-------MultipartBoundary--qlqrZw0V4ZwRqEr33dvKvznQu6zR6k9SktV7wukQP1----
+------MultipartBoundary--dcNIYxbzI2QCCu6f23jX8VFxiKePvDUX1b0LAw1pxF----
 Content-Type: text/css
 Content-Transfer-Encoding: quoted-printable
 Content-Location: https://dify.4x6maker.com/_next/static/css/3906eae0a255d384.css
@@ -1292,7 +1455,7 @@ ity)); }
 
 .style_warningIcon__1ElkO { height: 22px; width: 22px; fill: currentcolor; =
 --tw-text-opacity: 1; color: rgb(220 38 38/var(--tw-text-opacity)); }
-------MultipartBoundary--qlqrZw0V4ZwRqEr33dvKvznQu6zR6k9SktV7wukQP1----
+------MultipartBoundary--dcNIYxbzI2QCCu6f23jX8VFxiKePvDUX1b0LAw1pxF----
 Content-Type: text/css
 Content-Transfer-Encoding: quoted-printable
 Content-Location: https://dify.4x6maker.com/_next/static/css/e86e601de78f8fa4.css
@@ -2346,7 +2509,7 @@ static/media/copied.350b63f0.svg"); }
 px; }
 
 .style_slider-track-1__Mt_Vw { background-color: rgb(229, 231, 235); }
-------MultipartBoundary--qlqrZw0V4ZwRqEr33dvKvznQu6zR6k9SktV7wukQP1----
+------MultipartBoundary--dcNIYxbzI2QCCu6f23jX8VFxiKePvDUX1b0LAw1pxF----
 Content-Type: text/css
 Content-Transfer-Encoding: quoted-printable
 Content-Location: https://dify.4x6maker.com/_next/static/css/63a87df637ab8ab0.css
@@ -3250,7 +3413,7 @@ deoPlayer_smallSize__dgokI .VideoPlayer_playPauseButton__jJ8E7 svg { width:=
 
 .VideoPlayer_controls__e1GdA.VideoPlayer_smallSize__dgokI .VideoPlayer_mute=
 Button__4Wefh { order: -1; }
-------MultipartBoundary--qlqrZw0V4ZwRqEr33dvKvznQu6zR6k9SktV7wukQP1----
+------MultipartBoundary--dcNIYxbzI2QCCu6f23jX8VFxiKePvDUX1b0LAw1pxF----
 Content-Type: text/css
 Content-Transfer-Encoding: quoted-printable
 Content-Location: https://dify.4x6maker.com/_next/static/css/8fde60dc5362b2b2.css
@@ -3552,7 +3715,7 @@ rning); color: var(--color-text-warning); }
 
 .badge.badge-accent { border-width: 1px; border-color: var(--color-text-acc=
 ent-secondary); color: var(--color-text-accent-secondary); }
-------MultipartBoundary--qlqrZw0V4ZwRqEr33dvKvznQu6zR6k9SktV7wukQP1----
+------MultipartBoundary--dcNIYxbzI2QCCu6f23jX8VFxiKePvDUX1b0LAw1pxF----
 Content-Type: text/css
 Content-Transfer-Encoding: quoted-printable
 Content-Location: https://dify.4x6maker.com/_next/static/css/8c3d4075ea51bcce.css
@@ -4985,7 +5148,7 @@ p: auto; }
 
 .markdown-body .react-syntax-highlighter-line-number { color: var(--color-t=
 ext-quaternary); }
-------MultipartBoundary--qlqrZw0V4ZwRqEr33dvKvznQu6zR6k9SktV7wukQP1----
+------MultipartBoundary--dcNIYxbzI2QCCu6f23jX8VFxiKePvDUX1b0LAw1pxF----
 Content-Type: text/css
 Content-Transfer-Encoding: quoted-printable
 Content-Location: https://dify.4x6maker.com/_next/static/css/753eaaf09c59d58e.css
@@ -11991,7 +12154,7 @@ cus { outline: transparent solid 2px; outline-offset: 2px; }
 .\[\&\>\:first-child\]\:mt-0 > :first-child { margin-top: 0px; }
 
 .\[\&\>\:last-child\]\:mb-0 > :last-child { margin-bottom: 0px; }
-------MultipartBoundary--qlqrZw0V4ZwRqEr33dvKvznQu6zR6k9SktV7wukQP1----
+------MultipartBoundary--dcNIYxbzI2QCCu6f23jX8VFxiKePvDUX1b0LAw1pxF----
 Content-Type: text/css
 Content-Transfer-Encoding: quoted-printable
 Content-Location: https://dify.4x6maker.com/_next/static/css/a84e16e53b8b7ae2.css
@@ -12538,7 +12701,7 @@ shadow: 0px 8px 8px -4px rgba(16,24,40,0.03),0px 20px 24px -4px rgba(16,24,=
 dow,0 0 #0000),var(--tw-ring-shadow,0 0 #0000),var(--tw-shadow); transition=
 -property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); t=
 ransition-duration: 0.15s; }
-------MultipartBoundary--qlqrZw0V4ZwRqEr33dvKvznQu6zR6k9SktV7wukQP1----
+------MultipartBoundary--dcNIYxbzI2QCCu6f23jX8VFxiKePvDUX1b0LAw1pxF----
 Content-Type: text/css
 Content-Transfer-Encoding: quoted-printable
 Content-Location: https://dify.4x6maker.com/_next/static/css/312c3a30cd1a3f18.css
@@ -13584,10 +13747,10 @@ taset-chunk-list-mask-bg: linear-gradient(180deg,rgba(34,34,37,0.00),#22222=
 5); --mask-top2bottom-gray-50-to-transparent: linear-gradient(180deg,rgba(2=
 4,24,27,0.08),rgba(0,0,0,0)); --color-dataset-warning-message-bg: linear-gr=
 adient(92deg,rgba(247,144,9,0.30),rgba(0,0,0,0.00)); }
-------MultipartBoundary--qlqrZw0V4ZwRqEr33dvKvznQu6zR6k9SktV7wukQP1----
+------MultipartBoundary--dcNIYxbzI2QCCu6f23jX8VFxiKePvDUX1b0LAw1pxF----
 Content-Type: text/css
 Content-Transfer-Encoding: quoted-printable
-Content-Location: cid:css-5f3c2c8d-2deb-4932-b0c8-d119c640d9dd@mhtml.blink
+Content-Location: cid:css-5c4698c5-f2f9-47d6-adfd-7c08a7eb5cc9@mhtml.blink
 
 @charset "utf-8";
 
@@ -13598,10 +13761,10 @@ nning fadeInOut; }
   0%, 100% { background-color: transparent; }
   30%, 70% { background-color: rgba(2, 118, 255, 0.2); }
 }
-------MultipartBoundary--qlqrZw0V4ZwRqEr33dvKvznQu6zR6k9SktV7wukQP1----
+------MultipartBoundary--dcNIYxbzI2QCCu6f23jX8VFxiKePvDUX1b0LAw1pxF----
 Content-Type: text/css
 Content-Transfer-Encoding: quoted-printable
-Content-Location: cid:css-fb1dcb72-7bd5-4c2a-a57a-976f81444e8a@mhtml.blink
+Content-Location: cid:css-adb608ff-d9ea-4e79-8d72-781c206b2477@mhtml.blink
 
 @charset "utf-8";
 
@@ -13609,4 +13772,4 @@ body { transition: opacity 0.2s ease-in; }
 
 body[unresolved] { opacity: 0; display: block; overflow: hidden; position: =
 relative; }
-------MultipartBoundary--qlqrZw0V4ZwRqEr33dvKvznQu6zR6k9SktV7wukQP1------
+------MultipartBoundary--dcNIYxbzI2QCCu6f23jX8VFxiKePvDUX1b0LAw1pxF------
