@@ -108,6 +108,8 @@ class BaseDifyChatApp extends BaseDifyApp {
         // No need to re-bind them here unless consolidating.
 
         // ---> Bind listeners for ACTION BUTTONS (Copy, Feedback, Regenerate) <--- 
+        // REMOVED: This logic is now handled in setupSidebarListeners to avoid duplication
+        /*
         const chatMessagesContainer = this.ui.elements.chatMessagesContainer;
         if (chatMessagesContainer) {
             chatMessagesContainer.addEventListener('click', (event) => {
@@ -132,6 +134,7 @@ class BaseDifyChatApp extends BaseDifyApp {
                 }
             });
         }
+        */
         
         console.log(`[BaseDifyChatApp ${this.constructor.name}] Chat-specific events bound.`);
         
@@ -350,9 +353,13 @@ class BaseDifyChatApp extends BaseDifyApp {
             // Create Dify client
             if (!this.difyClient) { // Create if not existing (e.g., after error/completion)
                 this.difyClient = new DifyClient({
-                    baseUrl: this.state.apiEndpoint,
+                    baseUrl: '/api/v1',
                     apiKey: this.state.apiKey,
-                    mode: this.difyMode
+                    mode: this.difyMode,
+                    onError: this.state.onError || ((error) => {
+                        console.error('[DifyClient Error]', error);
+                        this.ui.showError(`Dify Client Error: ${error.message || 'Unknown error'}`);
+                    })
                 });
             }
 
@@ -428,7 +435,7 @@ class BaseDifyChatApp extends BaseDifyApp {
             return;
         }
 
-        const paramsUrl = `${this.state.apiEndpoint}/parameters`;
+        const paramsUrl = '/api/v1/parameters';
         let openingStatement = t('chat.welcomeMessage', { default: '你好！我可以帮你做什么？' }); // Default welcome
         let suggestedQuestions = [];
 
@@ -459,6 +466,9 @@ class BaseDifyChatApp extends BaseDifyApp {
             const openingMessageId = 'opening-message-0'; // Make ID slightly more unique
             const msgElement = this.ui?.addMessage('assistant', openingStatement, openingMessageId, 'complete');
              if (msgElement) {
+                 // --- ADD MARKER FOR OPENING MESSAGE ---
+                 msgElement.dataset.messageType = 'opening'; 
+                 // --- END MARKER ---
                  this.ui?.finalizeMessage(openingMessageId); // Immediately finalize
                  // Display initial suggested questions below opening statement
                  if (suggestedQuestions.length > 0) {
@@ -480,7 +490,7 @@ class BaseDifyChatApp extends BaseDifyApp {
              return;
          }
 
-         const suggestionsUrl = `${this.state.apiEndpoint}/messages/${messageId}/suggested?user=${encodeURIComponent(this.state.currentUser.username || 'unknown-user')}`;
+         const suggestionsUrl = '/api/v1/messages/' + messageId + '/suggested?user=' + encodeURIComponent(this.state.currentUser.username || 'unknown-user');
          try {
              const response = await fetch(suggestionsUrl, {
                  method: 'GET',
@@ -536,7 +546,7 @@ class BaseDifyChatApp extends BaseDifyApp {
          this.ui?.clearChatArea();
          // TODO: Show loading indicator in chat area
 
-         const messagesUrl = `${this.state.apiEndpoint}/messages?conversation_id=${conversationId}&user=${encodeURIComponent(this.state.currentUser.username || 'unknown-user')}&limit=50`; // TODO: Add pagination
+         const messagesUrl = '/api/v1/messages?conversation_id=' + conversationId + '&user=' + encodeURIComponent(this.state.currentUser.username || 'unknown-user') + '&limit=50'; // TODO: Add pagination
 
          try {
              const response = await fetch(messagesUrl, {
@@ -687,7 +697,9 @@ class BaseDifyChatApp extends BaseDifyApp {
          }
          console.log(`Submitting feedback: message=${messageId}, rating=${rating}`);
 
-         const feedbackUrl = `${this.state.apiEndpoint}/messages/${messageId}/feedbacks`;
+         const feedbackUrl = '/api/v1/messages/' + messageId + '/feedbacks';
+         const feedbackButton = this.ui?.elements.chatMessagesContainer?.querySelector(`.feedback-btn[data-message-id="${messageId}"][data-rating="${rating}"]`);
+
          try {
              const response = await fetch(feedbackUrl, {
                  method: 'POST',
@@ -713,14 +725,23 @@ class BaseDifyChatApp extends BaseDifyApp {
              const result = await response.json();
               if (result.result === 'success') {
                   this.ui?.showToast(t('chat.feedbackSubmitted', { default: '感谢反馈！' }), 'success');
+                  // --- FIX: Ensure visual state is updated correctly on success --- 
+                  if (feedbackButton) {
+                      // Remove selected from sibling buttons
+                      feedbackButton.parentElement?.querySelectorAll('.feedback-btn').forEach(sib => {
+                          if (sib !== feedbackButton) sib.classList.remove('selected');
+                      });
+                      // Add selected to the clicked button
+                      feedbackButton.classList.add('selected');
+                  }
+                  // --- END FIX ---
               } else {
                    throw new Error("Feedback API did not return success.");
               }
          } catch (error) {
               console.error(`[${this.constructor.name}] Error submitting feedback for message ${messageId}:`, error);
                this.ui?.showToast(t('chat.error.feedbackFailed', { default: '提交反馈失败' }) + `: ${error.message}`, 'error');
-               // Revert button visual state on error?
-                const feedbackButton = this.ui?.elements.chatMessagesContainer?.querySelector(`.feedback-btn[data-message-id="${messageId}"][data-rating="${rating}"]`);
+               // Revert button visual state on error
                  feedbackButton?.classList.remove('selected');
          }
      }

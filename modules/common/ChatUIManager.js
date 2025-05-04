@@ -295,7 +295,8 @@ class ChatUIManager {
 
         // Add/Update actions
         if (actionsWrapper) {
-             this._addMessageActions(actionsWrapper, messageId, metadata);
+             const finalMessageId = (metadata && metadata.message_id) ? metadata.message_id : messageId;
+             this._addMessageActions(actionsWrapper, finalMessageId, metadata);
         }
 
         // Clean up from streaming map
@@ -312,6 +313,14 @@ class ChatUIManager {
      * @param {object} [metadata] - Optional metadata.
      */
     _addMessageActions(actionsWrapper, messageId, metadata = {}) {
+        // --- ADD CHECK FOR OPENING MESSAGE ---
+        const messageElement = this.elements.chatMessagesContainer?.querySelector(`.message-wrapper[data-message-id="${messageId}"]`);
+        if (messageElement?.dataset?.messageType === 'opening') {
+            actionsWrapper.innerHTML = ''; // Ensure actions are cleared just in case
+            return; // Don't add actions for opening messages
+        }
+        // --- END CHECK ---
+
         actionsWrapper.innerHTML = ''; // Clear previous actions
 
         // --- SVG Icons --- (Using simple examples, replace with preferred icons)

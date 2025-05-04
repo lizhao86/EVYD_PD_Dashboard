@@ -18,3 +18,14 @@
     *   修复了 `ChatUIManager.js` 中因 `message_id` 不匹配导致无法找到目标消息元素的问题，通过在 `finalizeMessage` 中更新 DOM 元素的 `data-message-id` 解决。
     *   根据 Dify 界面调整建议问题区域的 HTML 结构 (JS) 和 CSS 样式：添加 "TRY TO ASK" 标题，调整容器背景、内边距、圆角，修改按钮样式，并将容器从消息气泡内部移至外部作为兄弟节点，实现居中显示。
     *   为 "TRY TO ASK" 标题添加国际化支持。
+
+*   **01:18 AM - 01:45 AM:** 解决反馈功能 CORS 和 404 错误，并修复重复提交问题：
+    *   **CORS 错误:** 识别到从 `localhost` 向 Dify API 提交反馈 (`POST`) 时出现 CORS 错误。通过配置 `vite.config.js` 添加 `/api` 代理到 Dify 服务器 (`https://dify.4x6maker.com`) 解决。
+    *   修改 `BaseDifyChatApp.js` 中所有 API 调用 (fetch, DifyClient) 使用 `/api/v1` 前缀。
+    *   **404 错误:** 发现反馈 API 404 是因为使用了客户端临时的 `assistant-...` ID。修改 `ChatUIManager.js` 的 `finalizeMessage` 方法，确保在生成操作按钮 (`_addMessageActions`) 时传递的是 Dify 返回的最终 `message_id`。
+    *   **重复提交:** 发现反馈事件被触发两次，原因是 `BaseDifyChatApp.js` 的 `bindEvents` 和 `setupSidebarListeners` 中都添加了对反馈按钮的监听。移除了 `bindEvents` 中的重复逻辑。
+
+*   **01:48 AM - 01:55 AM:** 屏蔽 AI 开场白消息的操作按钮：
+    *   根据需求，AI 的第一条开场白消息不应显示操作按钮（点赞/点踩/重试/复制）。
+    *   在 `BaseDifyChatApp.js` 的 `displayInitialAssistantMessage` 中，为开场白消息 DOM 元素添加 `data-message-type="opening"` 标记。
+    *   在 `ChatUIManager.js` 的 `_addMessageActions` 方法中添加检查，如果消息元素存在此标记，则不添加任何操作按钮。

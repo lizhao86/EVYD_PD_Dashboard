@@ -34,11 +34,20 @@ export default defineConfig({
     },
     emptyOutDir: true, // Clean dist before build
   },
-  // Optional: Configure server options for development (npm run dev)
-  // server: {
-  //   port: 5173, // Default port
-  //   open: true, // Automatically open browser
-  // },
+  // Configure server options for development (npm run dev)
+  server: {
+    // port: 5173, // Default port
+    // open: true, // Automatically open browser
+    proxy: {
+      // 将 /api 的请求代理到 Dify 服务器
+      // 例如 /api/v1/parameters -> https://dify.4x6maker.com/v1/parameters
+      '/api': {
+        target: 'https://dify.4x6maker.com', // 目标 Dify 服务器
+        changeOrigin: true, // Needed for virtual hosted sites
+        rewrite: (path) => path.replace(/^\/api/, ''), // 重写路径，移除 /api
+      },
+    }
+  },
   
   // 添加此配置，为 AWS Amplify V5 创建必要的全局变量
   define: {
