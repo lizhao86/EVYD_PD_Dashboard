@@ -28,7 +28,9 @@
 ├── modules/           # 功能模块 (认证, 管理员, 通用组件, 各 AI 应用)
 │   ├── common/        # 通用模块 (Header, UI, API Client 等)
 │   │   ├── header.js
-│   │   ├── dify-app-ui.js  # 通用 AI 应用 UI 逻辑
+│   │   ├── dify-app-ui.js  # 通用 AI 应用 UI 逻辑 (非聊天)
+│   │   ├── ChatUIManager.js # NEW: 通用聊天界面 UI 逻辑
+│   │   ├── BaseDifyChatApp.js # NEW: 聊天应用基类
 │   │   ├── dify-client.js  # 通用 Dify API 交互客户端
 │   │   └── ...
 │   ├── apps/          # 各个 AI 应用模块
@@ -42,6 +44,10 @@
 │   │       └── index.js  # 应用主逻辑 (已重构)
 │   └── ...
 ├── templates/         # HTML 页面模板
+│   ├── pages/
+│   │   ├── chat-interface.html # NEW: 通用聊天界面 HTML
+│   │   └── ...
+│   └── ...
 ├── docs/              # 文档
 ├── node_modules/      # npm 依赖 (本地)
 ├── src/               # Amplify 生成的前端配置和代码
