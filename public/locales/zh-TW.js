@@ -426,5 +426,24 @@ window.zhTW = {
             requirementRequired: "需求描述不能為空。",
             requirementTooLong: "需求描述不能超過5000字元。"
         }
-    }
+    },
+
+    // ADD CHAT SPECIFIC KEYS
+    chat: {
+        newChat: '新對話',
+        welcomeMessage: '你好！有什麼可以幫您？',
+        like: '讚',
+        dislike: '踩',
+        copy: '複製',
+        regenerate: '重新生成',
+        tryToAsk: '嘗試提問',
+        feedbackSubmitted: '感謝反饋！',
+        error: {
+            fetchParamsFailed: '獲取應用配置失敗',
+            loadMessagesFailed: '加載歷史訊息失敗',
+            feedbackFailed: '提交反饋失敗',
+            inputTooLong: '輸入超過 {count} 字元限制'
+        }
+    },
+    // END CHAT SPECIFIC KEYS
 }; 

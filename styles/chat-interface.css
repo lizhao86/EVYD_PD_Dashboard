@@ -346,6 +346,59 @@
 .feedback-btn.dislike-btn:hover { color: var(--danger, #EF4444); }
 .feedback-btn.retry-btn:hover { color: var(--warning, #F59E0B); }
 
+/* --- 建议问题样式 --- */
+.suggested-questions {
+    margin-top: 0.5rem; /* 减小与上方消息的间距 */
+    margin-bottom: 1rem; /* 增加与下方输入区域的间距 */
+    padding: 0.75rem 1rem; 
+    background-color: var(--gray-50); 
+    border-radius: 0.5rem; 
+    /* 设置一个最大宽度并居中 */
+    max-width: 80%; /* 例如，最大宽度为父容器的80% */
+    margin-left: auto;  /* 配合 max-width 实现居中 */
+    margin-right: auto; /* 配合 max-width 实现居中 */
+}
+
+.suggested-questions-title {
+    font-size: 0.7rem; 
+    font-weight: 600; 
+    color: var(--gray-500); 
+    text-transform: uppercase; 
+    margin-bottom: 0.75rem; 
+    letter-spacing: 0.5px; 
+    text-align: center; 
+}
+
+.suggested-buttons-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center; 
+}
+
+.suggested-question-btn {
+    padding: 0.3rem 0.75rem; /* 较小的内边距 */
+    font-size: 0.8rem; /* 较小的字体 */
+    background-color: var(--primary-light); /* Use primary light */
+    color: var(--primary); /* Use primary color */
+    border: none; /* Remove border */
+    /* border: 1px solid var(--gray-200); */
+    border-radius: 1rem; /* 圆角 */
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    /* Remove explicit transition for border-color */
+    /* transition: background-color 0.2s, border-color 0.2s, color 0.2s; */
+}
+
+.suggested-question-btn:hover {
+    background-color: var(--primary); /* Darker on hover */
+    color: var(--white); /* White text on hover */
+    /* Remove border hover style */
+    /* border-color: var(--gray-300); */
+    /* color: var(--gray-900); */
+}
+/* --- 结束 建议问题样式 --- */
+
 /* 输入区域 */
 .chat-input-area {
     padding: 1rem 2rem; /* 上下16px，左右32px */
@@ -412,14 +465,22 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 0.5rem; /* 8px */
+    width: 32px; /* 固定宽度 */
+    height: 32px; /* 固定高度，使其为方形 */
+    padding: 0; /* 移除内边距，让 SVG 居中 */
+    border-radius: 0.5rem; /* 8px - 可以稍微调整，比如 6px (0.375rem) */
     background-color: var(--primary);
     color: var(--white);
     border: none;
     cursor: pointer;
     transition: background-color 0.2s;
+    flex-shrink: 0; /* 防止按钮被压缩 */
+}
+
+/* 确保 SVG 图标大小合适 */
+.btn-send svg {
+    width: 18px; /* 调整图标大小，例如 18px */
+    height: 18px;
 }
 
 .btn-send:hover {
@@ -429,6 +490,7 @@
 .btn-send:disabled {
     background-color: var(--gray-300);
     cursor: not-allowed;
+    color: var(--gray-500); /* 可以改变禁用时的图标颜色 */
 }
 
 /* --- Standalone Toggle Button Styles --- */

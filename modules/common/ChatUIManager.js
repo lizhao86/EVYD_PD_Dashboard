@@ -267,7 +267,7 @@ class ChatUIManager {
      */
     finalizeMessage(messageId, metadata = {}) {
         const messageData = this.streamingMessages.get(messageId);
-        const messageElement = messageData?.element || this.elements.chatMessagesContainer?.querySelector(`.message-wrapper[data-message-id="${messageId}"]`);
+        const messageElement = this.elements.chatMessagesContainer?.querySelector(`.message-wrapper[data-message-id="${messageId}"]`);
 
         if (!messageElement) {
              console.warn(`[ChatUIManager] finalizeMessage: Element for Message ID ${messageId} not found.`);
@@ -277,6 +277,11 @@ class ChatUIManager {
         messageElement.dataset.status = 'complete';
         const contentBubble = messageElement.querySelector('.message-content');
         const actionsWrapper = messageElement.querySelector('.message-actions');
+
+        if (metadata && metadata.message_id && messageElement.dataset.messageId !== metadata.message_id) {
+            console.log(`[ChatUIManager] Updating message element dataset ID from ${messageId} to ${metadata.message_id}`);
+            messageElement.dataset.messageId = metadata.message_id;
+        }
 
         // Final render of full content
         if (contentBubble && messageData) {
@@ -426,17 +431,18 @@ class ChatUIManager {
 
         const value = inputElement.value;
         const charCount = value.length;
+        const charLimit = 4000; // Define the limit
 
         // Update Char Count
         if (this.elements.charCount) {
-            // Assuming a fixed limit for display, e.g., 4000. TODO: Make limit configurable?
-            this.elements.charCount.textContent = `${charCount}/4000`;
-            // Add warning class if needed (optional)
-            // this.elements.charCount.classList.toggle('warning', charCount > 4000);
+            this.elements.charCount.textContent = `${charCount}/${charLimit}`;
+            // --- FIX: Uncomment and use the defined limit ---
+            this.elements.charCount.classList.toggle('warning', charCount > charLimit);
+            // --- END FIX ---
         }
 
         // Update Send Button State
-        this.updateSendButtonState();
+        this.updateSendButtonState(); // Pass limit or recalculate inside
 
         // Auto-resize Textarea
         inputElement.style.height = 'auto'; // Reset height first to get correct scrollHeight
@@ -463,7 +469,12 @@ class ChatUIManager {
         if (this.elements.messageInput && this.elements.sendButton) {
             const hasText = this.elements.messageInput.value.trim().length > 0;
             const isProcessing = this.elements.sendButton.dataset.state === 'thinking' || this.elements.sendButton.dataset.state === 'streaming';
-            this.elements.sendButton.disabled = !hasText || isProcessing;
+            // --- FIX: Add character limit check ---
+            const charCount = this.elements.messageInput.value.length;
+            const charLimit = 4000; // Ensure this matches the limit used in handleInput
+            const exceedsLimit = charCount > charLimit;
+            this.elements.sendButton.disabled = !hasText || isProcessing || exceedsLimit;
+            // --- END FIX ---
         }
     }
 
@@ -494,9 +505,11 @@ class ChatUIManager {
                 break;
             case 'idle':
             default:
-                 // Enable only if there is text
-                 this.elements.sendButton.disabled = !(this.elements.messageInput?.value.trim().length > 0);
+                 // --- FIX: Don't re-evaluate disabled state here. Restore icon and call the central state updater. ---
+                 // this.elements.sendButton.disabled = !(this.elements.messageInput?.value.trim().length > 0);
                  this.elements.sendButton.innerHTML = originalIconSvg;
+                 this.updateSendButtonState(); // Call the main function to set the correct disabled state based on all criteria
+                 // --- END FIX ---
                 break;
         }
     }
@@ -587,23 +600,43 @@ class ChatUIManager {
              return;
         }
 
-        let suggestionsContainer = targetMessageElement.querySelector('.suggested-questions');
-        if (!suggestionsContainer) {
-            suggestionsContainer = document.createElement('div');
-            suggestionsContainer.className = 'suggested-questions';
-             // Append after the message content wrapper inside the message wrapper for better structure
-             targetMessageElement.querySelector('.message-content-wrapper')?.appendChild(suggestionsContainer);
-        }
-         suggestionsContainer.innerHTML = ''; // Clear existing buttons
+        // Ensure it targets bot messages only
+        if (!targetMessageElement.classList.contains('bot-message')) return; 
+
+        // --- FIX: Remove existing suggestion containers first --- 
+        const existingSuggestions = this.elements.chatMessagesContainer.querySelectorAll('.suggested-questions');
+        existingSuggestions.forEach(el => el.remove());
+        // --- END FIX ---
+
+        // --- FIX: Create container and insert AFTER the target message --- 
+        const suggestionsContainer = document.createElement('div');
+        suggestionsContainer.className = 'suggested-questions';
+        suggestionsContainer.dataset.targetMessageId = targetMessageId; // Add data attribute
+
+        // Insert after the target message element in the main chat container
+        targetMessageElement.after(suggestionsContainer); 
+        // --- END FIX ---
+
+        // Populate the container (title and buttons)
+        suggestionsContainer.innerHTML = ''; // Ensure it's empty before populating
+
+        const titleElement = document.createElement('div');
+        titleElement.className = 'suggested-questions-title';
+        titleElement.textContent = this.t('chat.tryToAsk', { default: 'TRY TO ASK' }).toUpperCase(); 
+        suggestionsContainer.appendChild(titleElement);
+        
+        const buttonsWrapper = document.createElement('div');
+        buttonsWrapper.className = 'suggested-buttons-wrapper';
+        suggestionsContainer.appendChild(buttonsWrapper);
 
         questions.forEach(q => {
             const button = document.createElement('button');
-            button.className = 'btn-secondary suggested-question-btn';
+            button.className = 'btn suggested-question-btn'; 
             button.textContent = q;
             button.dataset.question = q;
-            suggestionsContainer.appendChild(button);
+            buttonsWrapper.appendChild(button);
         });
-         this.scrollToBottom(true); // Scroll if needed after adding suggestions
+        this.scrollToBottom(true); 
     }
 
     // --- Utility ---

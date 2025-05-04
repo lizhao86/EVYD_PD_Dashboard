@@ -59,6 +59,87 @@ class BaseDifyChatApp extends BaseDifyApp {
     // --- Overridden Methods ---
 
     /**
+     * Binds event listeners specific to the chat interface.
+     * Overrides BaseDifyApp.bindEvents.
+     */
+    bindEvents() {
+        if (!this.ui || !this.ui.elements) {
+            console.error(`[BaseDifyChatApp ${this.constructor.name}] Cannot bind events: UI or elements not initialized.`);
+            return;
+        }
+
+        const sendButton = this.ui.elements.sendButton;
+        const messageInput = this.ui.elements.messageInput;
+        const toggleSidebarButton = this.ui.elements.toggleSidebarButton;
+        const startNewChatButton = this.ui.elements.startNewChatButton;
+        const chatHistoryList = this.ui.elements.chatHistoryList;
+
+        // Send Button Click
+        if (sendButton) {
+            sendButton.addEventListener('click', () => {
+                if (!this.state.isGenerating && !sendButton.disabled) {
+                    this.handleGenerate();
+                } else {
+                    console.log("[BaseDifyChatApp] Send button clicked but ignored (generating or disabled).");
+                }
+            });
+        } else {
+            console.warn(`[BaseDifyChatApp ${this.constructor.name}] Send button not found.`);
+        }
+
+        // Message Input Keydown (Enter to send)
+        if (messageInput) {
+            messageInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    if (!this.state.isGenerating && sendButton && !sendButton.disabled) {
+                        this.handleGenerate();
+                    }
+                }
+            });
+            // Input event for char count/button state is likely handled by ChatUIManager.handleInput
+            // Let's ensure ChatUIManager.handleInput is called from init or elsewhere
+            messageInput.addEventListener('input', () => this.ui.handleInput()); 
+        } else {
+            console.warn(`[BaseDifyChatApp ${this.constructor.name}] Message input not found.`);
+        }
+
+        // --- Sidebar listeners are already handled in setupSidebarListeners() ---
+        // No need to re-bind them here unless consolidating.
+
+        // ---> Bind listeners for ACTION BUTTONS (Copy, Feedback, Regenerate) <--- 
+        const chatMessagesContainer = this.ui.elements.chatMessagesContainer;
+        if (chatMessagesContainer) {
+            chatMessagesContainer.addEventListener('click', (event) => {
+                const targetButton = event.target.closest('.feedback-btn, .copy-message-btn, .regenerate-btn'); // Find the closest action button
+                if (!targetButton) return; // Click wasn't on an action button
+
+                const messageId = targetButton.dataset.messageId;
+                if (!messageId) return; // Button missing message ID
+
+                if (targetButton.classList.contains('feedback-btn')) {
+                    const rating = targetButton.dataset.rating; // 'like' or 'dislike'
+                    if (rating) {
+                        this.submitFeedback(messageId, rating);
+                        // Optional: Visually update button state (e.g., add 'active' class)
+                        targetButton.classList.add('active'); // Add some visual feedback
+                    }
+                } else if (targetButton.classList.contains('copy-message-btn')) {
+                    // Copy is handled directly by ChatUIManager's internal listener added in _addMessageActions
+                    // No action needed here unless we move the listener logic
+                } else if (targetButton.classList.contains('regenerate-btn')) {
+                    this.handleRegenerate(messageId);
+                }
+            });
+        }
+        
+        console.log(`[BaseDifyChatApp ${this.constructor.name}] Chat-specific events bound.`);
+        
+        // Call _bindSpecificEvents for any further subclass bindings
+        this._bindSpecificEvents(); 
+    }
+
+    /**
      * Override to use ChatUIManager for error display within the chat context.
      */
     _handleNotLoggedIn() {

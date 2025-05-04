@@ -323,13 +323,11 @@ class BaseDifyApp {
 
         // Generate/Stop button listener
         if (generateButton) {
-            generateButton.addEventListener('click', async (e) => {
-                e.preventDefault();
-                const currentAction = generateButton.getAttribute('data-action') || 'generate';
-                if (currentAction === 'stop') {
-                    await this.stopGeneration();
-                } else if (currentAction === 'generate') {
-                    await this.handleGenerate();
+            generateButton.addEventListener('click', () => {
+                if (!this.state.isGenerating && !generateButton.disabled) {
+                    this.handleGenerate();
+                } else {
+                     console.log("[BaseDifyApp] Generate button clicked but ignored (generating or disabled).");
                 }
             });
         }

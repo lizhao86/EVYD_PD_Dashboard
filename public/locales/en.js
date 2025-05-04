@@ -80,6 +80,25 @@ window.en = {
         secondsSuffix: 's'
     },
     
+    // ADD CHAT SPECIFIC KEYS
+    chat: {
+        newChat: 'New Chat',
+        welcomeMessage: 'Hi! How can I help you?',
+        like: 'Like',
+        dislike: 'Dislike',
+        copy: 'Copy',
+        regenerate: 'Regenerate',
+        tryToAsk: 'Try to ask',
+        feedbackSubmitted: 'Thanks for the feedback!',
+        error: {
+            fetchParamsFailed: 'Failed to fetch app configuration',
+            loadMessagesFailed: 'Failed to load chat history',
+            feedbackFailed: 'Failed to submit feedback',
+            inputTooLong: 'Input exceeds {count} character limit'
+        }
+    },
+    // END CHAT SPECIFIC KEYS
+    
     // Navigation
     nav: {
         home: 'Home',

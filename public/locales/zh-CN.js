@@ -434,5 +434,24 @@ window.zhCN = {
             requirementRequired: "需求描述不能为空。",
             requirementTooLong: "需求描述不能超过5000字符。"
         }
-    }
+    },
+
+    // ADD CHAT SPECIFIC KEYS
+    chat: {
+        newChat: '新对话',
+        welcomeMessage: '你好！有什么可以帮您？',
+        like: '赞',
+        dislike: '踩',
+        copy: '复制',
+        regenerate: '重新生成',
+        tryToAsk: '尝试提问',
+        feedbackSubmitted: '感谢反馈！',
+        error: {
+            fetchParamsFailed: '获取应用配置失败',
+            loadMessagesFailed: '加载历史消息失败',
+            feedbackFailed: '提交反馈失败',
+            inputTooLong: '输入超过 {count} 字符限制'
+        }
+    },
+    // END CHAT SPECIFIC KEYS
 }; 
