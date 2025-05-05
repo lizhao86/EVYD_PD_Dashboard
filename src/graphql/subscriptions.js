@@ -175,6 +175,7 @@ export const onCreateConversation = /* GraphQL */ `
       id
       title
       messages
+      appType
       createdAt
       updatedAt
       _version
@@ -194,6 +195,7 @@ export const onUpdateConversation = /* GraphQL */ `
       id
       title
       messages
+      appType
       createdAt
       updatedAt
       _version
@@ -213,6 +215,7 @@ export const onDeleteConversation = /* GraphQL */ `
       id
       title
       messages
+      appType
       createdAt
       updatedAt
       _version

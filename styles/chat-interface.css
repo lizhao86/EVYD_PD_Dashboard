@@ -80,7 +80,7 @@
 }
 
 .btn-new-chat:hover {
-    background-color: rgba(0, 119, 255, 0.15); /* 调整 hover 效果 */
+    background-color: rgba(var(--primary-rgb), 0.15); /* 使用变量代替硬编码 rgba(0, 119, 255, 0.15) */
 }
 
 .sidebar.collapsed .btn-new-chat {
@@ -98,108 +98,113 @@
     display: none; /* Hide history when collapsed */
 }
 
-.chat-history-item {
+/* 更正选择器：.history-item */
+.history-item {
     display: flex;
-    align-items: center;
+    align-items: center; /* 垂直居中 */
+    justify-content: space-between; /* 将标题和按钮推到两端 */
     padding: 0.6rem 0.75rem;
     border-radius: 0.5rem; /* 8px */
     margin-bottom: 0.25rem;
     cursor: pointer;
-    transition: background-color 0.2s, color 0.2s;
-    color: var(--gray-600);
+    transition: background-color 0.2s ease-in-out; /* Add smooth transition */
+    color: var(--gray-700); /* 默认文字颜色稍深 */
     font-size: 0.875rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    position: relative; /* 为删除按钮定位提供基准 */
+    position: relative; /* 保留相对定位 */
 }
 
-.chat-history-item:hover {
-    background-color: var(--gray-100);
-    color: var(--gray-800);
+/* 更正选择器：.history-item.active */
+.history-item.active {
+    background-color: var(--primary-light); /* 选中背景 */
+    color: var(--primary); /* 选中文本颜色 */
+    font-weight: 600; /* 选中时加粗 */
 }
 
-.chat-history-item.active {
-    background-color: var(--primary-light);
-    color: var(--primary);
-    font-weight: 500;
-}
-
+/* history-item-icon 选择器保持不变，因为它似乎在 HTML 中未使用或未显示 */
 .history-item-icon {
     margin-right: 0.6rem;
-    flex-shrink: 0; /* 防止图标被压缩 */
-    color: currentColor; /* 让图标颜色随父元素变化 */
+    flex-shrink: 0;
+    color: currentColor; /* 图标颜色随父元素 */
 }
 
-/* 历史项名称 */
-.history-item-name {
-    flex-grow: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+/* 更正选择器：.history-item.active .history-item-icon */
+.history-item.active .history-item-icon {
+    color: var(--primary); /* 选中时图标也变色 */
 }
 
-/* 历史项操作按钮容器 */
-.history-item-actions {
+/* 更正选择器：.history-title */
+.history-title {
+    flex-grow: 1; /* 占据可用空间 */
+    overflow: hidden; /* 隐藏溢出 */
+    text-overflow: ellipsis; /* 显示省略号 */
+    white-space: nowrap; /* 禁止换行 */
+    margin-right: 0.5rem; /* 与右侧按钮间距 */
+}
+
+/* 更正选择器：.history-actions */
+.history-actions {
     display: flex;
     gap: 0.3rem;
-    margin-left: 0.5rem;
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.2s, visibility 0.2s;
+    flex-shrink: 0; /* 防止被压缩 */
 }
 
-.chat-history-item:hover .history-item-actions {
+/* 更正选择器：.history-item:hover .history-actions */
+.history-item:hover .history-actions {
     opacity: 1;
     visibility: visible;
 }
 
-/* 历史项重命名按钮 */
+/* 重命名按钮样式保持不变，但依赖于 .history-actions 的显隐 */
 .rename-history-btn {
-    opacity: 0;
-    visibility: hidden;
     padding: 4px;
     color: var(--gray-500);
     background: none;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    transition: opacity 0.2s, visibility 0.2s, color 0.2s, background-color 0.2s;
+    transition: color 0.2s, background-color 0.2s;
+    display: flex; /* 确保图标居中 */
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
 }
 
-.chat-history-item:hover .rename-history-btn {
-    opacity: 1;
-    visibility: visible;
+.rename-history-btn svg {
+    width: 14px; /* 统一图标大小 */
+    height: 14px;
 }
 
 .rename-history-btn:hover {
-    color: var(--blue-600);
-    background-color: var(--blue-100);
+    color: var(--info);
+    background-color: rgba(var(--info-rgb, 59, 130, 246), 0.1);
 }
 
-/* 历史项删除按钮 */
+/* 删除按钮样式保持不变，但依赖于 .history-actions 的显隐 */
 .delete-history-btn {
-    opacity: 0;
-    visibility: hidden;
     padding: 4px;
     color: var(--gray-500);
     background: none;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    transition: opacity 0.2s, visibility 0.2s, color 0.2s, background-color 0.2s;
+    transition: color 0.2s, background-color 0.2s;
+    display: flex; /* 确保图标居中 */
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
 }
 
-.chat-history-item:hover .delete-history-btn {
-    opacity: 1;
-    visibility: visible;
+.delete-history-btn svg {
+    width: 14px; /* 统一图标大小 */
+    height: 14px;
 }
 
 .delete-history-btn:hover {
-    color: var(--red-600);
-    background-color: var(--red-100);
+    color: var(--danger);
+    background-color: rgba(var(--danger-rgb, 239, 68, 68), 0.1);
 }
 
 .sidebar-footer {
@@ -380,8 +385,32 @@
     /* 确保这些定位规则存在 */
     left: auto;   /* 取消左侧定位 */
     right: 10px;  /* 定位到右侧 */
-    bottom: -25px; /* 移除或注释掉正值 */
+    bottom: -25px; 
     position: absolute; /* 再次确认 position */
+    flex-direction: row !important; /* 强制水平排列，增加 !important */
+    display: flex; /* 再次确认 display: flex */
+    align-items: center; /* 垂直居中对齐 */
+    justify-content: flex-start; /* 从左到右排列 */
+}
+
+/* 新增：确保中间按钮容器也使用 flex 水平排列 */
+.message-actions-buttons {
+    display: flex;
+    flex-direction: row; /* 确保水平排列 */
+    gap: inherit; /* 继承父级的间距设置 */
+    align-items: center; /* 垂直居中对齐按钮 */
+}
+
+/* 新增：统计信息样式 (字体和间距) */
+.message-actions-stats {
+    font-family: inherit; /* 继承 common.css 的字体 */
+    font-size: 0.75rem;  /* 稍小字号 */
+    color: var(--gray-600); /* 中性灰色 */
+    display: flex;        /* 使用 flex 布局来控制内部元素 */
+    gap: 0.75rem;         /* 在 flex 子项之间添加 0.75rem 的间距 */
+    align-items: center;  /* 垂直居中对齐 */
+    padding: 0.25rem 0;   /* 添加一些垂直内边距 */
+    margin-left: 5px;     /* 与左侧按钮保持一点距离 */
 }
 
 .message-wrapper:hover .message-actions {
@@ -495,7 +524,7 @@
 
 .input-wrapper:focus-within {
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(0, 119, 255, 0.1);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1); /* 使用变量代替硬编码 rgba(0, 119, 255, 0.1) */
 }
 
 #message-input {
@@ -504,12 +533,18 @@
     outline: none;
     resize: none;
     font-size: 0.9rem;
-    line-height: 1.5;
+    line-height: 1.5; /* 保持行高 */
     background-color: transparent;
     color: var(--gray-800);
-    max-height: 150px; /* 限制最大高度 */
+    /* 移除固定的 max-height */
+    /* max-height: 150px; */
+    /* 设置最小和最大高度 */
+    min-height: calc(1.5em * 2 + 0.8rem); /* 2行文本高度 + 垂直 padding */
+    max-height: calc(1.5em * 6 + 0.8rem); /* 最多显示 6 行文本的高度 */
     overflow-y: auto; /* 高度超出时滚动 */
     padding: 0.4rem 0; /* 调整垂直内边距 */
+    /* 添加此行以允许高度根据内容变化 */
+    height: auto;
 }
 
 #message-input::placeholder {
@@ -518,16 +553,28 @@
 
 .input-controls {
     display: flex;
-    flex-direction: column; /* 垂直排列 */
-    align-items: flex-end; /* 右对齐 */
+    /* 移除 column 方向 */
+    /* flex-direction: column; */
+    /* 改为行方向，并底部对齐 */
+    flex-direction: row;
+    align-items: flex-end; /* 底部对齐内部元素 */
     margin-left: 0.5rem; /* 与输入框间距 */
     flex-shrink: 0;
+    /* 移除 margin-bottom for char-count */
 }
 
 .char-count {
     font-size: 0.7rem;
     color: var(--gray-400);
-    margin-bottom: 0.2rem; /* 与按钮间距 */
+    /* 移除 margin-bottom */
+    /* margin-bottom: 0.2rem; */
+    /* 添加右边距，使其与按钮分开 */
+    margin-right: 0.5rem;
+    /* 确保它在 flex 容器中垂直居中（如果需要）或底部对齐 */
+    align-self: flex-end; /* 确保底部对齐 */
+    /* 添加一些 padding 使其基线与按钮对齐 */
+    padding-bottom: 4px; /* 根据实际按钮大小微调 */
+    white-space: nowrap; /* 防止换行 */
 }
 .char-count.warning {
     color: var(--danger);
@@ -710,13 +757,13 @@
 }
 
 .message-content code {
-    background-color: rgba(135, 131, 120, 0.15); /* Subtle background for inline code */
-    color: var(--gray-700, #4a5568);
+    background-color: rgba(135, 131, 120, 0.15); /* 保留此处，因为是透明度特殊值 */
+    color: var(--gray-700);
     padding: 0.2em 0.4em;
     margin: 0 0.2em;
     font-size: 0.85em;
     border-radius: 3px;
-    font-family: var(--font-mono, monospace); /* Monospace font */
+    font-family: var(--font-mono, monospace);
 }
 
 /* Style for code blocks (pre > code) if they appear */
@@ -741,17 +788,17 @@
 }
 
 .message-content blockquote {
-    border-left: 3px solid var(--gray-300, #d1d5db);
+    border-left: 3px solid var(--gray-300);
     margin-left: 0;
     margin-right: 0;
     padding-left: 1em;
-    color: var(--gray-600, #4b5563);
+    color: var(--gray-600);
     margin-bottom: 1em;
 }
 
 .message-content hr {
     border: none;
-    border-top: 1px solid var(--gray-300, #d1d5db);
+    border-top: 1px solid var(--gray-300);
     margin: 1.5em 0;
 }
 
@@ -760,19 +807,59 @@
     width: auto;
     border-collapse: collapse;
     margin-bottom: 1em;
-    border: 1px solid var(--gray-300, #d1d5db);
+    border: 1px solid var(--gray-300);
 }
 
 .message-content th,
 .message-content td {
-    border: 1px solid var(--gray-300, #d1d5db);
+    border: 1px solid var(--gray-300);
     padding: 0.5em 0.8em;
     text-align: left;
 }
 
 .message-content th {
-    background-color: var(--gray-100, #f3f4f6);
+    background-color: var(--gray-100);
     font-weight: 600;
 }
 
-/* Add more specific styles as needed */ 
+/* Add more specific styles as needed */
+
+/* --- NEW: Hover effect for non-active items --- */
+.history-item:not(.active):hover {
+    background-color: #f0f0f0; /* Light grey background on hover */
+    cursor: pointer; /* Indicate clickable */
+}
+
+/* Ensure active item retains its style on hover (or define a specific active hover style) */
+.history-item.active:hover {
+    /* Keep the active background, or define a slightly different one if needed */
+    /* background-color: #e0e0e0; */ /* Example: Slightly darker active hover */
+    cursor: default; /* Or pointer if clicking it does something */
+}
+
+/* 停止响应按钮样式 */
+.btn-stop-responding {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    background-color: white;
+    color: var(--gray-700);
+    border: 1px solid var(--gray-300);
+    border-radius: 30px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-stop-responding svg {
+    width: 16px;
+    height: 16px;
+    margin-right: 6px;
+}
+
+.btn-stop-responding:hover {
+    background-color: var(--gray-100);
+    border-color: var(--gray-400);
+} 

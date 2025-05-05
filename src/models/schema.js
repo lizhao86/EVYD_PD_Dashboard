@@ -257,21 +257,26 @@ export const schema = {
                     "isRequired": false,
                     "attributes": []
                 },
+                "appType": {
+                    "name": "appType",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": false,
+                    "attributes": []
+                },
                 "createdAt": {
                     "name": "createdAt",
                     "isArray": false,
                     "type": "AWSDateTime",
                     "isRequired": false,
-                    "attributes": [],
-                    "isReadOnly": true
+                    "attributes": []
                 },
                 "updatedAt": {
                     "name": "updatedAt",
                     "isArray": false,
                     "type": "AWSDateTime",
                     "isRequired": false,
-                    "attributes": [],
-                    "isReadOnly": true
+                    "attributes": []
                 }
             },
             "syncable": true,
@@ -280,6 +285,17 @@ export const schema = {
                 {
                     "type": "model",
                     "properties": {}
+                },
+                {
+                    "type": "key",
+                    "properties": {
+                        "name": "byAppType",
+                        "queryField": "conversationsByAppType",
+                        "fields": [
+                            "updatedAt",
+                            "createdAt"
+                        ]
+                    }
                 },
                 {
                     "type": "auth",
@@ -391,5 +407,5 @@ export const schema = {
     "enums": {},
     "nonModels": {},
     "codegenVersion": "3.4.4",
-    "version": "940c4ad67d7485c4cdd95a3618ee9832"
+    "version": "060765f4c700a3e5b00e4b56aadf68d1"
 };

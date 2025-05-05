@@ -1,5 +1,8 @@
 // modules/common/BaseDifyChatApp.js
 
+// 禁用调试日志
+const DEBUG = false;
+
 /**
  * Base class for Dify Chat-based AI applications.
  * Extends BaseDifyApp and integrates ChatUIManager for chat-specific UI interactions.
@@ -24,13 +27,18 @@ class BaseDifyChatApp extends BaseDifyApp {
     constructor() {
         super(); // Call BaseDifyApp constructor
 
+        // 设置默认appType
+        this.appType = 'chat'; // 默认值，可以被子类覆盖
+
         // Instantiate ChatUIManager instead of DifyAppUI
         // Pass dependencies here
         this.ui = new ChatUIManager({ t, marked });
 
         // Reset specific state for chat apps
         this.state.currentConversationId = null;
-        
+        this.state.isNewConversationPending = false; // Initialize pending flag
+        this.state.isStartingNewChat = false; // Flag to prevent rapid clicks
+
         // 添加history属性用于缓存历史记录列表
         this.history = [];
     }
@@ -40,7 +48,7 @@ class BaseDifyChatApp extends BaseDifyApp {
      * Extends base initialization and sets up chat-specific UI and event listeners.
      */
     async init() {
-        console.log(`[BaseDifyChatApp ${this.constructor.name}] Initializing...`);
+        if (DEBUG) console.log(`[BaseDifyChatApp ${this.constructor.name}] Initializing...`);
         // Call base init first (loads config, user, DifyClient etc.)
         await super.init(); // This should call ChatUIManager's initUserInterface now.
 
@@ -56,23 +64,31 @@ class BaseDifyChatApp extends BaseDifyApp {
                 // 判断是否有历史对话可加载
                 if (this.history.length > 0) {
                     // 自动加载最新的一个对话
-                    console.log("自动加载最新对话...");
+                    if (DEBUG) console.log("[BaseDifyChatApp Init] Found history, loading latest conversation...");
                     const latestConversation = this.history[0]; // 因为已经按时间排序，第一个是最新的
                     await this.loadConversationMessages(latestConversation.id);
                 } else {
+                    // --- MODIFICATION: Call startNewConversation to auto-create --- 
+                    if (DEBUG) console.log("[BaseDifyChatApp Init] No history found, automatically starting a new conversation...");
+                    this.startNewConversation(); // This will create record, update sidebar, select, and show welcome
+                    // OLD LOGIC - REMOVED
+                    /*
                     // 只有在没有历史对话时才显示初始欢迎消息
-                    console.log("没有历史对话，显示欢迎消息...");
+                    if (DEBUG) console.log("没有历史对话，显示欢迎消息...");
                     this.displayInitialAssistantMessage();
+                    */
+                   // --- END MODIFICATION --- 
                 }
             } catch (error) {
-                console.error("初始化对话加载失败:", error);
-                // 出错时显示欢迎消息作为后备
-                this.displayInitialAssistantMessage();
+                console.error("[BaseDifyChatApp Init] Initialization conversation loading/creation failed:", error);
+                // 出错时尝试显示欢迎消息作为后备 (或者可以显示错误信息)
+                // this.displayInitialAssistantMessage(); 
+                this.ui?.showErrorInChat(t('chat.error.loadHistoryFailed', {default: '加载或创建初始对话失败'}));
             }
         } else {
-             console.log(`[BaseDifyChatApp ${this.constructor.name}] Skipping chat-specific init as user is not logged in.`);
+             if (DEBUG) console.log(`[BaseDifyChatApp ${this.constructor.name}] Skipping chat-specific init as user is not logged in.`);
         }
-         console.log(`[BaseDifyChatApp ${this.constructor.name}] Initialization complete.`);
+         if (DEBUG) console.log(`[BaseDifyChatApp ${this.constructor.name}] Initialization complete.`);
     }
 
     // --- Overridden Methods ---
@@ -92,6 +108,7 @@ class BaseDifyChatApp extends BaseDifyApp {
         const toggleSidebarButton = this.ui.elements.toggleSidebarButton;
         const startNewChatButton = this.ui.elements.startNewChatButton;
         const chatHistoryList = this.ui.elements.chatHistoryList;
+        const stopRespondingButton = this.ui.elements.stopRespondingButton; // 获取停止响应按钮
 
         // Send Button Click
         if (sendButton) {
@@ -99,11 +116,18 @@ class BaseDifyChatApp extends BaseDifyApp {
                 if (!this.state.isGenerating && !sendButton.disabled) {
                     this.handleGenerate();
                 } else {
-                    console.log("[BaseDifyChatApp] Send button clicked but ignored (generating or disabled).");
+                    if (DEBUG) console.log("[BaseDifyChatApp] Send button clicked but ignored (generating or disabled).");
                 }
             });
         } else {
             console.warn(`[BaseDifyChatApp ${this.constructor.name}] Send button not found.`);
+        }
+
+        // 停止响应按钮点击事件
+        if (stopRespondingButton) {
+            stopRespondingButton.addEventListener('click', () => {
+                this.stopGeneration();
+            });
         }
 
         // Message Input Keydown (Enter to send)
@@ -155,7 +179,7 @@ class BaseDifyChatApp extends BaseDifyApp {
         }
         */
         
-        console.log(`[BaseDifyChatApp ${this.constructor.name}] Chat-specific events bound.`);
+        if (DEBUG) console.log(`[BaseDifyChatApp ${this.constructor.name}] Chat-specific events bound.`);
         
         // Call _bindSpecificEvents for any further subclass bindings
         this._bindSpecificEvents(); 
@@ -234,10 +258,13 @@ class BaseDifyChatApp extends BaseDifyApp {
     /**
      * Provides the base callbacks for DifyClient, adapted for ChatUIManager.
      * Expects an assistantMessageId to target updates.
+     * --- MODIFIED: Accepts userQuery and isPendingNewConversation for handling delayed creation. ---
      * @param {string} assistantMessageId - The unique ID assigned to the assistant's message placeholder.
+     * @param {string} [userQuery] - The initial user query (needed for creating new conv).
+     * @param {boolean} [isPendingNewConversation] - Flag indicating if this is the first message of a new conversation.
      * @returns {object} Callbacks for onMessage, onComplete, onError.
      */
-    _getBaseCallbacks(assistantMessageId) {
+    _getBaseCallbacks(assistantMessageId, userQuery, isPendingNewConversation) {
          if (!this.ui) {
              console.error("Cannot get base callbacks: ChatUIManager not initialized.");
              return {};
@@ -251,92 +278,158 @@ class BaseDifyChatApp extends BaseDifyApp {
          }
         return {
             onMessage: (content, isFirstChunk) => {
+                // Find the user message ID which should be the element before the assistant message
+                const assistantElement = this.ui.elements.chatMessagesContainer?.querySelector(`.message-wrapper[data-message-id="${assistantMessageId}"]`);
+                const userElement = assistantElement?.previousElementSibling;
+                const userMessageId = userElement?.dataset.messageId; // Get the user message ID
+
                 // console.log(`Callback onMessage: chunk received for ${assistantMessageId}`);
                 this.ui.updateMessageStream(assistantMessageId, content);
+
+                // Set streaming state if it's the first chunk (moved from handleGenerate)
+                if (isFirstChunk) {
+                    this.ui.setSendButtonState('streaming');
+                }
             },
             onComplete: async (metadata) => {
-                console.log(`Callback onComplete for ${assistantMessageId}. Metadata:`, metadata);
-                // Finalize the specific message bubble
-                this.ui.finalizeMessage(assistantMessageId, metadata);
+                if (DEBUG) console.log(`Callback onComplete for ${assistantMessageId}. Metadata:`, metadata);
+                this.state.isGenerating = false; // Generation complete
 
-                // --- BaseDifyApp completion logic adaptation ---
-                // this.ui.showGenerationCompleted(); // Reset main button state (if applicable)
-                this.ui.setSendButtonState('idle'); // Reset chat send button
-                this.ui.displaySystemInfo(metadata); // Show metadata if needed
+                // Find the user message ID again (in case it was not found in onMessage)
+                const assistantElement = this.ui.elements.chatMessagesContainer?.querySelector(`.message-wrapper[data-message-id="${assistantMessageId}"]`);
+                const userElement = assistantElement?.previousElementSibling;
+                const userMessageId = userElement?.dataset.messageId;
 
-                // Handle stats display (if UI manager supports it or adapt here)
-                 if (metadata && metadata.usage) {
-                      console.log("Received stats:", metadata.usage);
-                      // TODO: Adapt stats display (e.g., add to finalized message actions?)
-                 } else {
-                      console.warn(`[${this.constructor.name}] Metadata or usage data is missing/incomplete. Skipping stats display.`);
-                 }
+                // Get final assistant message content
+                const assistantContent = this.ui.streamingMessages.get(assistantMessageId)?.fullContent || '';
+                const finalDifyConversationId = metadata?.conversation_id;
+                const finalAssistantMessageId = metadata?.message_id || assistantMessageId; // Use Dify's ID if available
+                const conversationName = metadata?.name || null; // Dify generated title
 
-                // Update conversation ID for the *next* message
-                if (metadata?.conversation_id) {
-                     console.log(`Updating conversation ID to: ${metadata.conversation_id}`);
-                    // 更新当前会话ID
-                    this.state.currentConversationId = metadata.conversation_id;
-                    // 保存Dify会话ID
-                    this.state.difyConversationId = metadata.conversation_id;
-                    // 设置当前活跃的历史项
-                    this.ui?.setActiveHistoryItem(this.state.currentConversationId);
-                    
-                    // 获取Dify生成的对话名称
-                    let conversationName = metadata.name || null;
-                    if (conversationName) {
-                        console.log(`Dify自动生成的对话标题: ${conversationName}`);
-                        
-                        // 如果已经有对话记录，更新对话标题（只更新当前对话，不创建新的）
-                        try {
-                            // 更新对话标题
-                            await ChatHistoryService.updateConversation(this.state.currentConversationId, {
-                                title: conversationName
-                            });
-                            console.log(`更新对话标题成功: ${conversationName}`);
-                            
-                            // 只更新UI和内存中的状态，不创建新记录
-                            // 重要：在这里我们确保只更新已存在的对话，不添加新记录
-                            const existingIndex = this.history.findIndex(h => h.id === metadata.conversation_id);
-                            if (existingIndex > -1) {
-                                // 只更新已存在的记录
-                                this.history[existingIndex] = {
-                                    ...this.history[existingIndex],
-                                    title: conversationName,
-                                    last_message_time: Math.floor(Date.now() / 1000)
-                                };
-                                
-                                // 重新排序（最新的在前）
-                                this.history.sort((a, b) => (b.last_message_time || 0) - (a.last_message_time || 0));
-                                
-                                // 更新UI
-                                this.ui?.updateHistoryList(this.history);
-                                console.log(`[BaseDifyChatApp.onComplete] 已更新现有历史记录，当前共 ${this.history.length} 条。`);
-                            } else {
-                                console.warn(`[BaseDifyChatApp.onComplete] 找不到要更新的历史记录ID: ${metadata.conversation_id}`);
-                            }
-                        } catch (error) {
-                            console.error("更新对话标题失败:", error);
+                try {
+                    if (isPendingNewConversation) {
+                        // --- Create New Conversation Logic ---
+                        if (DEBUG) console.log(`[BaseDifyChatApp.onComplete] Creating new conversation record.`);
+                        if (!userQuery) {
+                            console.error("[BaseDifyChatApp.onComplete] Cannot create new conversation: userQuery is missing.");
+                            throw new Error("Missing user query for new conversation creation.");
+                        }
+                        if (!userMessageId) {
+                            console.warn("[BaseDifyChatApp.onComplete] Cannot find userMessageId for new conversation. Using a placeholder.");
+                            // Potentially generate a fallback ID if needed by ChatHistoryService
+                        }
+
+                        // Use Dify's name or generate a fallback title
+                        const title = conversationName || (userQuery.length > 20 ? `${userQuery.slice(0, 20)}...` : userQuery) || `Chat ${new Date().toLocaleTimeString()}`;
+                        if (DEBUG) console.log(`[BaseDifyChatApp.onComplete] Using title: ${title}`);
+
+                        // Prepare messages array
+                        const messagesToSave = [
+                            { id: userMessageId || `user-${Date.now()}`, role: 'user', content: userQuery, timestamp: Date.now() - 1000 }, // Approx user time
+                            { id: finalAssistantMessageId, role: 'assistant', content: assistantContent, timestamp: Date.now() }
+                        ];
+
+                        // Create conversation using ChatHistoryService
+                        const newConversation = await ChatHistoryService.createConversation({
+                            title: title,
+                            messages: messagesToSave,
+                            appType: this.appType
+                        });
+
+                        if (!newConversation || !newConversation.id) {
+                            throw new Error("Failed to create conversation in ChatHistoryService.");
+                        }
+                        if (DEBUG) console.log(`[BaseDifyChatApp.onComplete] New conversation created locally. ID: ${newConversation.id}, Dify ID: ${finalDifyConversationId}`);
+
+                        // Update state
+                        this.state.currentConversationId = newConversation.id; // Use the local ID
+                        this.state.difyConversationId = finalDifyConversationId;
+                        this.state.isNewConversationPending = false; // No longer pending
+
+                        // Update history list in UI
+                        await this.addOrUpdateConversationHistory({
+                            id: newConversation.id,
+                            title: newConversation.title,
+                            last_message_time: Math.floor(Date.now() / 1000),
+                            appType: newConversation.appType
+                        });
+                        // Ensure the new item is selected
+                        this.ui?.setActiveHistoryItem(newConversation.id);
+
+                    } else {
+                        // --- Update Existing Conversation Logic ---
+                        if (DEBUG) console.log(`[BaseDifyChatApp.onComplete] Adding assistant message to existing conversation: ${this.state.currentConversationId}`);
+                        if (!this.state.currentConversationId) {
+                             console.error("[BaseDifyChatApp.onComplete] Inconsistent state: Not a new conversation, but currentConversationId is missing.");
+                             // Handle error - maybe show toast?
+                        } else {
+                             // Save only the assistant message
+                             await this.saveMessageToHistory('assistant', assistantContent, finalAssistantMessageId);
+
+                             // Update Dify conversation ID for next message if it changed
+                             if (finalDifyConversationId && finalDifyConversationId !== this.state.difyConversationId) {
+                                  if (DEBUG) console.log(`Updating Dify conversation ID from ${this.state.difyConversationId} to: ${finalDifyConversationId}`);
+                                  this.state.difyConversationId = finalDifyConversationId;
+                             }
+
+                             // If Dify provided a name (unlikely for existing chats, but handle defensively)
+                             // and it differs from the current local title, update the local title.
+                             if (conversationName) {
+                                 const existingConv = this.history.find(h => h.id === this.state.currentConversationId);
+                                 if (existingConv && existingConv.title !== conversationName) {
+                                     if (DEBUG) console.log(`[BaseDifyChatApp.onComplete] Dify provided a name '${conversationName}' for existing chat ${this.state.currentConversationId}. Updating local title.`);
+                                     try {
+                                         await ChatHistoryService.updateConversation(this.state.currentConversationId, { title: conversationName });
+                                         // Update cache and UI
+                                         await this.addOrUpdateConversationHistory({ id: this.state.currentConversationId, title: conversationName });
+                                         this.ui?.setActiveHistoryItem(this.state.currentConversationId); // Keep it active
+                                     } catch (error) {
+                                         console.error("Failed to update existing conversation title based on Dify name:", error);
+                                     }
+                                 }
+                             }
                         }
                     }
+
+                    // Finalize the assistant message in UI (render markdown, add actions etc.)
+                    // --- BUG FIX: Pass the *initial* assistantMessageId, not the final one ---
+                    // finalizeMessage internally handles updating the element's ID if needed.
+                    this.ui?.finalizeMessage(assistantMessageId, metadata);
+                    // --- END BUG FIX ---
+
+                    // Fetch suggestions (only if successful and message ID exists)
+                    // --- Use the final ID for fetching suggestions, as that's what the API expects ---
+                    if (finalAssistantMessageId) {
+                         this.fetchAndDisplaySuggestions(finalAssistantMessageId);
+                    } else {
+                         if (DEBUG) console.log(`[BaseDifyChatApp.onComplete] Skipping suggestion fetch for ${assistantMessageId} because final message ID is missing.`);
+                    }
+
+                } catch (error) {
+                    console.error("[BaseDifyChatApp.onComplete] Error processing completion callback:", error);
+                    this._handleError(error instanceof Error ? error : new Error(String(error)), finalAssistantMessageId || assistantMessageId);
+                } finally {
+                    // Always reset client and input state, regardless of success/error in processing
+                    this.difyClient = null;
+                    // Re-enable input
+                    if (this.ui?.elements?.messageInput) {
+                        this.ui.elements.messageInput.disabled = false;
+                        this.ui.elements.messageInput.focus();
+                    }
+                    // Ensure button state is idle if not handled by error
+                    if (!this.state.isGenerating) {
+                         this.ui?.setSendButtonState('idle');
+                    }
                 }
-
-                // Fetch and display suggested questions for the completed message
-                const finalMessageId = metadata?.message_id || assistantMessageId; // Use final ID if available
-                this.fetchAndDisplaySuggestions(finalMessageId);
-
-
-                this.difyClient = null;
-                this.state.isGenerating = false;
-
-                // Re-enable input
-                if (this.ui.elements.messageInput) {
-                    this.ui.elements.messageInput.disabled = false;
-                    this.ui.elements.messageInput.focus();
-                 }
             },
             onError: (error) => {
                  this._handleError(error, assistantMessageId); // Pass the ID for context
+                 // Also reset the pending flag if an error occurs during the first message attempt
+                 if (isPendingNewConversation) {
+                      this.state.isNewConversationPending = false; // Reset flag on error too
+                      // Maybe reset currentConversationId as well if it was tentatively set?
+                      // this.state.currentConversationId = null; 
+                 }
             }
         };
     }
@@ -374,9 +467,13 @@ class BaseDifyChatApp extends BaseDifyApp {
     /**
      * Handles the generate button click.
      * Overrides base to orchestrate chat UI updates.
+     * --- MODIFIED: Delays saving user message for pending new conversations. ---
      */
     async handleGenerate() {
-         console.log(`[BaseDifyChatApp ${this.constructor.name}] handleGenerate called.`);
+         if (DEBUG) {
+             console.log(`[BaseDifyChatApp ${this.constructor.name}] handleGenerate called.`);
+             console.log(`[BaseDifyChatApp ${this.constructor.name}] 当前appType=${this.appType || '未设置'}`);
+         }
 
         if (!this.ui || !this.state.apiKey || !this.state.apiEndpoint || !this.state.currentUser) {
             console.error(`[BaseDifyChatApp ${this.constructor.name}] Cannot generate: App not fully initialized or missing config.`);
@@ -388,21 +485,32 @@ class BaseDifyChatApp extends BaseDifyApp {
         if (!inputs) {
             return; // Validation failed or input empty
         }
+        const userQuery = inputs.query; // Store the user query
 
-        // 检查是否需要创建新对话（只有在用户未选择任何对话且未手动点击新对话时）
-        if (!this.state.currentConversationId && !this.state.difyConversationId) {
-            console.log("首次发送消息，自动创建新对话...");
-            // 这是一个自动创建的对话，不做特殊处理
+        // --- MODIFICATION: Check if it's a pending new conversation ---
+        const isPendingNewConversation = this.state.isNewConversationPending || !this.state.currentConversationId;
+        if (isPendingNewConversation) {
+            if (DEBUG) console.log("[BaseDifyChatApp] Handling first message for a pending new conversation.");
+        } else {
+             if (!this.state.currentConversationId) {
+                  console.error("[BaseDifyChatApp] Error: Not a pending new conversation, but currentConversationId is missing!");
+                  // Handle this potential error state, perhaps by treating as new?
+             }
         }
+        // --- END MODIFICATION ---
 
-        // 显示用户消息
+        // 显示用户消息 (Always show in UI)
         const userMessageId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-        this.ui.addMessage('user', inputs.query, userMessageId);
-        const userQuery = inputs.query; // 保留用户输入的副本
+        this.ui.addMessage('user', userQuery, userMessageId);
         this.ui.clearInputText(); // 清空输入框
 
-        // 保存用户消息到历史记录
-        await this.saveMessageToHistory('user', userQuery, userMessageId);
+        // --- MODIFICATION: Only save user message immediately for existing conversations ---
+        if (!isPendingNewConversation && this.state.currentConversationId) {
+             await this.saveMessageToHistory('user', userQuery, userMessageId);
+        } else {
+             if (DEBUG) console.log("[BaseDifyChatApp] Delaying save of user message for new conversation.");
+        }
+        // --- END MODIFICATION ---
 
         // 设置UI为思考状态
         this.ui.setSendButtonState('thinking');
@@ -439,15 +547,18 @@ class BaseDifyChatApp extends BaseDifyApp {
              }
 
             // 获取回调函数，传入临时消息ID
-            const baseCallbacks = this._getBaseCallbacks(assistantMessageId);
+            // --- MODIFICATION: Pass userQuery and isPendingNewConversation to callbacks ---
+            const baseCallbacks = this._getBaseCallbacks(assistantMessageId, userQuery, isPendingNewConversation);
+            // --- END MODIFICATION ---
             const specificCallbacks = this._getSpecificCallbacks(); // 用于潜在的重写
             finalCallbacks = { ...baseCallbacks, ...specificCallbacks };
 
              // 修改回调以设置'streaming'状态
              const originalOnMessage = finalCallbacks.onMessage;
-             const originalOnComplete = finalCallbacks.onComplete;
+             // --- MODIFICATION: remove originalOnComplete handling here, move to _getBaseCallbacks ---
+             // const originalOnComplete = finalCallbacks.onComplete;
              let streamingStateSet = false;
-             
+
              finalCallbacks.onMessage = (content, isFirstChunk) => {
                  if (!streamingStateSet) {
                       this.ui.setSendButtonState('streaming');
@@ -455,23 +566,26 @@ class BaseDifyChatApp extends BaseDifyApp {
                  }
                  if (originalOnMessage) originalOnMessage(content, isFirstChunk);
              };
-             
+
+             // --- REMOVED: Logic moved to _getBaseCallbacks's onComplete wrapper ---
+             /*
              // 添加消息保存逻辑到onComplete回调
              finalCallbacks.onComplete = async (metadata) => {
-                 console.log(`Callback onComplete for ${assistantMessageId}. Metadata:`, metadata);
-                 
+                 if (DEBUG) console.log(`Callback onComplete for ${assistantMessageId}. Metadata:`, metadata);
+
                  // 保存助手消息到历史记录（使用最终消息ID）
                  const finalMessageId = metadata?.message_id || assistantMessageId;
                  const messageContent = this.ui.streamingMessages.get(assistantMessageId)?.fullContent || '';
-                 
+
                  // 使用DynamoDB保存助手消息
                  await this.saveMessageToHistory('assistant', messageContent, finalMessageId);
-                 
+
                  // 调用原始的onComplete回调
                  if (originalOnComplete) originalOnComplete(metadata);
              };
+             */
 
-            console.log(`[BaseDifyChatApp ${this.constructor.name}] Calling difyClient.generateStream with payload for message ${assistantMessageId}`);
+            if (DEBUG) console.log(`[BaseDifyChatApp ${this.constructor.name}] Calling difyClient.generateStream with payload for message ${assistantMessageId}`);
             // 不使用await，让回调处理完成/错误
              this.difyClient.generateStream(payload, finalCallbacks).catch(err => {
                  console.error("Error directly from generateStream promise:", err);
@@ -567,54 +681,87 @@ class BaseDifyChatApp extends BaseDifyApp {
      */
     async fetchAndDisplaySuggestions(messageId) {
          if (!messageId || !this.state.apiKey || !this.state.apiEndpoint || !this.state.currentUser) {
-             console.warn("Cannot fetch suggestions: missing messageId or config/user.");
+             console.warn("[BaseDifyChatApp] Cannot fetch suggestions: missing messageId or config/user.");
              return;
          }
 
          const suggestionsUrl = '/api/v1/messages/' + messageId + '/suggested?user=' + encodeURIComponent(this.state.currentUser.username || 'unknown-user');
+         if (DEBUG) console.log(`[BaseDifyChatApp] Fetching suggestions from: ${suggestionsUrl}`); // Added DEBUG log
+         
          try {
              const response = await fetch(suggestionsUrl, {
                  method: 'GET',
                  headers: { 'Authorization': `Bearer ${this.state.apiKey}` }
              });
-             if (!response.ok) {
-                 console.warn(`[${this.constructor.name}] Failed to fetch suggestions for message ${messageId}. Status: ${response.status}`);
-                 return; // Non-critical error
+
+             // --- Modification Start: Log response and adjust error logging --- 
+             const responseStatus = response.status;
+             const responseOk = response.ok;
+             let result = null;
+
+             try {
+                 result = await response.json();
+                 if (DEBUG) console.log(`[BaseDifyChatApp] Suggestions API response for ${messageId}: Status=${responseStatus}, OK=${responseOk}, Data=`, JSON.stringify(result));
+             } catch (jsonError) {
+                 // Handle cases where response is not JSON (e.g., empty body for 204, or error page for others)
+                 const textResponse = await response.text(); // Try reading as text
+                 console.warn(`[BaseDifyChatApp] Suggestions API response for ${messageId} was not valid JSON. Status=${responseStatus}. Body:`, textResponse);
+                 if (!responseOk) { // If status was already not ok, throw based on status
+                     throw new Error(`HTTP error! status: ${responseStatus}`);
+                 }
+                 // If status was ok but parsing failed, treat as no suggestions
+                 result = { data: [] }; 
              }
-             const result = await response.json();
+
+             if (!responseOk) {
+                 // Log non-critical errors (400, 404) differently
+                 if (responseStatus === 400 || responseStatus === 404) {
+                     console.log(`[BaseDifyChatApp] Failed to fetch suggestions for message ${messageId}. Status: ${responseStatus} (This might be expected for some apps).`);
+                 } else {
+                     // Log other errors as warnings
+                     console.warn(`[BaseDifyChatApp] Failed to fetch suggestions for message ${messageId}. Status: ${responseStatus}`);
+                 }
+                 return; // Stop processing if fetch failed
+             }
+             // --- Modification End ---
+
              if (result.data && Array.isArray(result.data) && result.data.length > 0) {
+                 if (DEBUG) console.log(`[BaseDifyChatApp] Calling ui.displaySuggestedQuestions for ${messageId}`); // Added DEBUG log
                  this.ui?.displaySuggestedQuestions(messageId, result.data);
+             } else {
+                 if (DEBUG) console.log(`[BaseDifyChatApp] No suggestions data received or data array is empty for ${messageId}.`); // Added DEBUG log
              }
          } catch (error) {
-              console.error(`[${this.constructor.name}] Error fetching suggestions for message ${messageId}:`, error);
-              // Don't show toast for this potentially minor error
+              // Log network errors or unexpected issues as errors
+              console.error(`[BaseDifyChatApp] Error during fetchAndDisplaySuggestions for message ${messageId}:`, error);
          }
     }
 
     /**
      * Handles starting a new chat session.
+     * --- MODIFIED: Does NOT create backend record immediately. ---
      */
     startNewConversation() {
-        console.log("Starting new conversation...");
+        console.log("[BaseDifyChatApp] Starting new conversation (UI only)...");
         if (this.state.isGenerating && this.difyClient) {
-             console.log("Stopping current generation before starting new chat.");
+             console.log("[BaseDifyChatApp] Stopping current generation before starting new chat.");
              this.stopGeneration(); // 先停止任何正在进行的生成
          }
-        // 重置状态
+
+        // --- MODIFIED: Remove backend creation, only reset state & UI ---
+        // Reset state
         this.state.currentConversationId = null;
-        this.state.difyConversationId = null; // 同时重置Dify对话ID
-        // 清空聊天区域
+        this.state.difyConversationId = null; // Reset Dify ID for the new chat
+        this.state.isNewConversationPending = true; // Mark that a new conversation is pending storage
+
+        // Update UI
         this.ui?.clearChatArea();
-        // 从侧边栏取消选中所有历史项
-        this.ui?.setActiveHistoryItem(null);
-        // 显示欢迎语
-        this.displayInitialAssistantMessage();
-        // 聚焦输入框
+        this.ui?.setActiveHistoryItem(null); // Deselect history item
+        this.displayInitialAssistantMessage(); // Show welcome message
         if (this.ui?.elements?.messageInput) this.ui.elements.messageInput.focus();
-        // 标记这是一个用户明确请求的新对话
-        console.log("用户主动创建新对话");
-        
-        // 重要：不要在此时创建新的对话记录，等到用户发送第一条消息时再创建
+
+        console.log("[BaseDifyChatApp] New conversation UI setup complete, pending first message to save.");
+        // --- END MODIFICATION ---
     }
 
     /**
@@ -803,6 +950,7 @@ class BaseDifyChatApp extends BaseDifyApp {
             console.error("[BaseDifyChatApp.addOrUpdateConversationHistory] 无效的对话数据:", conversationData);
             return;
         }
+        if (DEBUG) console.log(`[BaseDifyChatApp.addOrUpdateConversationHistory] Received data:`, JSON.stringify(conversationData)); // Added DEBUG log
 
         try {
             // 确保所有对话数据使用统一的title字段
@@ -821,16 +969,24 @@ class BaseDifyChatApp extends BaseDifyApp {
                     // 如果未提供last_message_time，则使用当前时间
                     last_message_time: conversationData.last_message_time || Math.floor(Date.now() / 1000)
                 };
+                
+                if (DEBUG) console.log(`[BaseDifyChatApp.addOrUpdateConversationHistory] 更新对话 ${conversationData.id}，appType=${conversationData.appType || this.history[existingIndex].appType || 'undefined'}`);
             } else {
-                // 添加新记录到顶部
-                this.history.unshift({ 
+                // 添加新记录到顶部，确保包含appType
+                const newConversationData = { 
                     ...conversationData,
-                    last_message_time: conversationData.last_message_time || Math.floor(Date.now() / 1000)
-                });
+                    last_message_time: conversationData.last_message_time || Math.floor(Date.now() / 1000),
+                    appType: conversationData.appType || this.appType // 如果没有appType则使用当前appType
+                };
+                
+                this.history.unshift(newConversationData);
+                
+                if (DEBUG) console.log(`[BaseDifyChatApp.addOrUpdateConversationHistory] 添加新对话 ${conversationData.id}，appType=${newConversationData.appType || 'undefined'}`);
             }
             
             // 排序（最新的在前）
             this.history.sort((a, b) => (b.last_message_time || 0) - (a.last_message_time || 0));
+            if (DEBUG) console.log(`[BaseDifyChatApp.addOrUpdateConversationHistory] History sorted. Calling updateHistoryList.`); // Added DEBUG log
             
             // 更新UI
             this.ui?.updateHistoryList(this.history);
@@ -840,30 +996,34 @@ class BaseDifyChatApp extends BaseDifyApp {
                 this.ui?.setActiveHistoryItem(conversationData.id);
             }
             
-            console.log(`[BaseDifyChatApp.addOrUpdateConversationHistory] 历史记录已更新，当前共 ${this.history.length} 条。`);
+            if (DEBUG) console.log(`[BaseDifyChatApp.addOrUpdateConversationHistory] 历史记录已更新，当前共 ${this.history.length} 条。`);
         } catch (error) {
             console.error("[BaseDifyChatApp.addOrUpdateConversationHistory] 更新历史记录时出错:", error);
         }
     }
 
     /**
-     * 保存当前对话消息到DynamoDB.
-     * 当添加新消息时调用此方法，确保对话内容被持久化。
+     * 保存**现有**对话消息到DynamoDB.
+     * 当添加新消息到已存在的对话时调用此方法，确保对话内容被持久化。
+     * --- MODIFIED: This function now ONLY handles ADDING messages to EXISTING conversations. ---
+     * --- Creating new conversations is handled in the onComplete callback. ---
      * @param {string} role - 消息发送者角色 ('user' 或 'assistant')
      * @param {string} content - 消息内容
      * @param {string} messageId - 消息ID
      * @returns {Promise<void>}
      */
     async saveMessageToHistory(role, content, messageId) {
-        // 如果没有conversation_id，表示这是新对话的第一条消息
+        // --- MODIFIED: Check if currentConversationId exists. If not, do nothing (should be handled by onComplete). ---
         if (!this.state.currentConversationId) {
-            console.log("[BaseDifyChatApp.saveMessageToHistory] 创建新对话...");
-            // 创建临时标题，后续将被Dify生成的标题替换
-            // 从用户消息创建标题（如果是用户消息）
-            const title = role === 'user' 
-                ? (content.length > 20 ? `${content.slice(0, 20)}...` : content)
-                : `对话 ${new Date().toLocaleDateString()}`;
-            
+            console.warn("[BaseDifyChatApp.saveMessageToHistory] Called without a currentConversationId. Aborting save. New conversation creation should happen in onComplete.");
+            return;
+        }
+        // --- END MODIFICATION ---
+
+        // 现有对话，添加消息
+        if (DEBUG) console.log(`[BaseDifyChatApp.saveMessageToHistory] 向对话 ${this.state.currentConversationId} 添加消息...`);
+
+        try {
             // 创建消息对象
             const message = {
                 id: messageId,
@@ -871,64 +1031,31 @@ class BaseDifyChatApp extends BaseDifyApp {
                 content,
                 timestamp: Date.now()
             };
-            
-            try {
-                // 创建新对话
-                const newConversation = await ChatHistoryService.createConversation({
-                    title,
-                    messages: [message]
+
+            // 添加消息到现有对话
+            const updatedConversation = await ChatHistoryService.addMessage(
+                this.state.currentConversationId,
+                message
+            );
+
+            if (updatedConversation) {
+                if (DEBUG) console.log(`[BaseDifyChatApp.saveMessageToHistory] 消息添加成功，对话 ${updatedConversation.id} 现在有 ${updatedConversation.messages.length} 条消息。`);
+
+                // 更新历史记录列表，保留appType字段
+                await this.addOrUpdateConversationHistory({
+                    id: updatedConversation.id,
+                    title: updatedConversation.title,
+                    last_message_time: Math.floor(Date.now() / 1000),
+                    appType: updatedConversation.appType || this.appType // 保留现有appType或使用当前appType
                 });
-                
-                if (newConversation) {
-                    console.log(`[BaseDifyChatApp.saveMessageToHistory] 新对话创建成功, ID: ${newConversation.id}`);
-                    // 更新当前对话ID（这可能会被后续的Dify API响应中的conversation_id覆盖）
-                    this.state.currentConversationId = newConversation.id;
-                    
-                    // 更新历史记录列表和UI
-                    await this.addOrUpdateConversationHistory({
-                        id: newConversation.id,
-                        title: newConversation.title,
-                        last_message_time: Math.floor(Date.now() / 1000)
-                    });
-                    
-                    // 设置活跃历史项
-                    this.ui?.setActiveHistoryItem(newConversation.id);
-                }
-            } catch (error) {
-                console.error("[BaseDifyChatApp.saveMessageToHistory] 创建新对话失败:", error);
+            } else {
+                 // Handle case where addMessage might fail but not throw
+                 console.error(`[BaseDifyChatApp.saveMessageToHistory] ChatHistoryService.addMessage did not return an updated conversation for ID: ${this.state.currentConversationId}`);
             }
-        } else {
-            // 现有对话，添加消息
-            console.log(`[BaseDifyChatApp.saveMessageToHistory] 向对话 ${this.state.currentConversationId} 添加消息...`);
-            
-            try {
-                // 创建消息对象
-                const message = {
-                    id: messageId,
-                    role,
-                    content,
-                    timestamp: Date.now()
-                };
-                
-                // 添加消息到现有对话
-                const updatedConversation = await ChatHistoryService.addMessage(
-                    this.state.currentConversationId,
-                    message
-                );
-                
-                if (updatedConversation) {
-                    console.log(`[BaseDifyChatApp.saveMessageToHistory] 消息添加成功，对话 ${updatedConversation.id} 现在有 ${updatedConversation.messages.length} 条消息。`);
-                    
-                    // 更新历史记录列表
-                    await this.addOrUpdateConversationHistory({
-                        id: updatedConversation.id,
-                        title: updatedConversation.title,
-                        last_message_time: Math.floor(Date.now() / 1000)
-                    });
-                }
-            } catch (error) {
-                console.error(`[BaseDifyChatApp.saveMessageToHistory] 向对话 ${this.state.currentConversationId} 添加消息失败:`, error);
-            }
+        } catch (error) {
+            console.error(`[BaseDifyChatApp.saveMessageToHistory] 向对话 ${this.state.currentConversationId} 添加消息失败:`, error);
+            // Optionally show a toast message?
+            // this.ui?.showToast(t('chat.error.saveMessageFailed', { default: '保存消息失败' }), 'error');
         }
     }
 
@@ -1067,18 +1194,42 @@ class BaseDifyChatApp extends BaseDifyApp {
 
          // Start new chat button
          this.ui.elements.startNewChatButton?.addEventListener('click', () => {
-             this.startNewConversation();
+             // --- MODIFICATION: Prevent rapid clicks ---
+             if (this.state.isStartingNewChat) {
+                 console.warn("[BaseDifyChatApp] Ignoring rapid click on Start New Chat button.");
+                 return;
+             }
+             this.state.isStartingNewChat = true;
+             try {
+                  this.startNewConversation();
+             } finally {
+                 // Reset the flag after a short delay to allow UI updates but prevent immediate re-clicks
+                 setTimeout(() => { this.state.isStartingNewChat = false; }, 500);
+             }
+             // --- END MODIFICATION ---
          });
 
          // History list item clicks (using event delegation)
          this.ui.elements.chatHistoryList?.addEventListener('click', async (e) => {
+             console.log('[DEBUG Sidebar Click] Click event on chatHistoryList triggered.'); // 日志 1
+             console.log('[DEBUG Sidebar Click] Target element:', e.target); // 日志 2
+             
+             const renameBtn = e.target.closest('.rename-btn'); // 修正选择器: 移除 -history
+             const deleteBtn = e.target.closest('.delete-btn'); // 修正选择器: 移除 -history
+             console.log('[DEBUG Sidebar Click] renameBtn found:', renameBtn); // 日志 3.1
+             console.log('[DEBUG Sidebar Click] deleteBtn found:', deleteBtn); // 日志 3.2
+
              // 如果点击的是重命名按钮
-             if (e.target.closest('.rename-history-btn')) {
+             if (renameBtn) {
+                 console.log('[DEBUG Sidebar Click] Clicked Rename button.');
                  e.stopPropagation(); // 阻止冒泡到history item
-                 const historyItem = e.target.closest('.chat-history-item');
-                 const convId = historyItem?.dataset.conversationId;
+                 const historyItem = e.target.closest('.history-item'); // 修正选择器
+                 console.log('[DEBUG Sidebar Click] Found historyItem for rename:', historyItem); // 日志 4.1
+                 const convId = historyItem?.dataset.id; // 从 data-id 获取对话ID
+                 console.log('[DEBUG Sidebar Click] Extracted convId for rename:', convId); // 日志 5.1
                  
                  if (convId) {
+                     console.log('[DEBUG Sidebar Click] Entering rename logic...'); // 日志 6.1
                      // 获取当前标题
                      const existingConv = this.history.find(h => h.id === convId);
                      const currentTitle = existingConv?.title || '';
@@ -1105,12 +1256,16 @@ class BaseDifyChatApp extends BaseDifyApp {
              }
              
              // 如果点击的是删除按钮
-             if (e.target.closest('.delete-history-btn')) {
+             if (deleteBtn) {
+                 console.log('[DEBUG Sidebar Click] Clicked Delete button.');
                  e.stopPropagation(); // 阻止冒泡到history item
-                 const historyItem = e.target.closest('.chat-history-item');
-                 const convId = historyItem?.dataset.conversationId;
+                 const historyItem = e.target.closest('.history-item'); // 修正选择器
+                 console.log('[DEBUG Sidebar Click] Found historyItem for delete:', historyItem); // 日志 4.2
+                 const convId = historyItem?.dataset.id; // 从 data-id 获取对话ID
+                 console.log('[DEBUG Sidebar Click] Extracted convId for delete:', convId); // 日志 5.2
                  
                  if (convId) {
+                     console.log('[DEBUG Sidebar Click] Entering delete logic...'); // 日志 6.2
                      // 显示确认对话框 - 修复: 使用全局t函数而不是this.t
                      if (confirm(t('chat.confirmDeleteConversation', { default: '确定要删除这个对话吗？此操作不可撤销。' }))) {
                          try {
@@ -1127,15 +1282,21 @@ class BaseDifyChatApp extends BaseDifyApp {
                  }
              }
              
-             // 常规点击（加载对话）
-             const historyItem = e.target.closest('.chat-history-item');
-             const convId = historyItem?.dataset.conversationId;
-             if (convId && convId !== this.state.currentConversationId) {
-                 this.loadConversationMessages(convId);
-                 // Collapse sidebar on mobile after selection
-                  if (window.innerWidth <= 768 && this.ui.elements.sidebar && !this.ui.elements.sidebar.classList.contains('collapsed')) {
-                      this.ui.toggleSidebar(); // Use the UI method
-                  }
+             // 常规点击（加载对话） - 仅在未点击按钮时执行
+             if (!renameBtn && !deleteBtn) {
+                 console.log('[DEBUG Sidebar Click] Handling regular item click.');
+                 const historyItem = e.target.closest('.history-item'); // 修正选择器
+                 console.log('[DEBUG Sidebar Click] Found historyItem for load:', historyItem); // 日志 4.3
+                 const convId = historyItem?.dataset.id; // 从 data-id 获取对话ID
+                 console.log('[DEBUG Sidebar Click] Extracted convId for load:', convId); // 日志 5.3
+                 if (convId && convId !== this.state.currentConversationId) {
+                     console.log('[DEBUG Sidebar Click] Entering load conversation logic...'); // 日志 6.3
+                     this.loadConversationMessages(convId);
+                     // Collapse sidebar on mobile after selection
+                      if (window.innerWidth <= 768 && this.ui.elements.sidebar && !this.ui.elements.sidebar.classList.contains('collapsed')) {
+                          this.ui.toggleSidebar(); // Use the UI method
+                      }
+                 }
              }
          });
 
@@ -1282,7 +1443,7 @@ class BaseDifyChatApp extends BaseDifyApp {
      * @param {string} assistantMsgId - The ID of the assistant message to regenerate.
      */
     async handleRegenerate(assistantMsgId) {
-        console.log(`[BaseDifyChatApp ${this.constructor.name}] handleRegenerate called for message: ${assistantMsgId}`);
+        if (DEBUG) console.log(`[BaseDifyChatApp ${this.constructor.name}] handleRegenerate called for message: ${assistantMsgId}`);
 
         if (!this.ui || !this.state.apiKey || !this.state.apiEndpoint || !this.state.currentUser || !this.state.currentConversationId) {
             console.error(`[BaseDifyChatApp ${this.constructor.name}] Cannot regenerate: App not fully initialized, missing config, or conversation ID.`);
@@ -1341,7 +1502,7 @@ class BaseDifyChatApp extends BaseDifyApp {
             // Create Dify client if needed
             if (!this.difyClient) {
                  this.difyClient = new DifyClient({
-                     baseUrl: '/api/v1', // Use proxy
+                     baseUrl: '/api/v1',
                      apiKey: this.state.apiKey,
                      mode: this.difyMode
                  });

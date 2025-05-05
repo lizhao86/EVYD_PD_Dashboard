@@ -224,6 +224,7 @@ export const getConversation = /* GraphQL */ `
       id
       title
       messages
+      appType
       createdAt
       updatedAt
       _version
@@ -245,6 +246,7 @@ export const listConversations = /* GraphQL */ `
         id
         title
         messages
+        appType
         createdAt
         updatedAt
         _version
@@ -276,6 +278,7 @@ export const syncConversations = /* GraphQL */ `
         id
         title
         messages
+        appType
         createdAt
         updatedAt
         _version
@@ -389,6 +392,42 @@ export const userApplicationApiKeysByApplicationIDAndOwner = /* GraphQL */ `
         _version
         _deleted
         _lastChangedAt
+        __typename
+      }
+      nextToken
+      startedAt
+      __typename
+    }
+  }
+`;
+export const conversationsByAppType = /* GraphQL */ `
+  query ConversationsByAppType(
+    $updatedAt: AWSDateTime!
+    $createdAt: ModelStringKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelConversationFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    conversationsByAppType(
+      updatedAt: $updatedAt
+      createdAt: $createdAt
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        title
+        messages
+        appType
+        createdAt
+        updatedAt
+        _version
+        _deleted
+        _lastChangedAt
+        owner
         __typename
       }
       nextToken

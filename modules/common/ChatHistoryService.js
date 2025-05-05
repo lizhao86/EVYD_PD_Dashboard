@@ -47,10 +47,98 @@ class ChatHistoryService {
                 id: conversation.id,
                 title: conversation.title || this._generateDefaultTitle(conversation),
                 last_message_time: new Date(conversation.updatedAt || conversation.createdAt).getTime() / 1000,
-                messageCount: this._countMessages(conversation)
+                messageCount: this._countMessages(conversation),
+                appType: conversation.appType // 添加appType字段到返回结果
             }));
         } catch (error) {
             console.error('[ChatHistoryService] Error getting conversation list:', error);
+            return [];
+        }
+    }
+
+    /**
+     * 根据应用类型获取对话列表
+     * @param {string} appType 应用类型: 'chat', 'ux-design', 'requirement-analysis'
+     * @returns {Promise<Array>} 过滤后的对话数组
+     */
+    static async getConversationsByAppType(appType) {
+        try {
+            console.log(`[ChatHistoryService] 正在按应用类型查询对话: ${appType}`);
+            
+            // 检查conversationsByAppType查询是否可用
+            let conversations = [];
+            if (queries.conversationsByAppType) {
+                try {
+                    const result = await API.graphql(
+                        graphqlOperation(queries.conversationsByAppType, {
+                            appType: appType,
+                            sortDirection: "DESC"  // 降序排列，最新的对话在前
+                        })
+                    );
+                    
+                    conversations = result.data.conversationsByAppType.items || [];
+                    console.log(`[ChatHistoryService] 按应用类型查询到 ${conversations.length} 条对话`);
+                } catch (queryError) {
+                    console.warn('[ChatHistoryService] conversationsByAppType查询出错:', queryError);
+                    // 如果查询出错，使用回退方案
+                    conversations = [];
+                }
+            }
+            
+            // 如果通过新查询获取的结果为空，则使用旧方法获取全部并过滤
+            if (conversations.length === 0) {
+                console.log('[ChatHistoryService] 没有找到记录或者新查询不可用，使用旧方法并过滤');
+                
+                // 获取所有对话
+                const allConversations = await this.getConversationList();
+                
+                // 首先尝试通过appType字段过滤
+                const appTypeFiltered = allConversations.filter(conv => conv.appType === appType);
+                
+                if (appTypeFiltered.length > 0) {
+                    // 如果找到了匹配的记录，使用它们
+                    console.log(`[ChatHistoryService] 通过appType字段过滤找到 ${appTypeFiltered.length} 条记录`);
+                    return appTypeFiltered;
+                }
+                
+                // 如果通过appType字段没有找到记录，尝试通过标题前缀过滤
+                console.log('[ChatHistoryService] 通过appType字段没有找到记录，尝试使用标题前缀过滤');
+                
+                const prefixMap = {
+                    'chat': '[手册]',
+                    'ux-design': '[UX]',
+                    'requirement-analysis': '[需求]'
+                };
+                const prefix = prefixMap[appType] || '';
+                
+                // 为空的chat应用特殊处理：没有前缀的记录归属于默认chat应用
+                if (appType === 'chat') {
+                    const filtered = allConversations.filter(conv => 
+                        !conv.title || !conv.title.startsWith('[')
+                    );
+                    console.log(`[ChatHistoryService] 为chat应用找到 ${filtered.length} 条无前缀记录`);
+                    return filtered;
+                }
+                
+                const filtered = allConversations.filter(conv => 
+                    conv.title && conv.title.startsWith(prefix)
+                );
+                console.log(`[ChatHistoryService] 通过标题前缀'${prefix}'过滤找到 ${filtered.length} 条记录`);
+                return filtered;
+            }
+            
+            // 转换每个对话对象为简单的元数据格式
+            return conversations.map(conversation => ({
+                id: conversation.id,
+                title: conversation.title || this._generateDefaultTitle(conversation),
+                last_message_time: new Date(conversation.updatedAt || conversation.createdAt).getTime() / 1000,
+                messageCount: this._countMessages(conversation),
+                appType: conversation.appType || appType // 如果没有appType字段，使用传入的appType
+            }));
+        } catch (error) {
+            console.error(`[ChatHistoryService] 按应用类型查询对话时出错:`, error);
+            
+            // 出错时返回空数组
             return [];
         }
     }
@@ -105,16 +193,25 @@ class ChatHistoryService {
             const messages = data.messages || [];
             const messagesJson = JSON.stringify(messages);
             
+            // 准备创建对话的输入数据
             const input = {
                 title: data.title,
                 messages: messagesJson
             };
+            
+            // 如果提供了appType，添加到输入
+            if (data.appType) {
+                input.appType = data.appType;
+                console.log(`[ChatHistoryService] 创建对话设置appType: ${data.appType}`);
+            }
 
+            // 调用GraphQL API创建对话
             const result = await API.graphql(
                 graphqlOperation(mutations.createConversation, { input })
             );
 
             const newConversation = result.data.createConversation;
+            console.log(`[ChatHistoryService] 对话创建成功，ID: ${newConversation.id}`);
             
             // 返回解析后的对象
             return {
@@ -165,6 +262,16 @@ class ChatHistoryService {
             // 如果提供了消息，序列化并添加到输入
             if (data.messages) {
                 input.messages = JSON.stringify(data.messages);
+            }
+            
+            // 如果提供了appType，添加到输入
+            if (data.appType) {
+                input.appType = data.appType;
+                console.log(`[ChatHistoryService] 更新对话设置appType: ${data.appType}`);
+            }
+            // 否则保留现有的appType
+            else if (existingConversation.appType) {
+                input.appType = existingConversation.appType;
             }
 
             // 执行更新
@@ -296,6 +403,92 @@ class ChatHistoryService {
         } catch (error) {
             console.error(`[ChatHistoryService] Error updating message ${messageId} in conversation ${conversationId}:`, error);
             return null;
+        }
+    }
+
+    /**
+     * 为现有对话添加应用类型字段（迁移工具）
+     * @param {string} conversationId 对话ID
+     * @param {string} appType 应用类型
+     * @returns {Promise<boolean>} 是否成功更新
+     */
+    static async updateConversationAppType(conversationId, appType) {
+        if (!conversationId || !appType) {
+            console.error('[ChatHistoryService] 更新appType需要对话ID和应用类型');
+            return false;
+        }
+
+        try {
+            // 获取现有对话
+            const conversation = await this.getConversation(conversationId);
+            if (!conversation) {
+                console.error(`[ChatHistoryService] 对话 ${conversationId} 不存在`);
+                return false;
+            }
+
+            // 准备更新数据
+            const updateData = {
+                appType: appType
+            };
+
+            // 更新对话
+            const result = await this.updateConversation(conversationId, updateData);
+            
+            if (result) {
+                console.log(`[ChatHistoryService] 对话 ${conversationId} 的appType更新为 ${appType}`);
+                return true;
+            }
+            
+            return false;
+        } catch (error) {
+            console.error(`[ChatHistoryService] 更新对话appType时出错:`, error);
+            return false;
+        }
+    }
+
+    /**
+     * 批量更新对话的应用类型字段（迁移工具）
+     * @param {string} appType 应用类型
+     * @param {string} titlePrefix 标题前缀用于筛选（可选）
+     * @returns {Promise<number>} 成功更新的对话数量
+     */
+    static async batchUpdateAppType(appType, titlePrefix = '') {
+        try {
+            console.log(`[ChatHistoryService] 开始批量更新appType为 ${appType}`);
+            
+            // 获取所有对话
+            const allConversations = await this.getConversationList();
+            
+            // 筛选需要更新的对话
+            let targetConversations = allConversations;
+            
+            // 如果提供了标题前缀，则根据前缀筛选
+            if (titlePrefix) {
+                targetConversations = allConversations.filter(conv => 
+                    conv.title && conv.title.startsWith(titlePrefix)
+                );
+            } else if (appType === 'chat') {
+                // 如果是chat应用且没有提供前缀，则选取没有前缀的对话
+                targetConversations = allConversations.filter(conv => 
+                    !conv.title || !conv.title.startsWith('[')
+                );
+            }
+            
+            console.log(`[ChatHistoryService] 找到 ${targetConversations.length} 个符合条件的对话`);
+            
+            // 批量更新
+            let successCount = 0;
+            for (const conv of targetConversations) {
+                if (await this.updateConversationAppType(conv.id, appType)) {
+                    successCount++;
+                }
+            }
+            
+            console.log(`[ChatHistoryService] 成功更新 ${successCount}/${targetConversations.length} 个对话的appType`);
+            return successCount;
+        } catch (error) {
+            console.error(`[ChatHistoryService] 批量更新appType时出错:`, error);
+            return 0;
         }
     }
 

@@ -1,3 +1,6 @@
+// 禁用调试日志
+const DEBUG = false;
+
 /**
  * Base class for Dify-powered AI applications in the EVYD Product Manager AI Workbench.
  * Handles common logic for initialization, UI interaction, API client setup, 
@@ -28,7 +31,8 @@ class BaseDifyApp {
         currentUser: null,
         currentConversationId: null, // Used only in chat mode
         isGenerating: false, // Track generation state
-        startTime: null // For timing generation
+        startTime: null, // For timing generation
+        appInfo: null // Added for app info storage
     };
 
     // --- Instances ---
@@ -72,26 +76,20 @@ class BaseDifyApp {
             this.state.apiKey = configResult.key;
             this.difyMode = (configResult.type === 'chat' || configResult.type === 'workflow') ? configResult.type : this.difyMode;
 
-            try {
-                this.difyAppInfo = await this._fetchAppInformation();
-                if (!this.difyAppInfo) {
-                     console.warn(`[${this.constructor.name}] _fetchAppInformation did not return valid data.`);
-                }
+            if (this.state.apiKey && this.state.apiEndpoint && this.state.currentUser) {
+                if (DEBUG) console.log(`[${this.constructor.name}] API Key and Endpoint found. Proceeding with initialization.`);
+                await this._fetchAppInfo();
+
                 if (this.ui) {
                     console.log(`[BaseDifyApp ${this.constructor.name}] Calling ui.displayAppInfo...`);
-                    this.ui.displayAppInfo(this.difyAppInfo);
+                    this.ui.displayAppInfo(this.state.appInfo);
                      console.log(`[BaseDifyApp ${this.constructor.name}] ui.displayAppInfo completed.`);
                 } else {
                      console.error(`[${this.constructor.name}] UI object not available to display app info.`);
                 }
-            } catch (error) {
-                 console.error(`[${this.constructor.name}] Error during _fetchAppInformation or display:`, error);
-                 this.ui?.showError(t(`${this.difyApiKeyName}.fetchInfoError`, {
-                     default: `获取或显示应用信息时出错: ${error.message}`,
-                     error: error.message
-                 }));
-                 this.difyAppInfo = null;
-                  this.ui?.displayAppInfo(); 
+            } else {
+                 console.error(`[${this.constructor.name}] Missing API key, endpoint, or user during initialization.`);
+                 this.ui?.showError(t(`${this.difyApiKeyName}.initError`, { default: '初始化应用时出错，请刷新页面重试。' }));
             }
 
             this.bindEvents();
@@ -109,6 +107,9 @@ class BaseDifyApp {
         } catch (error) {
              console.error(`Error initializing ${this.constructor.name}:`, error);
              this.ui?.showError(t(`${this.difyApiKeyName}.initError`, { default: '初始化应用时出错，请刷新页面重试。' }));
+        } finally {
+             this.state.isInitializing = false;
+             if (DEBUG) console.log(`[${this.constructor.name}] Initialization process finished.`);
         }
     }
 
@@ -624,6 +625,86 @@ class BaseDifyApp {
         this.ui.showGenerationCompleted(); // Ensure button/UI reset
         this.difyClient = null; // Clean up client instance
         this.state.isGenerating = false;
+    }
+
+    // --- NEW: Fetch App Info ---
+    /**
+     * Fetches application metadata (name, description, tags) from the Dify /info endpoint.
+     * Stores the result in this.state.appInfo.
+     * @private
+     */
+    async _fetchAppInfo() {
+        if (!this.state.apiKey || !this.state.apiEndpoint) {
+            console.warn(`[${this.constructor.name}] Cannot fetch app info: missing API key or endpoint.`);
+            return;
+        }
+
+        const infoUrl = `/api/v1/info`; // Assuming relative path works with proxy/setup
+         if (DEBUG) console.log(`[${this.constructor.name}] Fetching app info from ${infoUrl}...`);
+
+        try {
+            const response = await fetch(infoUrl, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${this.state.apiKey}`,
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                 // Try to get error details from response body
+                 let errorBody = `HTTP error! status: ${response.status}`;
+                 try {
+                      const errorJson = await response.json();
+                      errorBody = errorJson.detail || errorJson.message || JSON.stringify(errorJson);
+                 } catch (e) { /* ignore parsing error */ }
+                 throw new Error(errorBody);
+            }
+
+            const appInfo = await response.json();
+            if (DEBUG) console.log(`[${this.constructor.name}] Fetched App Info:`, appInfo);
+
+            // Store fetched info in state
+            this.state.appInfo = {
+                name: appInfo.name || '',
+                description: appInfo.description || '',
+                tags: appInfo.tags || []
+            };
+
+        } catch (error) {
+            console.error(`[${this.constructor.name}] Error fetching app info from /info endpoint:`, error);
+            // Set default/empty info on error? Or show error? For now, just log.
+            this.state.appInfo = { name: '', description: '', tags: [] }; // Set empty state on error
+             this.ui?.showToast(t('common.error.fetchAppInfoFailed', { default: '获取应用信息失败' }), 'error');
+        }
+    }
+    // --- END NEW ---
+
+    /**
+     * Initializes the User Interface manager.
+     * Separated to allow calling after fetching necessary data.
+     * @private
+     */
+    _initUserInterface() {
+        if (!this.ui) {
+            console.error(`[${this.constructor.name}] UI manager not instantiated.`);
+            return;
+        }
+        try {
+            if (typeof this.ui.initUserInterface === 'function') {
+                this.ui.initUserInterface(); // Cache DOM elements
+            }
+             // ---> MOVE displayAppInfo call here, after fetching <---
+             if (this.state.appInfo && typeof this.ui.displayAppInfo === 'function') {
+                 if (DEBUG) console.log(`[${this.constructor.name}] Displaying fetched app info via UI manager.`);
+                 this.ui.displayAppInfo(this.state.appInfo);
+             } else if (DEBUG) {
+                 console.log(`[${this.constructor.name}] Skipping displayAppInfo: App info not fetched or UI method missing.`);
+             }
+             // ---> END MOVE <---
+        } catch (error) {
+             console.error(`[${this.constructor.name}] Error initializing UI:`, error);
+        }
     }
 }
 

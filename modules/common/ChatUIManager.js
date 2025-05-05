@@ -1,5 +1,8 @@
 // modules/common/ChatUIManager.js
 
+// 禁用调试日志
+const DEBUG = false;
+
 /**
  * ChatUIManager
  * Manages the DOM elements and interactions for a Dify chat interface.
@@ -57,7 +60,7 @@ class ChatUIManager {
      * @param {object} configOverrides - Optional overrides for configuration.
      */
     initUserInterface(configOverrides = {}) {
-        console.log("[ChatUIManager] Initializing elements...");
+        if (DEBUG) console.log("[ChatUIManager] Initializing elements...");
         this.config = { ...this.config, ...configOverrides };
 
         this.elements.chatMessagesContainer = document.getElementById(this.config.chatMessagesId);
@@ -68,6 +71,9 @@ class ChatUIManager {
         this.elements.charCount = document.getElementById(this.config.charCountId);
         this.elements.toggleSidebarButton = document.getElementById(this.config.toggleSidebarButtonId);
         this.elements.startNewChatButton = document.getElementById(this.config.startNewChatButtonId);
+        // 缓存停止响应按钮和容器
+        this.elements.stopRespondingButton = document.getElementById('stop-responding');
+        this.elements.stopRespondingContainer = document.getElementById('stop-responding-container');
 
         // Check for essential elements
         if (!this.elements.chatMessagesContainer) console.error(`[ChatUIManager] Chat messages container element #${this.config.chatMessagesId} not found!`);
@@ -85,7 +91,7 @@ class ChatUIManager {
               this.elements.sidebar.classList.remove('collapsed'); // Ensure default is expanded
          }
 
-        console.log("[ChatUIManager] Elements cached:", this.elements);
+        if (DEBUG) console.log("[ChatUIManager] Elements cached:", this.elements);
     }
 
     // --- App Info & General Error Display (Added for BaseDifyApp compatibility) ---
@@ -174,13 +180,13 @@ class ChatUIManager {
              console.error("[ChatUIManager] Cannot add message, container not found.");
              return null;
         }
-        // console.log(`[ChatUIManager] Adding message: role=${role}, messageId=${messageId}, status=${status}`);
+        // if (DEBUG) console.log(`[ChatUIManager] Adding message: role=${role}, messageId=${messageId}, status=${status}`);
 
         const messageWrapper = document.createElement('div');
         const roleClass = role === 'assistant' ? 'bot-message' : `${role}-message`;
         messageWrapper.classList.add('message-wrapper', roleClass);
         // --- DEBUGGING LOG ---
-        console.log(`[ChatUIManager] Adding messageWrapper with classes:`, messageWrapper.classList);
+        if (DEBUG) console.log(`[ChatUIManager] Adding messageWrapper with classes:`, messageWrapper.classList);
         // --- END DEBUGGING LOG ---
         if (messageId) messageWrapper.dataset.messageId = messageId;
         messageWrapper.dataset.status = status;
@@ -247,7 +253,7 @@ class ChatUIManager {
             return;
         }
 
-        // console.log(`[ChatUIManager] Setting state for ${messageId} to: ${state}`);
+        // if (DEBUG) console.log(`[ChatUIManager] Setting state for ${messageId} to: ${state}`);
         messageElement.dataset.status = state; // Update the status dataset attribute
 
         const contentBubble = messageElement.querySelector('.message-content');
@@ -362,12 +368,15 @@ class ChatUIManager {
              return;
         }
 
+        // 确保停止响应按钮隐藏
+        this.toggleStopRespondingButton(false);
+
         // Determine the final message ID (server-provided or original)
         const finalMessageId = (metadata && metadata.message_id) ? metadata.message_id : messageId;
         
         // Update element's dataset ID if it changed
         if (finalMessageId !== messageId) {
-            console.log(`[ChatUIManager] Updating message element dataset ID from ${messageId} to ${finalMessageId}`);
+            if (DEBUG) console.log(`[ChatUIManager] Updating message element dataset ID from ${messageId} to ${finalMessageId}`);
             messageElement.dataset.messageId = finalMessageId;
         }
 
@@ -425,72 +434,91 @@ class ChatUIManager {
      * @param {object} [metadata] - Optional metadata.
      */
     _addMessageActions(actionsWrapper, messageId, metadata = {}) {
-        // --- ADD CHECK FOR OPENING MESSAGE ---
-        const messageElement = actionsWrapper.closest('.message-wrapper'); // More robust way to find parent
-        // const messageElement = this.elements.chatMessagesContainer?.querySelector(`.message-wrapper[data-message-id="${messageId}"]`);
+        // Check for opening message
+        const messageElement = actionsWrapper.closest('.message-wrapper'); 
         if (messageElement?.dataset?.messageType === 'opening') {
-            actionsWrapper.innerHTML = ''; // Ensure actions are cleared just in case
-            return; // Don't add actions for opening messages
+            actionsWrapper.innerHTML = ''; 
+            return; 
         }
-        // --- END CHECK ---
 
         actionsWrapper.innerHTML = ''; // Clear previous actions
 
-        // --- SVG Icons --- (Using simple examples, replace with preferred icons)
+        // --- Create containers --- 
+        const statsContainer = document.createElement('div');
+        statsContainer.className = 'message-actions-stats';
+
+        const buttonsContainer = document.createElement('div');
+        buttonsContainer.className = 'message-actions-buttons';
+        // --- End Create containers ---
+
+        // --- Populate Stats Container --- 
+        let hasStats = false;
+        if (metadata && metadata.usage && metadata.usage.total_tokens) {
+            const statsSpan = document.createElement('span');
+            statsSpan.className = 'message-stat tokens'; 
+            statsSpan.textContent = `Tokens: ${metadata.usage.total_tokens}`;
+            statsSpan.title = `Prompt: ${metadata.usage.prompt_tokens || 'N/A'}, Completion: ${metadata.usage.completion_tokens || 'N/A'}`;
+            statsContainer.appendChild(statsSpan);
+            hasStats = true;
+        }
+        if (metadata && metadata.usage && typeof metadata.usage.latency === 'number') { 
+             const latency = metadata.usage.latency;
+             const timeSpan = document.createElement('span');
+             timeSpan.className = 'message-stat time'; 
+             const timeLabel = this.t('chat.elapsedTimeLabel', { default: '耗时:' });
+             timeSpan.textContent = `${timeLabel} ${latency.toFixed(1)}s`; 
+             statsContainer.appendChild(timeSpan);
+             hasStats = true;
+        }
+        // --- End Populate Stats --- 
+
+        // --- Populate Buttons Container --- 
         const thumbsUpSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M14.5998 8.00033H21C22.1046 8.00033 23 8.89576 23 10.0003V12.1047C23 12.3659 22.9488 12.6246 22.8494 12.8662L19.755 20.3811C19.6007 20.7558 19.2355 21.0003 18.8303 21.0003H2C1.44772 21.0003 1 20.5526 1 20.0003V10.0003C1 9.44804 1.44772 9.00033 2 9.00033H5.48184C5.80677 9.00033 6.11143 8.84246 6.29881 8.57701L11.7522 0.851355C11.8947 0.649486 12.1633 0.581978 12.3843 0.692483L14.1984 1.59951C15.25 2.12534 15.7931 3.31292 15.5031 4.45235L14.5998 8.00033ZM7 10.5878V19.0003H18.1606L21 12.1047V10.0003H14.5998C13.2951 10.0003 12.3398 8.77128 12.6616 7.50691L13.5649 3.95894C13.6229 3.73105 13.5143 3.49353 13.3039 3.38837L12.6428 3.0578L7.93275 9.73038C7.68285 10.0844 7.36341 10.3746 7 10.5878ZM5 11.0003H3V19.0003H5V11.0003Z"></path></svg>';
         const thumbsDownSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M9.40017 16H3C1.89543 16 1 15.1046 1 14V11.8957C1 11.6344 1.05118 11.3757 1.15064 11.1342L4.24501 3.61925C4.3993 3.24455 4.76447 3 5.16969 3H22C22.5523 3 23 3.44772 23 4V14C23 14.5523 22.5523 15 22 15H18.5182C18.1932 15 17.8886 15.1579 17.7012 15.4233L12.2478 23.149C12.1053 23.3508 11.8367 23.4184 11.6157 23.3078L9.80163 22.4008C8.74998 21.875 8.20687 20.6874 8.49694 19.548L9.40017 16ZM17 13.4125V5H5.83939L3 11.8957V14H9.40017C10.7049 14 11.6602 15.229 11.3384 16.4934L10.4351 20.0414C10.3771 20.2693 10.4857 20.5068 10.6961 20.612L11.3572 20.9425L16.0673 14.27C16.3172 13.9159 16.6366 13.6257 17 13.4125ZM19 13H21V5H19V13Z"></path></svg>';
         const copySvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
         const regenerateSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M22 12C22 17.5228 17.5229 22 12 22C6.4772 22 2 17.5228 2 12C2 6.47715 6.4772 2 12 2V4C7.5817 4 4 7.58172 4 12C4 16.4183 7.5817 20 12 20C16.4183 20 20 16.4183 20 12C20 9.25022 18.6127 6.82447 16.4998 5.38451L16.5 8H14.5V2L20.5 2V4L18.0008 3.99989C20.4293 5.82434 22 8.72873 22 12Z"></path></svg>';
 
-        // Regenerate Button (Add this first as per Dify screenshot order)
         const regenerateButton = document.createElement('button');
         regenerateButton.className = 'btn-icon regenerate-btn';
-        regenerateButton.innerHTML = regenerateSvg;
-        regenerateButton.ariaLabel = this.t('chat.regenerate', { default: 'Regenerate' });
+        regenerateButton.innerHTML = regenerateSvg; 
         regenerateButton.title = this.t('chat.regenerate', { default: 'Regenerate' });
         regenerateButton.dataset.messageId = messageId;
-        regenerateButton.dataset.action = 'regenerate'; // Add data attribute for event listener
-        actionsWrapper.appendChild(regenerateButton);
+        regenerateButton.dataset.action = 'regenerate';
+        buttonsContainer.appendChild(regenerateButton);
 
-        // Feedback Buttons
         const likeButton = document.createElement('button');
         likeButton.className = 'btn-icon feedback-btn thumbs-up';
-        // likeButton.innerHTML = '👍'; // Use SVG icons for better styling
         likeButton.innerHTML = thumbsUpSvg;
-        likeButton.ariaLabel = this.t('chat.like', { default: 'Like' });
         likeButton.title = this.t('chat.like', { default: 'Like' });
         likeButton.dataset.messageId = messageId;
         likeButton.dataset.rating = 'like';
-        actionsWrapper.appendChild(likeButton);
+        buttonsContainer.appendChild(likeButton);
 
         const dislikeButton = document.createElement('button');
         dislikeButton.className = 'btn-icon feedback-btn thumbs-down';
-        // dislikeButton.innerHTML = '👎';
         dislikeButton.innerHTML = thumbsDownSvg;
-        dislikeButton.ariaLabel = this.t('chat.dislike', { default: 'Dislike' });
         dislikeButton.title = this.t('chat.dislike', { default: 'Dislike' });
         dislikeButton.dataset.messageId = messageId;
         dislikeButton.dataset.rating = 'dislike';
-        actionsWrapper.appendChild(dislikeButton);
+        buttonsContainer.appendChild(dislikeButton);
 
-        // Copy Button
         const copyButton = document.createElement('button');
         copyButton.className = 'btn-icon copy-message-btn';
-         // copyButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>'; // Example SVG
-         copyButton.innerHTML = copySvg;
-        copyButton.ariaLabel = this.t('chat.copy', { default: 'Copy' });
+        copyButton.innerHTML = copySvg;
         copyButton.title = this.t('chat.copy', { default: 'Copy' });
         copyButton.addEventListener('click', (e) => {
-             e.stopPropagation(); // Prevent triggering other listeners
+             e.stopPropagation(); 
              this.copyMessageContent(messageId);
         });
-        actionsWrapper.appendChild(copyButton);
+        buttonsContainer.appendChild(copyButton);
+        // --- End Populate Buttons --- 
 
-        // TODO: Add stats display (Tokens, Time) if needed
-        // const statsContainer = document.createElement('div');
-        // statsContainer.className = 'message-stats';
-        // ... populate with metadata ...
-        // actionsWrapper.appendChild(statsContainer);
+        // --- Append containers to wrapper --- 
+        if (hasStats) {
+            actionsWrapper.appendChild(statsContainer);
+        }
+        actionsWrapper.appendChild(buttonsContainer);
+        // --- End Append --- 
     }
 
     /**
@@ -500,6 +528,10 @@ class ChatUIManager {
      */
     showErrorInChat(message, messageId) {
         console.error(`[ChatUIManager] Error: ${message}` + (messageId ? ` (related to message ${messageId})` : ''));
+        
+        // 确保停止响应按钮隐藏
+        this.toggleStopRespondingButton(false);
+        
         if (messageId) {
             // const messageData = this.streamingMessages.get(messageId);
             const messageElement = this.elements.chatMessagesContainer?.querySelector(`.message-wrapper[data-message-id="${messageId}"]`);
@@ -616,15 +648,21 @@ class ChatUIManager {
             case 'thinking':
                  this.elements.sendButton.disabled = true;
                  this.elements.sendButton.innerHTML = loadingIndicatorHtml;
+                 // 显示停止按钮
+                 this.toggleStopRespondingButton(true);
                 break;
             case 'streaming':
                   this.elements.sendButton.disabled = true; // Keep disabled during streaming
                   // Optionally change indicator? For now, keep the loading one.
                   this.elements.sendButton.innerHTML = loadingIndicatorHtml;
+                  // 显示停止按钮
+                  this.toggleStopRespondingButton(true);
                  break;
             case 'disabled': // Explicitly disabled state
                  this.elements.sendButton.disabled = true;
                  this.elements.sendButton.innerHTML = originalIconSvg;
+                 // 隐藏停止按钮
+                 this.toggleStopRespondingButton(false);
                 break;
             case 'idle':
             default:
@@ -633,6 +671,8 @@ class ChatUIManager {
                  this.elements.sendButton.innerHTML = originalIconSvg;
                  this.updateSendButtonState(); // Call the main function to set the correct disabled state based on all criteria
                  // --- END FIX ---
+                 // 隐藏停止按钮
+                 this.toggleStopRespondingButton(false);
                 break;
         }
     }
@@ -644,106 +684,63 @@ class ChatUIManager {
      * @param {Array<object>} conversations - Array of conversation objects (e.g., { id: string, name: string, last_message_time?: number }).
      */
     updateHistoryList(conversations = []) {
-        if (!this.elements.chatHistoryList) return;
-        this.elements.chatHistoryList.innerHTML = ''; // Clear existing
-
-        // 如果没有对话，仅清空列表，不添加任何占位符
-        if (conversations.length === 0) {
-            console.log("[ChatUIManager] 没有历史对话可显示");
+        if (!this.elements.chatHistoryList) {
+            console.error("[ChatUIManager] 无法更新历史记录列表：缺少容器元素");
             return;
         }
+        
+        if (!Array.isArray(conversations) || conversations.length === 0) {
+            if (DEBUG) console.log("[ChatUIManager] 没有历史对话可显示");
+            this.elements.chatHistoryList.innerHTML = `
+                <div class="empty-history-message">
+                    <p>${this.t('chat.noConversations', {default: '没有历史对话'})}</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // 清空当前列表
+        this.elements.chatHistoryList.innerHTML = '';
 
-        // Sort conversations, newest first (handle potentially missing times)
-        conversations.sort((a, b) => (b.last_message_time || 0) - (a.last_message_time || 0));
-
-        // 防止列表中出现重复的对话ID
-        const addedIds = new Set();
-
-        conversations.forEach(conv => {
-            // 跳过重复的对话ID
-            if (addedIds.has(conv.id)) return;
-            addedIds.add(conv.id);
+        // 为每个对话创建列表项
+        conversations.forEach(conversation => {
+            const listItem = document.createElement('div');
+            listItem.className = 'history-item';
+            listItem.dataset.id = conversation.id;
             
-            const item = document.createElement('div');
-            item.className = 'chat-history-item';
-            item.dataset.conversationId = conv.id;
+            // 添加标题
+            const titleSpan = document.createElement('span');
+            titleSpan.className = 'history-title';
+            titleSpan.textContent = conversation.title || '无标题对话';
             
-            // 优先使用title，如果没有则使用id前缀
-            const displayTitle = conv.title || `对话 ${conv.id.substring(0, 6)}...`;
-            item.title = displayTitle; // Add tooltip
-
-            // 历史项左侧图标
-            const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            icon.setAttribute('width', '16');
-            icon.setAttribute('height', '16');
-            icon.setAttribute('viewBox', '0 0 24 24');
-            icon.setAttribute('fill', 'none');
-            icon.setAttribute('stroke', 'currentColor');
-            icon.setAttribute('stroke-width', '2');
-            icon.setAttribute('stroke-linecap', 'round');
-            icon.setAttribute('stroke-linejoin', 'round');
-
-            icon.classList.add('icon', 'history-item-icon');
-            icon.innerHTML = '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>';
-            item.appendChild(icon);
-
-            // 标题文本
-            const nameSpan = document.createElement('span');
-            nameSpan.className = 'history-item-name';
-            // 限制过长的名称通过CSS文本溢出处理
-            nameSpan.textContent = displayTitle;
-            item.appendChild(nameSpan);
-
-            // 添加按钮容器
-            const actionsContainer = document.createElement('div');
-            actionsContainer.className = 'history-item-actions';
-
+            // 添加删除和重命名按钮容器
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'history-actions';
+            
             // 添加重命名按钮
-            const renameBtn = document.createElement('button');
-            renameBtn.className = 'btn-icon rename-history-btn';
-            renameBtn.title = this.t('chat.renameConversation', { default: '重命名对话' });
-            renameBtn.setAttribute('aria-label', this.t('chat.renameConversation', { default: '重命名对话' }));
+            const renameButton = document.createElement('button');
+            renameButton.className = 'btn-icon rename-btn';
+            renameButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>';
+            renameButton.dataset.action = 'rename';
+            renameButton.title = this.t('chat.rename', {default: '重命名'});
             
-            // 重命名图标
-            const renameIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            renameIcon.setAttribute('width', '14');
-            renameIcon.setAttribute('height', '14');
-            renameIcon.setAttribute('viewBox', '0 0 24 24');
-            renameIcon.setAttribute('fill', 'none');
-            renameIcon.setAttribute('stroke', 'currentColor');
-            renameIcon.setAttribute('stroke-width', '2');
-            renameIcon.setAttribute('stroke-linecap', 'round');
-            renameIcon.setAttribute('stroke-linejoin', 'round');
-            renameIcon.innerHTML = '<path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>';
-            
-            renameBtn.appendChild(renameIcon);
-            actionsContainer.appendChild(renameBtn);
-
             // 添加删除按钮
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'btn-icon delete-history-btn';
-            deleteBtn.title = this.t('chat.deleteConversation', { default: '删除对话' });
-            deleteBtn.setAttribute('aria-label', this.t('chat.deleteConversation', { default: '删除对话' }));
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'btn-icon delete-btn';
+            deleteButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
+            deleteButton.dataset.action = 'delete';
+            deleteButton.title = this.t('chat.delete', {default: '删除'});
             
-            // 删除图标
-            const deleteIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            deleteIcon.setAttribute('width', '14');
-            deleteIcon.setAttribute('height', '14');
-            deleteIcon.setAttribute('viewBox', '0 0 24 24');
-            deleteIcon.setAttribute('fill', 'none');
-            deleteIcon.setAttribute('stroke', 'currentColor');
-            deleteIcon.setAttribute('stroke-width', '2');
-            deleteIcon.setAttribute('stroke-linecap', 'round');
-            deleteIcon.setAttribute('stroke-linejoin', 'round');
-            deleteIcon.innerHTML = '<path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>';
+            // 添加按钮到操作容器
+            actionsDiv.appendChild(renameButton);
+            actionsDiv.appendChild(deleteButton);
             
-            deleteBtn.appendChild(deleteIcon);
-            actionsContainer.appendChild(deleteBtn);
-
-            // 将按钮容器添加到条目中
-            item.appendChild(actionsContainer);
-
-            this.elements.chatHistoryList.appendChild(item);
+            // 组装列表项
+            listItem.appendChild(titleSpan);
+            listItem.appendChild(actionsDiv);
+            
+            // 添加到历史记录列表
+            this.elements.chatHistoryList.appendChild(listItem);
         });
     }
 
@@ -753,9 +750,9 @@ class ChatUIManager {
      */
     setActiveHistoryItem(conversationId) {
         if (!this.elements.chatHistoryList) return;
-        const items = this.elements.chatHistoryList.querySelectorAll('.chat-history-item');
+        const items = this.elements.chatHistoryList.querySelectorAll('.history-item');
         items.forEach(item => {
-            item.classList.toggle('active', item.dataset.conversationId === conversationId);
+            item.classList.toggle('active', item.dataset.id === conversationId);
         });
     }
 
@@ -779,6 +776,7 @@ class ChatUIManager {
      */
     displaySuggestedQuestions(targetMessageId, questions = []) {
         if (!questions || questions.length === 0 || !this.elements.chatMessagesContainer) return;
+        if (DEBUG) console.log(`[ChatUIManager] displaySuggestedQuestions called for targetMessageId: ${targetMessageId}, with questions:`, questions); // Added DEBUG log
 
         const targetMessageElement = this.elements.chatMessagesContainer.querySelector(`.message-wrapper[data-message-id="${targetMessageId}"]`);
         if (!targetMessageElement) {
@@ -787,7 +785,10 @@ class ChatUIManager {
         }
 
         // Ensure it targets bot messages only
-        if (!targetMessageElement.classList.contains('bot-message')) return; 
+        if (!targetMessageElement.classList.contains('bot-message')) {
+            if (DEBUG) console.log(`[ChatUIManager] Skipping suggestions: target message ${targetMessageId} is not a bot message.`); // Added DEBUG log
+            return;
+        }
 
         // --- FIX: Remove existing suggestion containers first --- 
         const existingSuggestions = this.elements.chatMessagesContainer.querySelectorAll('.suggested-questions');
@@ -964,12 +965,87 @@ class ChatUIManager {
      * @param {object} data - The metadata object to display.
      */
     displaySystemInfo(data) {
-        if (data) {
-            console.log("[ChatUIManager] System Info/Metadata Received:", data);
-            // Potential future enhancement: Display this info somewhere non-intrusive?
-            // Example: Add to the last message's actions, or a dedicated debug panel.
-        } else {
-            // console.log("[ChatUIManager] displaySystemInfo called without data.");
+        if (!data) return;
+        
+        const systemInfoContainer = document.getElementById('system-info-container');
+        const systemInfoContent = document.getElementById('system-info-content');
+        
+        if (!systemInfoContainer || !systemInfoContent) return;
+        
+        try {
+            if (DEBUG) console.log("[ChatUIManager] System Info/Metadata Received:", data);
+            
+            // 构建系统信息HTML
+            let html = '<div class="system-info-details">';
+            
+            // 添加对话ID
+            if (data.conversation_id) {
+                html += `<div class="info-item">
+                    <span class="info-label">对话ID:</span>
+                    <span class="info-value">${data.conversation_id}</span>
+                </div>`;
+            }
+            
+            // 添加消息ID
+            if (data.message_id) {
+                html += `<div class="info-item">
+                    <span class="info-label">消息ID:</span>
+                    <span class="info-value">${data.message_id}</span>
+                </div>`;
+            }
+            
+            // 添加用量信息
+            if (data.usage) {
+                const usage = data.usage;
+                html += '<div class="info-section"><h5>Token 用量</h5>';
+                
+                // 提示Token
+                if (usage.prompt_tokens) {
+                    html += `<div class="info-item">
+                        <span class="info-label">提示Token:</span>
+                        <span class="info-value">${usage.prompt_tokens}</span>
+                    </div>`;
+                }
+                
+                // 完成Token
+                if (usage.completion_tokens) {
+                    html += `<div class="info-item">
+                        <span class="info-label">完成Token:</span>
+                        <span class="info-value">${usage.completion_tokens}</span>
+                    </div>`;
+                }
+                
+                // 总Token
+                if (usage.total_tokens) {
+                    html += `<div class="info-item">
+                        <span class="info-label">总Token:</span>
+                        <span class="info-value">${usage.total_tokens}</span>
+                    </div>`;
+                }
+                
+                html += '</div>'; // 关闭info-section
+            }
+            
+            // 关闭主容器
+            html += '</div>';
+            
+            // 更新DOM
+            systemInfoContent.innerHTML = html;
+            systemInfoContainer.style.display = 'block';
+            
+        } catch (error) {
+            console.error('[ChatUIManager] Error displaying system info:', error);
+        }
+    }
+
+    /**
+     * Shows or hides the "Stop Responding" button.
+     * @param {boolean} show - Whether to show the button.
+     */
+    toggleStopRespondingButton(show) {
+        const stopRespondingContainer = document.getElementById('stop-responding-container');
+        if (stopRespondingContainer) {
+            stopRespondingContainer.style.display = show ? 'block' : 'none';
         }
     }
 

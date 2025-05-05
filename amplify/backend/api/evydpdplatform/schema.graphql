@@ -41,6 +41,11 @@ type Conversation @model @auth(rules: [
   # owner 字段隐式添加
   title: String
   messages: AWSJSON   # 将消息数组存储为 JSON 字符串
+  appType: String     # 添加应用类型字段，用于区分不同应用的对话：'chat', 'ux-design', 'requirement-analysis'
+  createdAt: AWSDateTime # 显式定义创建时间字段，用于排序
+  updatedAt: AWSDateTime # 显式定义更新时间字段
+  # 添加索引以便于根据应用类型查询
+  @index(name: "byAppType", sortKeyFields: ["createdAt"], queryField: "conversationsByAppType")
 }
 
 # GlobalConfig Model - 存储全局配置，例如不同应用的 API 地址

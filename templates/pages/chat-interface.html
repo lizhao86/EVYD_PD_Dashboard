@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-translate="userManualNew.title">AI 写 User Manual (聊天模式)</title>
+    <title data-translate="chatInterface.title">EVYD AI聊天界面</title>
     
     <!-- Favicon -->
     <link rel="icon" href="/Variant=Black, Lockup=Logomark.png" type="image/png">
@@ -29,7 +29,7 @@
 
     <!-- 样式文件 -->
     <link rel="stylesheet" href="/styles/common.css">
-    <!-- 使用 User Manual New 的特定样式 -->
+    <!-- 使用统一聊天界面样式 -->
     <link rel="stylesheet" href="/styles/chat-interface.css">
     <link rel="stylesheet" href="/styles/markdown.css">
     <!-- 字体 (与 Homepage.html 保持一致) -->
@@ -53,25 +53,25 @@
         <!-- 返回按钮 和 页面标题 (保留) -->
         <div class="app-header">
             <div class="back-button">
-                <a href="/">
+                <a href="/templates/pages/Homepage.html">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M19 12H5M12 19l-7-7 7-7"/>
                     </svg>
                     <span data-translate="common.backToHome">返回主页</span>
                 </a>
             </div>
-            <h2 data-translate="userManualNew.title">AI User Manual 生成器 (聊天模式)</h2>
+            <h2 id="app-title" data-translate="chatInterface.title">AI 聊天界面</h2>
         </div>
 
         <!-- 应用信息区域 (保留, BaseDifyApp 需要) -->
         <div class="app-info" id="app-info">
             <div class="app-info-header">
-                <h3 id="app-name">产品 ChatBot - 撰写 User Manual</h3>
+                <h3 id="app-name">AI 聊天助手</h3>
                 <div class="app-tags" id="app-tags">
                     <span class="app-tag">Dify Chat</span>
                 </div>
             </div>
-            <p id="app-description">为您的产品生成清晰简洁的用户手册，自动创建操作指南和常见问题解答</p>
+            <p id="app-description">基于EVYD科技先进的人工智能技术，为产品经理提供的一站式工作平台</p>
         </div>
 
         <!-- 新的聊天界面容器 -->
@@ -89,14 +89,8 @@
               <button id="start-new-chat" class="btn-new-chat">
                 <!-- SVG or Icon for new chat -->
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                <span data-translate="chat.newChat">New Chat</span>
+                <span data-translate="chat.newChat">新对话</span>
               </button>
-              <!-- REMOVE Toggle Button From Here -->
-              <!--
-              <button id="toggle-sidebar" class="btn-icon toggle-sidebar-btn">
-                  ...
-              </button>
-              -->
             </div>
             <div id="chat-history" class="chat-history-list">
               <!-- Chat history items will be populated here -->
@@ -109,20 +103,25 @@
 
           <!-- Main Chat Area -->
           <div id="chat-area" class="chat-area">
-            <!-- Chat Header (Optional) -->
-            <!-- <div class="chat-header"> ... </div> -->
-
             <!-- Message List -->
             <div id="chat-messages" class="chat-messages">
                 <!-- Messages will be populated here -->
             </div>
 
+            <!-- 停止响应按钮 (按照截图样式放在输入区域上方) -->
+            <div id="stop-responding-container" style="display:none; text-align:center; margin-bottom:10px;">
+                <button id="stop-responding" class="btn-stop-responding">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    </svg>
+                    Stop responding
+                </button>
+            </div>
+
             <!-- Input Area -->
             <div id="chat-input-area" class="chat-input-area">
                 <div class="input-wrapper">
-                    <!-- Optional: File upload button -->
-                    <!-- <button id="file-upload-button" class="btn-icon">📎</button> -->
-                    <textarea id="message-input" placeholder="输入你的用户故事和验收标准..." rows="1"></textarea>
+                    <textarea id="message-input" placeholder="输入您的问题..." rows="1"></textarea>
                     <div class="input-controls">
                          <span id="char-count" class="char-count">0/4000</span>
                          <button id="send-button" class="btn-send" disabled>
@@ -134,7 +133,7 @@
             </div>
           </div>
         </div>
-        <!-- 新的聊天界面容器结束 -->
+        <!-- 聊天界面容器结束 -->
 
         <!-- 应用加载状态 (保留, BaseDifyApp 需要) -->
         <div class="app-info-loading" id="app-info-loading" style="display: none;">
@@ -154,19 +153,6 @@
             <button class="btn-primary" id="retry-button" data-translate="common.retryConnection">重试连接</button>
         </div>
 
-        <!-- 保留系统信息和结果容器 -->
-        <div class="system-info-container" id="system-info-container" style="display: none;">
-            <div class="system-info-header">
-                <h4 data-translate="common.systemInfoTitle">系统信息</h4>
-                <button class="toggle-system-info" id="toggle-system-info">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m18 15-6-6-6 6"/>
-                    </svg>
-                </button>
-            </div>
-            <div class="system-info-content" id="system-info-content"></div>
-        </div>
-
         <!-- 添加基类需要的result-container元素 (隐藏) -->
         <div class="result-container" id="result-container" style="display: none;">
             <div class="result-content" id="result-content"></div>
@@ -182,11 +168,6 @@
                 </div>
             </div>
         </div>
-    </main> <!-- 第一个 main 结束 -->
-
-    <!-- 移除第二个 <main> 标签 -->
-    <!-- <main class="container main-content"> ... </main> --> 
-
-    
+    </main>
 </body>
 </html> 

@@ -101,11 +101,11 @@ export declare const UserApplicationApiKey: (new (init: ModelInit<UserApplicatio
 type EagerConversation = {
   readonly [__modelMeta__]: {
     identifier: ManagedIdentifier<Conversation, 'id'>;
-    readOnlyFields: 'createdAt' | 'updatedAt';
   };
   readonly id: string;
   readonly title?: string | null;
   readonly messages?: string | null;
+  readonly appType?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }
@@ -113,11 +113,11 @@ type EagerConversation = {
 type LazyConversation = {
   readonly [__modelMeta__]: {
     identifier: ManagedIdentifier<Conversation, 'id'>;
-    readOnlyFields: 'createdAt' | 'updatedAt';
   };
   readonly id: string;
   readonly title?: string | null;
   readonly messages?: string | null;
+  readonly appType?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }

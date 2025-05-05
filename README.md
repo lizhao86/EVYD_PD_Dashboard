@@ -20,32 +20,35 @@
 ├── amplify/           # Amplify 后端配置 (由 Amplify CLI 管理)
 ├── assets/            # 静态资源 (图片, 字体, 图标)
 ├── styles/            # CSS 样式
+│   ├── chat-interface.css # 通用聊天界面样式
+│   └── ...
 ├── scripts/           # JavaScript 脚本 (核心, 工具, 服务, 页面初始化)
 │   ├── amplify-config.js # Amplify配置统一初始化
+│   ├── pages/
+│   │   ├── chat-interface.js # 通用聊天界面初始化逻辑
+│   │   └── ...
 │   └── ...
 ├── public/
 │   └── locales/       # 语言文件 (唯一来源)
 ├── modules/           # 功能模块 (认证, 管理员, 通用组件, 各 AI 应用)
 │   ├── common/        # 通用模块 (Header, UI, API Client 等)
 │   │   ├── header.js
-│   │   ├── dify-app-ui.js  # 通用 AI 应用 UI 逻辑 (非聊天)
-│   │   ├── ChatUIManager.js # NEW: 通用聊天界面 UI 逻辑
-│   │   ├── BaseDifyChatApp.js # NEW: 聊天应用基类
+│   │   ├── dify-app-ui.js  # 通用 AI 应用 UI 逻辑 (非聊天, 如User Story)
+│   │   ├── ChatUIManager.js # 通用聊天界面 UI 逻辑
+│   │   ├── BaseDifyChatApp.js # 聊天应用基类
 │   │   ├── dify-client.js  # 通用 Dify API 交互客户端
+│   │   ├── base-dify-app.js # 应用基类 (非聊天)
+│   │   ├── ChatHistoryService.js # 聊天历史服务
 │   │   └── ...
 │   ├── apps/          # 各个 AI 应用模块
-│   │   ├── user-story/
-│   │   │   └── index.js  # 应用主逻辑 (已重构)
-│   │   ├── user-manual/
-│   │   │   └── index.js  # 应用主逻辑 (已重构)
-│   │   ├── ux-design/
-│   │   │   └── index.js  # 应用主逻辑 (已重构)
-│   │   └── requirement-analysis/
-│   │       └── index.js  # 应用主逻辑 (已重构)
+│   │   └── user-story/ # User Story 应用 (基于Workflow, 保留独立模块)
+│   │       └── index.js
 │   └── ...
 ├── templates/         # HTML 页面模板
 │   ├── pages/
-│   │   ├── chat-interface.html # NEW: 通用聊天界面 HTML
+│   │   ├── chat-interface.html # 通用聊天界面 HTML (承载原用户手册, UX设计, 需求分析)
+│   │   ├── user-story.html   # User Story 应用 HTML (可能仍使用独立模板)
+│   │   ├── Homepage.html
 │   │   └── ...
 │   └── ...
 ├── docs/              # 文档
@@ -106,7 +109,8 @@
 - **可扩展性:** 模块化设计。
 
 ## 最近更新 (重点)
-- **[2025-05-05]** **聊天界面功能全面升级**: 实现聊天历史记录存储功能(基于DynamoDB)，添加对话重命名功能，优化对话气泡样式。解决历史对话加载和Markdown渲染问题，实现智能对话切换，修复多项交互问题，大大提升了整体聊天体验的稳定性和易用性。
+- **[2025-05-06]** **通用聊天界面交互优化**: 实现"停止响应"按钮功能。该按钮在AI流式响应时显示在输入框上方，点击可中断当前的Dify API请求。按钮UI按照新设计稿实现，确保视觉一致性。
+- **[2025-05-05]** **聊天界面功能全面升级**: 实现聊天历史记录存储功能(基于DynamoDB)、添加对话重命名功能，优化对话气泡样式。解决历史对话加载和Markdown渲染问题，实现智能对话切换，修复多项交互问题，大大提升了整体聊天体验的稳定性和易用性。
 - **[2025-05-05]** **聊天界面UI修复与规范化**: 调试并修复了通用聊天界面中消息操作按钮（复制、反馈、重试）的定位问题，确保按钮显示在消息气泡外部下方。将相关的 CSS 文件重命名 (`user-manual-new.css` -> `chat-interface.css`) 并更新了 HTML 中的引用。
 - **[2025-05-02]** **聊天界面UI修复**: 修复 `user-manual-new` 聊天界面输入框在输入时消失的Bug，通过覆盖基类 `bindEvents` 阻止冲突，确保输入交互稳定。
 - **[2025-05-02]** **工作流结果显示修复**: 优化 Dify 工作流结果显示逻辑，通过在完成时使用 `setStreamContent` 覆盖结果，解决内容重复或缺失问题，确保最终输出准确显示。
