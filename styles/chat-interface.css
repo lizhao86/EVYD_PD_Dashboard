@@ -239,40 +239,40 @@
 
 /* 机器人消息气泡样式 */
 .message-wrapper.bot-message .message-content {
-    background-color: var(--gray-200); /* 机器人浅灰色 -> 改为更深的 --gray-200 */
+    background-color: var(--gray-200);
     color: var(--gray-800);
-    border-top-left-radius: 0; /* 左上角直角 */
+    border-top-left-radius: 0.25rem; /* 调整左上角，稍微圆润 */
 }
-/* 机器人气泡尖角 */
+/* 机器人气泡尖角 - 调整或移除 */
 .message-wrapper.bot-message .message-content::before {
     content: '';
     position: absolute;
-    bottom: 0;
-    left: -8px; /* 调整位置 */
+    top: 8px; /* 调整位置 */
+    left: -6px; /* 减小水平偏移 */
     width: 0;
     height: 0;
     border-style: solid;
-    border-width: 0 10px 10px 0; /* 调整大小和方向 */
-    border-color: transparent var(--gray-200) transparent transparent; /* 更新尖角颜色 */
+    border-width: 6px 6px 6px 0; /* 创建更小的三角 */
+    border-color: transparent var(--gray-200) transparent transparent; /* 从右向左指的三角 */
 }
 
 /* 用户消息气泡样式 */
 .message-wrapper.user-message .message-content {
-    background-color: var(--primary); /* 用户主色调 */
+    background-color: var(--primary);
     color: var(--white);
-    border-top-right-radius: 0; /* 右上角直角 */
+    border-top-right-radius: 0.25rem; /* 调整右上角，稍微圆润 */
 }
-/* 用户气泡尖角 */
+/* 用户气泡尖角 - 调整或移除 */
 .message-wrapper.user-message .message-content::before {
     content: '';
     position: absolute;
-    bottom: 0;
-    right: -8px; /* 调整位置 */
+    top: 8px; /* 调整位置 */
+    right: -6px; /* 减小水平偏移 */
     width: 0;
     height: 0;
     border-style: solid;
-    border-width: 0 0 10px 10px; /* 调整大小和方向 */
-    border-color: transparent transparent transparent var(--primary);
+    border-width: 6px 0 6px 6px; /* 创建更小的三角 */
+    border-color: transparent transparent transparent var(--primary); /* 从左向右指的三角 */
 }
 
 /* 消息操作按钮（反馈等） */
@@ -432,7 +432,7 @@
     outline: none;
     resize: none;
     font-size: 0.9rem;
-    line-height: 1.4;
+    line-height: 1.5;
     background-color: transparent;
     color: var(--gray-800);
     max-height: 150px; /* 限制最大高度 */
@@ -599,3 +599,108 @@
         max-width: 95%;
     }
 } 
+
+/* --- Markdown Content Styling --- */
+.message-content {
+    line-height: 1.5; /* Improve readability */
+}
+
+.message-content h1,
+.message-content h2,
+.message-content h3,
+.message-content h4,
+.message-content h5,
+.message-content h6 {
+    margin-top: 1.2em;
+    margin-bottom: 0.6em;
+    font-weight: 600; /* Bolder headings */
+}
+
+.message-content h1 { font-size: 1.8em; }
+.message-content h2 { font-size: 1.5em; }
+.message-content h3 { font-size: 1.3em; }
+.message-content h4 { font-size: 1.1em; }
+.message-content h5 { font-size: 1em; }
+.message-content h6 { font-size: 0.9em; }
+
+.message-content p {
+    margin-bottom: 0.8em;
+}
+
+.message-content ul,
+.message-content ol {
+    margin-left: 2em; /* Indentation */
+    margin-bottom: 1em;
+}
+
+.message-content li {
+    margin-bottom: 0.4em; /* Spacing between list items */
+}
+
+.message-content code {
+    background-color: rgba(135, 131, 120, 0.15); /* Subtle background for inline code */
+    color: var(--gray-700, #4a5568);
+    padding: 0.2em 0.4em;
+    margin: 0 0.2em;
+    font-size: 0.85em;
+    border-radius: 3px;
+    font-family: var(--font-mono, monospace); /* Monospace font */
+}
+
+/* Style for code blocks (pre > code) if they appear */
+.message-content pre {
+    background-color: rgba(135, 131, 120, 0.1); /* Slightly different background for block */
+    border: 1px solid rgba(135, 131, 120, 0.2);
+    border-radius: 6px;
+    padding: 1em;
+    margin-bottom: 1em;
+    overflow-x: auto; /* Allow horizontal scrolling */
+    font-size: 0.9em;
+}
+
+.message-content pre code {
+    background-color: transparent; /* Reset background for code inside pre */
+    color: inherit;
+    padding: 0;
+    margin: 0;
+    font-size: inherit;
+    border-radius: 0;
+    font-family: var(--font-mono, monospace);
+}
+
+.message-content blockquote {
+    border-left: 3px solid var(--gray-300, #d1d5db);
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 1em;
+    color: var(--gray-600, #4b5563);
+    margin-bottom: 1em;
+}
+
+.message-content hr {
+    border: none;
+    border-top: 1px solid var(--gray-300, #d1d5db);
+    margin: 1.5em 0;
+}
+
+/* Basic table styling */
+.message-content table {
+    width: auto;
+    border-collapse: collapse;
+    margin-bottom: 1em;
+    border: 1px solid var(--gray-300, #d1d5db);
+}
+
+.message-content th,
+.message-content td {
+    border: 1px solid var(--gray-300, #d1d5db);
+    padding: 0.5em 0.8em;
+    text-align: left;
+}
+
+.message-content th {
+    background-color: var(--gray-100, #f3f4f6);
+    font-weight: 600;
+}
+
+/* Add more specific styles as needed */ 

@@ -44,3 +44,8 @@
         *   回调方法调整为针对特定消息 ID 进行更新。
     3.  **UI 状态管理**: 在 `ChatUIManager.js` 中添加了 `setMessageState` 方法来管理消息的视觉状态（如 'regenerating', 'error', 'complete'），并修改相关方法调用它。
     4.  **修复流式更新**: 解决了重新生成时 `updateMessageStream` 找不到消息记录的问题，通过在 `setMessageState('regenerating')` 时将消息 ID 加入 `streamingMessages` Map 解决。
+
+*   **10:42 AM:** 优化聊天气泡三角样式：
+    *   在 `styles/chat-interface.css` 中调整了用户和机器人消息气泡的 `::before` 伪元素。
+    *   将三角形从顶部移至侧面中上部，减小尺寸 (10px -> 6px)，并调整方向为水平指向。
+    *   为气泡添加了轻微的圆角，使整体外观更柔和。

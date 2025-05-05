@@ -179,6 +179,9 @@ class ChatUIManager {
         const messageWrapper = document.createElement('div');
         const roleClass = role === 'assistant' ? 'bot-message' : `${role}-message`;
         messageWrapper.classList.add('message-wrapper', roleClass);
+        // --- DEBUGGING LOG ---
+        console.log(`[ChatUIManager] Adding messageWrapper with classes:`, messageWrapper.classList);
+        // --- END DEBUGGING LOG ---
         if (messageId) messageWrapper.dataset.messageId = messageId;
         messageWrapper.dataset.status = status;
 
