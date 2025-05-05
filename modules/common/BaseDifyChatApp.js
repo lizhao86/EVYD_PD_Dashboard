@@ -667,21 +667,36 @@ class BaseDifyChatApp extends BaseDifyApp {
                    this.ui.elements.messageInput.focus();
                    // Automatically send the suggested question
                     this.handleGenerate();
+                    return; // Stop further processing if it was a suggestion click
                }
 
                // Feedback Button Click
                const feedbackButton = e.target.closest('.feedback-btn');
-               const messageId = feedbackButton?.dataset?.messageId;
-               const rating = feedbackButton?.dataset?.rating;
-               if (messageId && rating) {
-                    this.submitFeedback(messageId, rating);
-                    // Update button visual state (e.g., add 'selected' class, remove from sibling)
-                    feedbackButton.classList.add('selected');
-                     const siblings = feedbackButton.parentElement?.querySelectorAll('.feedback-btn');
-                     siblings?.forEach(sib => {
-                          if (sib !== feedbackButton) sib.classList.remove('selected');
-                     });
+               if (feedbackButton) {
+                    const messageId = feedbackButton?.dataset?.messageId;
+                    const rating = feedbackButton?.dataset?.rating;
+                    if (messageId && rating) {
+                         this.submitFeedback(messageId, rating);
+                         // Update button visual state (e.g., add 'selected' class, remove from sibling)
+                         feedbackButton.classList.add('selected');
+                          const siblings = feedbackButton.parentElement?.querySelectorAll('.feedback-btn');
+                          siblings?.forEach(sib => {
+                               if (sib !== feedbackButton) sib.classList.remove('selected');
+                          });
+                    }
+                    return; // Stop further processing if it was a feedback click
                }
+
+               // --- ADD Regenerate Button Click --- 
+               const regenerateButton = e.target.closest('.regenerate-btn');
+               if (regenerateButton) {
+                    const messageId = regenerateButton.dataset.messageId;
+                    if (messageId) {
+                        this.handleRegenerate(messageId);
+                    }
+                    return; // Stop further processing
+               }
+               // --- END Regenerate Button Click ---
          });
     }
 
@@ -776,6 +791,195 @@ class BaseDifyChatApp extends BaseDifyApp {
               console.warn(`[${this.constructor.name}] Chat message input element not found via UI manager for event binding.`);
          }
      }
+
+    // --- Regeneration Logic ---
+
+    /**
+     * Handles the regeneration request for a specific assistant message.
+     * @param {string} assistantMsgId - The ID of the assistant message to regenerate.
+     */
+    async handleRegenerate(assistantMsgId) {
+        console.log(`[BaseDifyChatApp ${this.constructor.name}] handleRegenerate called for message: ${assistantMsgId}`);
+
+        if (!this.ui || !this.state.apiKey || !this.state.apiEndpoint || !this.state.currentUser || !this.state.currentConversationId) {
+            console.error(`[BaseDifyChatApp ${this.constructor.name}] Cannot regenerate: App not fully initialized, missing config, or conversation ID.`);
+            this.ui?.showErrorInChat(this.t('chat.error.regenerateInitFailed', { default: '无法重新生成：应用未初始化或缺少必要信息。' }), assistantMsgId);
+            return;
+        }
+
+        if (this.state.isGenerating) {
+            console.warn(`[BaseDifyChatApp ${this.constructor.name}] Regeneration request ignored: Another generation is already in progress.`);
+             this.ui?.showToast(this.t('chat.error.alreadyGenerating', { default: '请等待当前响应完成。'}), 'warning');
+            return;
+        }
+
+        // 1. Find the assistant message element
+        const assistantMessageElement = this.ui.elements.chatMessagesContainer?.querySelector(`.message-wrapper[data-message-id="${assistantMsgId}"]`);
+        if (!assistantMessageElement) {
+            console.error(`[BaseDifyChatApp ${this.constructor.name}] Cannot regenerate: Assistant message element with ID ${assistantMsgId} not found.`);
+            this.ui?.showToast(this.t('chat.error.regenerateMessageNotFound', { default: '找不到要重新生成的消息。'}), 'error');
+            return;
+        }
+
+        // 2. Find the preceding user message and extract query
+        let userQuery = null;
+        let currentUserMessageElement = assistantMessageElement.previousElementSibling;
+        while (currentUserMessageElement) {
+            if (currentUserMessageElement.classList.contains('user-message')) {
+                const contentElement = currentUserMessageElement.querySelector('.message-content');
+                // Prefer innerText to avoid including hidden elements or complex HTML structure
+                userQuery = contentElement?.innerText?.trim();
+                break; // Found the user message
+            }
+            currentUserMessageElement = currentUserMessageElement.previousElementSibling;
+        }
+
+        if (!userQuery) {
+            console.error(`[BaseDifyChatApp ${this.constructor.name}] Cannot regenerate: Could not find preceding user query for message ${assistantMsgId}.`);
+            this.ui?.showErrorInChat(this.t('chat.error.regenerateQueryNotFound', { default: '无法找到对应的用户问题以重新生成。' }), assistantMsgId);
+            return;
+        }
+
+        console.log(`[BaseDifyChatApp ${this.constructor.name}] Found user query for regeneration:`, userQuery);
+
+        // Set UI to regenerating state for the specific message
+        // Need to implement this in ChatUIManager first
+        if (this.ui.setMessageState) { 
+            this.ui.setMessageState(assistantMsgId, 'regenerating'); 
+        } else {
+            console.warn("[BaseDifyChatApp] ui.setMessageState is not available yet.");
+            // Basic fallback: maybe just disable buttons?
+            assistantMessageElement.querySelectorAll('.message-actions button').forEach(btn => btn.disabled = true);
+        }
+
+        this.state.isGenerating = true; // Prevent other actions
+
+        try {
+            // Create Dify client if needed
+            if (!this.difyClient) {
+                 this.difyClient = new DifyClient({
+                     baseUrl: '/api/v1', // Use proxy
+                     apiKey: this.state.apiKey,
+                     mode: this.difyMode
+                 });
+            }
+
+            // Build payload (use found userQuery, current conversationId)
+            const payload = this._buildPayload({ query: userQuery }); // Use existing _buildPayload
+             if (!payload) {
+                  throw new Error("Failed to build payload internally for regeneration.");
+             }
+             // Ensure auto_generate_name is false for regeneration
+             payload.auto_generate_name = false; 
+
+            // Get Callbacks adapted for regeneration
+            const callbacks = this._getRegenerationCallbacks(assistantMsgId);
+
+            console.log(`[BaseDifyChatApp ${this.constructor.name}] Calling difyClient.generateStream for regeneration, targeting message ${assistantMsgId}`);
+
+            // Call API (Don't await here, let callbacks handle completion/error)
+             this.difyClient.generateStream(payload, callbacks).catch(err => {
+                 // Safety catch for errors before streaming or unexpected promise rejections
+                 console.error("Error directly from generateStream promise during regeneration:", err);
+                 if (callbacks && callbacks.onError) {
+                     callbacks.onError(err instanceof Error ? err : new Error(String(err)));
+                 }
+             });
+
+        } catch (error) {
+             console.error(`[BaseDifyChatApp ${this.constructor.name}] Error during regeneration stream setup or call:`, error);
+             // Use the onError callback if possible, otherwise handle directly
+             const errorCallback = this._getRegenerationCallbacks(assistantMsgId)?.onError || ((err) => this._handleRegenerationError(err, assistantMsgId));
+             errorCallback(error);
+        } 
+        // Note: isGenerating state reset is handled within the callbacks (onComplete/onError)
+    }
+
+    /**
+     * Provides callbacks specifically adapted for regenerating a message.
+     * @param {string} assistantMessageId - The ID of the message being regenerated.
+     * @returns {object} Callbacks for onMessage, onComplete, onError.
+     */
+    _getRegenerationCallbacks(assistantMessageId) {
+        if (!this.ui) {
+            console.error("Cannot get regeneration callbacks: ChatUIManager not initialized.");
+            return {};
+        }
+        if (!assistantMessageId) {
+            console.error("Cannot get regeneration callbacks: assistantMessageId is required.");
+            return {};
+        }
+
+        let firstChunkReceived = false;
+
+        return {
+            onMessage: (content, isFirstChunk) => {
+                if (!firstChunkReceived) {
+                    // Optionally clear the old content visually on first chunk
+                    // if (this.ui.clearMessageContent) this.ui.clearMessageContent(assistantMessageId); 
+                     if (this.ui.setMessageState) this.ui.setMessageState(assistantMessageId, 'streaming'); // Update state visually
+                    firstChunkReceived = true;
+                }
+                this.ui.updateMessageStream(assistantMessageId, content);
+            },
+            onComplete: (metadata) => {
+                console.log(`Regeneration onComplete for ${assistantMessageId}. Metadata:`, metadata);
+                // Finalize the message bubble (will re-render content and add actions)
+                // If Dify returns a new ID for the regenerated message, finalizeMessage handles updating the element's dataset
+                const finalMessageId = metadata?.message_id || assistantMessageId;
+                 // Pass the original ID used for lookup, finalizeMessage handles the potential new ID from metadata internally
+                this.ui.finalizeMessage(assistantMessageId, metadata); 
+                if (this.ui.setMessageState) this.ui.setMessageState(finalMessageId, 'complete'); // Ensure final state is set using the final ID
+
+                // Handle suggested questions for the *regenerated* message
+                this.fetchAndDisplaySuggestions(finalMessageId);
+
+                // Reset general state
+                this.difyClient = null;
+                this.state.isGenerating = false;
+
+                 // Re-enable main input (if it was globally disabled)
+                 if (this.ui.elements.messageInput) {
+                     this.ui.elements.messageInput.disabled = false;
+                 }
+            },
+            onError: (error) => {
+                 this._handleRegenerationError(error, assistantMessageId);
+            }
+        };
+    }
+
+    /**
+     * Handles errors specifically during the regeneration process.
+     * @param {Error} error - The error object.
+     * @param {string} assistantMessageId - The ID of the message being regenerated.
+     */
+    _handleRegenerationError(error, assistantMessageId) {
+        console.error(`[${this.constructor.name}] Error during regeneration for message ${assistantMessageId}:`, error);
+
+        const errorMsg = error.name === 'AbortError'
+           ? this.t('common.generationStoppedByUser', { default: '生成已由用户停止。' })
+           : this.t('chat.error.regenerateFailed', { default: '重新生成失败:'}) + ` ${error.message}`;
+
+        // Show error within the specific message context
+        if (this.ui?.showErrorInChat) {
+           this.ui.showErrorInChat(errorMsg, assistantMessageId);
+           if (this.ui.setMessageState) this.ui.setMessageState(assistantMessageId, 'error'); // Set visual error state
+        } else {
+           // Fallback alert
+           alert(errorMsg);
+        }
+
+        // Reset general state
+        this.difyClient = null;
+        this.state.isGenerating = false;
+
+        // Re-enable main input
+        if (this.ui?.elements?.messageInput) {
+           this.ui.elements.messageInput.disabled = false;
+        }
+    }
+
 }
 
 export default BaseDifyChatApp; 

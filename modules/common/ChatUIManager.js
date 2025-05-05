@@ -233,6 +233,73 @@ class ChatUIManager {
     }
 
     /**
+     * Sets the visual state of a specific message bubble.
+     * @param {string} messageId - The ID of the message to update.
+     * @param {'pending' | 'streaming' | 'complete' | 'error' | 'regenerating'} state - The new visual state.
+     */
+    setMessageState(messageId, state) {
+        const messageElement = this.elements.chatMessagesContainer?.querySelector(`.message-wrapper[data-message-id="${messageId}"]`);
+        if (!messageElement) {
+            console.warn(`[ChatUIManager] setMessageState: Element for Message ID ${messageId} not found.`);
+            return;
+        }
+
+        // console.log(`[ChatUIManager] Setting state for ${messageId} to: ${state}`);
+        messageElement.dataset.status = state; // Update the status dataset attribute
+
+        const contentBubble = messageElement.querySelector('.message-content');
+        const actionsWrapper = messageElement.querySelector('.message-actions');
+        let thinkingIndicator = contentBubble?.querySelector('.thinking-indicator');
+
+        // Remove existing indicators first
+        if (thinkingIndicator) thinkingIndicator.remove();
+
+        switch (state) {
+            case 'regenerating':
+                if (contentBubble) {
+                     // Clear existing content before showing indicator
+                     contentBubble.innerHTML = ''; 
+                     thinkingIndicator = document.createElement('div');
+                     thinkingIndicator.classList.add('thinking-indicator');
+                     thinkingIndicator.innerHTML = '<span>.</span><span>.</span><span>.</span>';
+                     contentBubble.appendChild(thinkingIndicator);
+                }
+                if (actionsWrapper) {
+                     actionsWrapper.querySelectorAll('button').forEach(btn => btn.disabled = true);
+                }
+                // --- ADD TO STREAMING MAP --- 
+                this.streamingMessages.set(messageId, { element: messageElement, fullContent: '' });
+                // --- END ADD --- 
+                break;
+            case 'streaming': 
+            case 'pending': 
+                 if (actionsWrapper) { // Ensure buttons are disabled
+                     actionsWrapper.querySelectorAll('button').forEach(btn => btn.disabled = true);
+                 }
+                 // Add thinking indicator if not already present (e.g., for pending)
+                 if (!thinkingIndicator && contentBubble && state === 'pending') {
+                    thinkingIndicator = document.createElement('div');
+                    thinkingIndicator.classList.add('thinking-indicator');
+                    thinkingIndicator.innerHTML = '<span>.</span><span>.</span><span>.</span>';
+                    contentBubble.appendChild(thinkingIndicator);
+                 }
+                break;
+            case 'complete':
+                if (actionsWrapper) {
+                     actionsWrapper.querySelectorAll('button').forEach(btn => btn.disabled = false);
+                }
+                break;
+            case 'error':
+                 if (actionsWrapper) {
+                     actionsWrapper.innerHTML = ''; // Clear actions on error
+                 }
+                break;
+            default:
+                console.warn(`[ChatUIManager] Unknown message state: ${state}`);
+        }
+    }
+
+    /**
      * Updates the content of a specific assistant message during streaming.
      * @param {string} messageId - The ID of the message to update.
      * @param {string} chunk - The new chunk of content to append.
@@ -245,11 +312,16 @@ class ChatUIManager {
         }
 
         const { element } = messageData;
-        element.dataset.status = 'streaming';
+        // --- Call setMessageState --- // No need to call here if called in callback
+        // if (element.dataset.status !== 'streaming') { // Only set state on first chunk visually
+        //     this.setMessageState(messageId, 'streaming'); 
+        // }
+        // --- End Call ---
 
         const contentBubble = element.querySelector('.message-content');
         if (!contentBubble) return;
 
+        // Remove thinking indicator if streaming starts (done by setMessageState('streaming') or implicitly)
         const thinkingIndicator = contentBubble.querySelector('.thinking-indicator');
         if (thinkingIndicator) thinkingIndicator.remove();
 
@@ -262,59 +334,65 @@ class ChatUIManager {
 
     /**
      * Finalizes an assistant message after streaming. Updates status, renders final content, adds actions.
-     * @param {string} messageId - The ID of the message to finalize.
-     * @param {object} [metadata] - Optional metadata (e.g., usage, elapsed time).
+     * @param {string} messageId - The ID of the message element to find and finalize.
+     * @param {object} [metadata] - Optional metadata (e.g., usage, elapsed time, message_id from server).
      */
     finalizeMessage(messageId, metadata = {}) {
-        const messageData = this.streamingMessages.get(messageId);
+        // Use the initially provided messageId to find the element
         const messageElement = this.elements.chatMessagesContainer?.querySelector(`.message-wrapper[data-message-id="${messageId}"]`);
+        const messageData = this.streamingMessages.get(messageId);
 
         if (!messageElement) {
-             console.warn(`[ChatUIManager] finalizeMessage: Element for Message ID ${messageId} not found.`);
+             console.warn(`[ChatUIManager] finalizeMessage: Element for initial Message ID ${messageId} not found.`);
              return;
         }
 
-        messageElement.dataset.status = 'complete';
+        // Determine the final message ID (server-provided or original)
+        const finalMessageId = (metadata && metadata.message_id) ? metadata.message_id : messageId;
+        
+        // Update element's dataset ID if it changed
+        if (finalMessageId !== messageId) {
+            console.log(`[ChatUIManager] Updating message element dataset ID from ${messageId} to ${finalMessageId}`);
+            messageElement.dataset.messageId = finalMessageId;
+        }
+
+        // Set final state using the final ID
+        this.setMessageState(finalMessageId, 'complete');
+
         const contentBubble = messageElement.querySelector('.message-content');
         const actionsWrapper = messageElement.querySelector('.message-actions');
-
-        if (metadata && metadata.message_id && messageElement.dataset.messageId !== metadata.message_id) {
-            console.log(`[ChatUIManager] Updating message element dataset ID from ${messageId} to ${metadata.message_id}`);
-            messageElement.dataset.messageId = metadata.message_id;
-        }
 
         // Final render of full content
         if (contentBubble && messageData) {
             contentBubble.innerHTML = this.marked.parse(messageData.fullContent || '', { breaks: true, gfm: true });
         } else if (contentBubble && !messageData && contentBubble.textContent) {
-             // If called on a non-streamed message (like history or opening), re-render existing content
+             // If called on a non-streamed message, re-render existing content
              try {
                   contentBubble.innerHTML = this.marked.parse(contentBubble.textContent || '', { breaks: true, gfm: true });
              } catch (e) { console.error("Markdown error on finalize:", e)}
         }
 
-        // Add/Update actions
+        // Add/Update actions using the final ID
         if (actionsWrapper) {
-             const finalMessageId = (metadata && metadata.message_id) ? metadata.message_id : messageId;
              this._addMessageActions(actionsWrapper, finalMessageId, metadata);
         }
 
-        // Clean up from streaming map
+        // Clean up from streaming map using the original ID
         if (this.streamingMessages.has(messageId)) {
             this.streamingMessages.delete(messageId);
         }
-        // console.log(`[ChatUIManager] Finalized message: ${messageId}`);
     }
 
     /**
      * Helper to populate the message actions container.
      * @param {HTMLElement} actionsWrapper - The container element for actions.
-     * @param {string} messageId - The ID of the related message.
+     * @param {string} messageId - The final ID of the related message.
      * @param {object} [metadata] - Optional metadata.
      */
     _addMessageActions(actionsWrapper, messageId, metadata = {}) {
         // --- ADD CHECK FOR OPENING MESSAGE ---
-        const messageElement = this.elements.chatMessagesContainer?.querySelector(`.message-wrapper[data-message-id="${messageId}"]`);
+        const messageElement = actionsWrapper.closest('.message-wrapper'); // More robust way to find parent
+        // const messageElement = this.elements.chatMessagesContainer?.querySelector(`.message-wrapper[data-message-id="${messageId}"]`);
         if (messageElement?.dataset?.messageType === 'opening') {
             actionsWrapper.innerHTML = ''; // Ensure actions are cleared just in case
             return; // Don't add actions for opening messages
@@ -388,25 +466,26 @@ class ChatUIManager {
     showErrorInChat(message, messageId) {
         console.error(`[ChatUIManager] Error: ${message}` + (messageId ? ` (related to message ${messageId})` : ''));
         if (messageId) {
-            const messageData = this.streamingMessages.get(messageId);
-            const messageElement = messageData?.element || this.elements.chatMessagesContainer?.querySelector(`.message-wrapper[data-message-id="${messageId}"]`);
+            // const messageData = this.streamingMessages.get(messageId);
+            const messageElement = this.elements.chatMessagesContainer?.querySelector(`.message-wrapper[data-message-id="${messageId}"]`);
             if (messageElement) {
-                messageElement.dataset.status = 'error';
+                // --- Call setMessageState ---
+                this.setMessageState(messageId, 'error');
+                // --- End Call ---
                 const contentBubble = messageElement.querySelector('.message-content');
                  if (contentBubble) {
-                      // Remove thinking indicator if present
-                      const thinkingIndicator = contentBubble.querySelector('.thinking-indicator');
-                      if (thinkingIndicator) thinkingIndicator.remove();
-                     // Append error message
-                     const errorP = document.createElement('p');
-                     errorP.className = 'text-error'; // Style this class
-                     errorP.textContent = `⚠️ ${message}`;
-                     contentBubble.appendChild(errorP);
+                      // Remove thinking indicator if present (done by setMessageState)
+                      // Append error message
+                      const errorP = document.createElement('p');
+                      errorP.className = 'text-error'; // Style this class
+                      errorP.textContent = `⚠️ ${message}`;
+                      // Append error below any existing content (or replace? Replace might be better)
+                      // contentBubble.innerHTML = ''; // Optional: Clear existing content on error
+                      contentBubble.appendChild(errorP);
                  }
-                 // Optionally clear actions on error?
-                 const actionsWrapper = messageElement.querySelector('.message-actions');
-                 if (actionsWrapper) actionsWrapper.innerHTML = '';
+                 // Clear actions (done by setMessageState)
 
+                // Clean up streaming map if error occurs mid-stream
                 if (this.streamingMessages.has(messageId)) {
                     this.streamingMessages.delete(messageId);
                 }
