@@ -329,8 +329,20 @@ class ChatUIManager {
         if (thinkingIndicator) thinkingIndicator.remove();
 
         messageData.fullContent += chunk;
-        // Render incrementally - careful with complex markdown
-        contentBubble.innerHTML = this.marked.parse(messageData.fullContent, { breaks: true, gfm: true });
+        
+        try {
+            // Render incrementally - 确保使用marked而不是直接插入HTML
+            if (this.marked && typeof this.marked.parse === 'function') {
+                contentBubble.innerHTML = this.marked.parse(messageData.fullContent, { breaks: true, gfm: true });
+            } else {
+                // 后备：至少进行基本的HTML转义和换行处理
+                contentBubble.innerText = messageData.fullContent;
+            }
+        } catch (error) {
+            console.error("Markdown parsing error:", error);
+            // 出错时至少显示纯文本
+            contentBubble.innerText = messageData.fullContent;
+        }
 
         this.scrollToBottom(true); // Conditional scroll
     }
@@ -367,12 +379,32 @@ class ChatUIManager {
 
         // Final render of full content
         if (contentBubble && messageData) {
-            contentBubble.innerHTML = this.marked.parse(messageData.fullContent || '', { breaks: true, gfm: true });
+            try {
+                // 确保使用marked渲染Markdown
+                if (this.marked && typeof this.marked.parse === 'function') {
+                    contentBubble.innerHTML = this.marked.parse(messageData.fullContent || '', { breaks: true, gfm: true });
+                } else {
+                    // 后备：至少进行基本的HTML转义和换行处理
+                    contentBubble.innerText = messageData.fullContent || '';
+                }
+            } catch (error) {
+                console.error("Markdown parsing error:", error);
+                // 出错时至少显示纯文本
+                contentBubble.innerText = messageData.fullContent || '';
+            }
         } else if (contentBubble && !messageData && contentBubble.textContent) {
              // If called on a non-streamed message, re-render existing content
              try {
-                  contentBubble.innerHTML = this.marked.parse(contentBubble.textContent || '', { breaks: true, gfm: true });
-             } catch (e) { console.error("Markdown error on finalize:", e)}
+                  // 使用marked而不是直接操作innerHTML
+                  if (this.marked && typeof this.marked.parse === 'function') {
+                      // 获取内容的纯文本，避免HTML转义问题
+                      const originalText = contentBubble.textContent || '';
+                      contentBubble.innerHTML = this.marked.parse(originalText, { breaks: true, gfm: true });
+                  }
+             } catch (e) { 
+                 console.error("Markdown error on finalize:", e);
+                 // 出错时保留原始内容
+             }
         }
 
         // Add/Update actions using the final ID
@@ -615,38 +647,101 @@ class ChatUIManager {
         if (!this.elements.chatHistoryList) return;
         this.elements.chatHistoryList.innerHTML = ''; // Clear existing
 
+        // 如果没有对话，仅清空列表，不添加任何占位符
+        if (conversations.length === 0) {
+            console.log("[ChatUIManager] 没有历史对话可显示");
+            return;
+        }
+
         // Sort conversations, newest first (handle potentially missing times)
         conversations.sort((a, b) => (b.last_message_time || 0) - (a.last_message_time || 0));
 
+        // 防止列表中出现重复的对话ID
+        const addedIds = new Set();
+
         conversations.forEach(conv => {
+            // 跳过重复的对话ID
+            if (addedIds.has(conv.id)) return;
+            addedIds.add(conv.id);
+            
             const item = document.createElement('div');
             item.className = 'chat-history-item';
             item.dataset.conversationId = conv.id;
-            item.title = conv.name || `Conversation ${conv.id.substring(0, 6)}`; // Add tooltip
+            
+            // 优先使用title，如果没有则使用id前缀
+            const displayTitle = conv.title || `对话 ${conv.id.substring(0, 6)}...`;
+            item.title = displayTitle; // Add tooltip
 
+            // 历史项左侧图标
             const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-             // Object.assign(icon, { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round' }); // OLD: Using Object.assign
-             // NEW: Using setAttribute for SVG attributes
-             icon.setAttribute('width', '16');
-             icon.setAttribute('height', '16');
-             icon.setAttribute('viewBox', '0 0 24 24');
-             icon.setAttribute('fill', 'none');
-             icon.setAttribute('stroke', 'currentColor');
-             icon.setAttribute('stroke-width', '2');
-             icon.setAttribute('stroke-linecap', 'round');
-             icon.setAttribute('stroke-linejoin', 'round');
+            icon.setAttribute('width', '16');
+            icon.setAttribute('height', '16');
+            icon.setAttribute('viewBox', '0 0 24 24');
+            icon.setAttribute('fill', 'none');
+            icon.setAttribute('stroke', 'currentColor');
+            icon.setAttribute('stroke-width', '2');
+            icon.setAttribute('stroke-linecap', 'round');
+            icon.setAttribute('stroke-linejoin', 'round');
 
-             icon.classList.add('icon', 'history-item-icon');
-             icon.innerHTML = '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>';
+            icon.classList.add('icon', 'history-item-icon');
+            icon.innerHTML = '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>';
             item.appendChild(icon);
 
+            // 标题文本
             const nameSpan = document.createElement('span');
-             // Truncate long names if needed via CSS text-overflow
-            nameSpan.textContent = conv.name || `Conversation ${conv.id.substring(0, 6)}...`;
+            nameSpan.className = 'history-item-name';
+            // 限制过长的名称通过CSS文本溢出处理
+            nameSpan.textContent = displayTitle;
             item.appendChild(nameSpan);
 
-            // TODO: Add delete button? Needs event listener in BaseDifyChatApp
-            // const deleteBtn = document.createElement('button'); ... item.appendChild(deleteBtn);
+            // 添加按钮容器
+            const actionsContainer = document.createElement('div');
+            actionsContainer.className = 'history-item-actions';
+
+            // 添加重命名按钮
+            const renameBtn = document.createElement('button');
+            renameBtn.className = 'btn-icon rename-history-btn';
+            renameBtn.title = this.t('chat.renameConversation', { default: '重命名对话' });
+            renameBtn.setAttribute('aria-label', this.t('chat.renameConversation', { default: '重命名对话' }));
+            
+            // 重命名图标
+            const renameIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            renameIcon.setAttribute('width', '14');
+            renameIcon.setAttribute('height', '14');
+            renameIcon.setAttribute('viewBox', '0 0 24 24');
+            renameIcon.setAttribute('fill', 'none');
+            renameIcon.setAttribute('stroke', 'currentColor');
+            renameIcon.setAttribute('stroke-width', '2');
+            renameIcon.setAttribute('stroke-linecap', 'round');
+            renameIcon.setAttribute('stroke-linejoin', 'round');
+            renameIcon.innerHTML = '<path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>';
+            
+            renameBtn.appendChild(renameIcon);
+            actionsContainer.appendChild(renameBtn);
+
+            // 添加删除按钮
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn-icon delete-history-btn';
+            deleteBtn.title = this.t('chat.deleteConversation', { default: '删除对话' });
+            deleteBtn.setAttribute('aria-label', this.t('chat.deleteConversation', { default: '删除对话' }));
+            
+            // 删除图标
+            const deleteIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            deleteIcon.setAttribute('width', '14');
+            deleteIcon.setAttribute('height', '14');
+            deleteIcon.setAttribute('viewBox', '0 0 24 24');
+            deleteIcon.setAttribute('fill', 'none');
+            deleteIcon.setAttribute('stroke', 'currentColor');
+            deleteIcon.setAttribute('stroke-width', '2');
+            deleteIcon.setAttribute('stroke-linecap', 'round');
+            deleteIcon.setAttribute('stroke-linejoin', 'round');
+            deleteIcon.innerHTML = '<path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>';
+            
+            deleteBtn.appendChild(deleteIcon);
+            actionsContainer.appendChild(deleteBtn);
+
+            // 将按钮容器添加到条目中
+            item.appendChild(actionsContainer);
 
             this.elements.chatHistoryList.appendChild(item);
         });

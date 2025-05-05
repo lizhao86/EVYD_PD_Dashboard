@@ -111,6 +111,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    position: relative; /* 为删除按钮定位提供基准 */
 }
 
 .chat-history-item:hover {
@@ -128,6 +129,77 @@
     margin-right: 0.6rem;
     flex-shrink: 0; /* 防止图标被压缩 */
     color: currentColor; /* 让图标颜色随父元素变化 */
+}
+
+/* 历史项名称 */
+.history-item-name {
+    flex-grow: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 历史项操作按钮容器 */
+.history-item-actions {
+    display: flex;
+    gap: 0.3rem;
+    margin-left: 0.5rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+}
+
+.chat-history-item:hover .history-item-actions {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* 历史项重命名按钮 */
+.rename-history-btn {
+    opacity: 0;
+    visibility: hidden;
+    padding: 4px;
+    color: var(--gray-500);
+    background: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: opacity 0.2s, visibility 0.2s, color 0.2s, background-color 0.2s;
+    flex-shrink: 0;
+}
+
+.chat-history-item:hover .rename-history-btn {
+    opacity: 1;
+    visibility: visible;
+}
+
+.rename-history-btn:hover {
+    color: var(--blue-600);
+    background-color: var(--blue-100);
+}
+
+/* 历史项删除按钮 */
+.delete-history-btn {
+    opacity: 0;
+    visibility: hidden;
+    padding: 4px;
+    color: var(--gray-500);
+    background: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: opacity 0.2s, visibility 0.2s, color 0.2s, background-color 0.2s;
+    flex-shrink: 0;
+}
+
+.chat-history-item:hover .delete-history-btn {
+    opacity: 1;
+    visibility: visible;
+}
+
+.delete-history-btn:hover {
+    color: var(--red-600);
+    background-color: var(--red-100);
 }
 
 .sidebar-footer {
