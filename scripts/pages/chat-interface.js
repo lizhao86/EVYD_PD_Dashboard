@@ -31,24 +31,24 @@ class GenericChatApp extends BaseDifyChatApp {
         
         // 设置API密钥名称映射
         this.apiKeyMapping = {
-            'userManual': 'userManual', // MODIFIED: Changed key from 'chat' to 'userManual'
-            'ux-design': 'uxDesign', // UX设计
-            'requirement-analysis': 'requirementsAnalysis', // 需求分析 (注意: 修正拼写，添加's')
+            'userManual': 'userManual',
+            'uxDesign': 'uxDesign',
+            'requirementsAnalysis': 'requirementsAnalysis',
         };
         
         // 设置应用信息映射 (移除 name 和 description，保留 title, placeholder, welcomeMessage)
         this.appInfoMapping = {
-            'userManual': { // MODIFIED: Changed key from 'chat' to 'userManual'
+            'userManual': {
                 title: t('userManualNew.title', { default: 'AI 写 User Manual (聊天模式)' }),
                 placeholder: t('userManualNew.inputPlaceholder', { default: '输入您想了解的产品功能或使用问题...' }),
                 welcomeMessage: t('userManualNew.welcomeMessage', { default: 'Hello! How can I assist you today? If you have a User Story and Acceptance Criteria to share, I can help generate a User Manual section based on them.' })
             },
-            'ux-design': {
+            'uxDesign': {
                 title: t('uxDesign.title', { default: 'UX 界面设计(POC)' }),
                 placeholder: t('uxDesign.requirementPlaceholder', { default: '请输入User Story Tickets中的描述和Acceptance Criteria的内容...' }),
                 welcomeMessage: t('uxDesign.welcomeMessage', { default: '欢迎使用UX界面设计助手！请提供您的User Story和需求描述，我将帮您生成Figma设计提示词，协助快速创建界面原型。' })
             },
-            'requirement-analysis': {
+            'requirementsAnalysis': {
                 title: t('requirementAnalysis.title', { default: 'AI 需求分析助手' }),
                 placeholder: t('requirementAnalysis.requirementPlaceholder', { default: '请输入需要分析的需求内容...' }),
                 welcomeMessage: t('requirementAnalysis.welcomeMessage', { default: '您好！我是需求分析助手。请描述您的产品需求或想法，我会帮您分析并生成结构化的需求文档，包括用户画像、功能列表和优先级建议。' })

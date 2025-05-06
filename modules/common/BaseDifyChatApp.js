@@ -825,23 +825,11 @@ class BaseDifyChatApp extends BaseDifyApp {
                  // 如果最后一条是用户消息，尝试获取Dify会话ID
                  const lastMessage = messages[messages.length - 1];
                  if (lastMessage.role === 'user') {
-                     console.log("最后一条是用户消息，尝试向Dify创建新会话以继续对话");
-                     // 这里不需要使用历史消息，只需要最新的用户消息来创建新会话
-                     try {
-                         // 从Dify API获取新的会话ID
-                         const difyConversationId = await this._createNewDifyConversation(lastMessage.content);
-                         
-                         if (difyConversationId) {
-                             console.log(`创建新的Dify会话ID成功: ${difyConversationId}`);
-                             // 保存到状态，让后续交互能够在同一Dify对话中进行
-                             this.state.difyConversationId = difyConversationId;
-                         } else {
-                             console.warn("无法为现有对话创建新的Dify会话");
-                         }
-                     } catch (difyError) {
-                         console.error("创建Dify会话时出错:", difyError);
-                         this.ui?.showErrorInChat("无法创建新的会话上下文，您可能需要发送新消息来开始新对话");
-                     }
+                     // 最后一条是用户消息，无需特殊处理。
+                     // Dify API 会在下次用户发送消息时自动处理会话。
+                     // 只需要确保 this.state.difyConversationId 在加载对话时被重置 (已在前面完成)。
+                     console.log("最后一条是用户消息，等待用户输入以继续对话。");
+                     // this.state.difyConversationId = null; // 确保 Dify 会话 ID 已重置 (在前面已做)
                  } else {
                      // 如果最后一条是助手消息，则表示对话已完成
                      // 不需要恢复Dify会话，用户下一条消息会创建新的上下文
@@ -868,47 +856,6 @@ class BaseDifyChatApp extends BaseDifyApp {
              }
          }
      }
-
-    /**
-     * 创建新的Dify会话（改进版）
-     * @param {string} userQuery - 用户查询
-     * @private
-     */
-    async _createNewDifyConversation(userQuery) {
-        if (!userQuery || !this.state.apiKey) {
-            console.warn("创建新Dify会话失败：缺少用户查询或API密钥");
-            return null;
-        }
-        
-        try {
-            // 创建一个临时DifyClient实例
-            const tempClient = new DifyClient({
-                baseUrl: '/api/v1',
-                apiKey: this.state.apiKey,
-                mode: this.difyMode
-            });
-            
-            // 使用阻塞模式创建新会话
-            console.log("正在使用用户消息创建新的Dify会话:", userQuery);
-            const response = await tempClient.generateBlocking({
-                query: userQuery,
-                user: this.state.currentUser.username || 'unknown-user',
-                response_mode: 'blocking',
-                auto_generate_name: true // 自动生成会话名称
-            });
-            
-            if (response?.conversation_id) {
-                console.log("成功创建Dify会话ID:", response.conversation_id);
-                return response.conversation_id;
-            } else {
-                console.warn("创建会话响应缺少conversation_id:", response);
-                return null;
-            }
-        } catch (error) {
-            console.error("创建Dify会话时出错:", error);
-            throw error;
-        }
-    }
 
     /**
      * Loads chat history from storage or API (placeholder implementation).
