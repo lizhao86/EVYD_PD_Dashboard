@@ -639,7 +639,7 @@ class BaseDifyApp {
             return;
         }
 
-        const infoUrl = `/api/v1/info`; // Assuming relative path works with proxy/setup
+        const infoUrl = `${this.state.apiEndpoint}/info`; // 使用完整API基础URL
          if (DEBUG) console.log(`[${this.constructor.name}] Fetching app info from ${infoUrl}...`);
 
         try {

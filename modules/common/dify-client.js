@@ -60,8 +60,8 @@ class DifyClient {
         this.abortController = new AbortController();
         const signal = this.abortController.signal;
 
-        const endpoint = this.mode === 'chat' ? '/chat-messages' : '/workflows/run';
-        const url = `${this.baseUrl}${endpoint}`;
+        const endpoint = this.mode === 'chat' ? 'chat-messages' : 'workflows/run';
+        const url = `${this.baseUrl}/${endpoint}`;
 
         // Ensure essential payload fields are present and set stream mode
         const body = {
