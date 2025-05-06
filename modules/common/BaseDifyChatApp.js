@@ -530,7 +530,7 @@ class BaseDifyChatApp extends BaseDifyApp {
             // 创建Dify客户端
             if (!this.difyClient) { // 如果不存在则创建（例如，在错误/完成后）
                 this.difyClient = new DifyClient({
-                    baseUrl: '/api/v1',
+                    baseUrl: this.state.apiEndpoint,
                     apiKey: this.state.apiKey,
                     mode: this.difyMode,
                     onError: this.state.onError || ((error) => {
@@ -630,7 +630,7 @@ class BaseDifyChatApp extends BaseDifyApp {
             return;
         }
 
-        const paramsUrl = '/api/v1/parameters';
+        const paramsUrl = `${this.state.apiEndpoint}/parameters`;
         let openingStatement = t('chat.welcomeMessage', { default: '你好！我可以帮你做什么？' }); // Default welcome
         let suggestedQuestions = [];
 
@@ -685,7 +685,7 @@ class BaseDifyChatApp extends BaseDifyApp {
              return;
          }
 
-         const suggestionsUrl = '/api/v1/messages/' + messageId + '/suggested?user=' + encodeURIComponent(this.state.currentUser.username || 'unknown-user');
+         const suggestionsUrl = `${this.state.apiEndpoint}/messages/${messageId}/suggested?user=${encodeURIComponent(this.state.currentUser.username || 'unknown-user')}`;
          if (DEBUG) console.log(`[BaseDifyChatApp] Fetching suggestions from: ${suggestionsUrl}`); // Added DEBUG log
          
          try {
@@ -1303,7 +1303,7 @@ class BaseDifyChatApp extends BaseDifyApp {
          }
          console.log(`Submitting feedback: message=${messageId}, rating=${rating}`);
 
-         const feedbackUrl = '/api/v1/messages/' + messageId + '/feedbacks';
+         const feedbackUrl = `${this.state.apiEndpoint}/messages/${messageId}/feedbacks`;
          const feedbackButton = this.ui?.elements.chatMessagesContainer?.querySelector(`.feedback-btn[data-message-id="${messageId}"][data-rating="${rating}"]`);
 
          try {
@@ -1449,9 +1449,10 @@ class BaseDifyChatApp extends BaseDifyApp {
             // Create Dify client if needed
             if (!this.difyClient) {
                  this.difyClient = new DifyClient({
-                     baseUrl: '/api/v1',
+                     baseUrl: this.state.apiEndpoint,
                      apiKey: this.state.apiKey,
-                     mode: this.difyMode
+                     mode: this.difyMode,
+                     // No onError here, we use callbacks
                  });
             }
 
